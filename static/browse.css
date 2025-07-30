@@ -102,7 +102,7 @@ body {
 /* Projects Section */
 .projects-section {
   background: #f8f9fa;
-  padding: 2rem 1.5rem;
+  padding: 3rem 2rem;
   min-height: 60vh;
 }
 
@@ -113,19 +113,19 @@ body {
 
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
 }
 
 .project-card {
   background: white;
-  border-radius: 10px;
-  padding: 1.25rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   cursor: pointer;
-  border: 1px solid #f0f0f0;
+  border: 2px solid transparent;
 }
 
 .project-card:hover {
@@ -584,111 +584,4 @@ body {
   .project-stats {
     justify-content: space-between;
   }
-}
-
-/* Donation Modal Specific Styles */
-.donation-modal-content {
-  max-width: 600px;
-}
-
-.donation-tabs {
-  display: flex;
-  border-bottom: 2px solid #f0f0f0;
-  margin-bottom: 1.5rem;
-}
-
-.tab-btn {
-  flex: 1;
-  padding: 0.75rem;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-weight: 500;
-  color: #666;
-  transition: all 0.3s ease;
-}
-
-.tab-btn.active {
-  color: #6a11cb;
-  border-bottom: 2px solid #6a11cb;
-}
-
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
-}
-
-.currency-selector {
-  margin-bottom: 1rem;
-}
-
-.currency-selector label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-}
-
-.currency-selector select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-}
-
-.qr-section {
-  text-align: center;
-}
-
-.qr-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 200px;
-  margin: 1rem 0;
-  border: 2px dashed #ddd;
-  border-radius: 8px;
-}
-
-.qr-loading {
-  text-align: center;
-}
-
-.qr-loading i {
-  font-size: 2rem;
-  color: #6a11cb;
-  margin-bottom: 0.5rem;
-}
-
-.payment-details {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-top: 1rem;
-  text-align: left;
-}
-
-.payment-details h4 {
-  margin-bottom: 1rem;
-  color: #1c1c1c;
-}
-
-.detail-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  padding: 0.25rem 0;
-  border-bottom: 1px solid #eee;
-}
-
-.detail-row .label {
-  font-weight: 500;
-  color: #666;
-}
-
-.detail-row .value {
-  font-weight: 600;
-  color: #1c1c1c;
 }

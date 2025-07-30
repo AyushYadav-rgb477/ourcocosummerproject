@@ -193,7 +193,7 @@
 
   <!-- Donation Modal -->
   <div class="modal" id="donate-modal">
-    <div class="modal-content donation-modal-content">
+    <div class="modal-content">
       <div class="modal-header">
         <h2>Support This Project</h2>
         <button class="close-modal" id="close-donate-modal">
@@ -201,68 +201,17 @@
         </button>
       </div>
       <div class="modal-body">
-        <div class="donation-tabs">
-          <button class="tab-btn active" data-tab="manual">Manual Donation</button>
-          <button class="tab-btn" data-tab="qr">QR Code Payment</button>
+        <p>Help fund this innovative project:</p>
+        <div class="donation-form">
+          <label for="donation-amount">Amount (USD)</label>
+          <input type="number" id="donation-amount" placeholder="25.00" min="1" step="0.01">
+          <label for="donation-message">Message (optional)</label>
+          <textarea id="donation-message" placeholder="Leave an encouraging message..." rows="3"></textarea>
         </div>
-        
-        <!-- Manual Donation Tab -->
-        <div class="tab-content active" id="manual-tab">
-          <p>Help fund this innovative project:</p>
-          <div class="donation-form">
-            <div class="currency-selector">
-              <label>Currency:</label>
-              <select id="donation-currency">
-                <option value="INR">INR (₹)</option>
-                <option value="USD">USD ($)</option>
-              </select>
-            </div>
-            <label for="donation-amount">Amount</label>
-            <input type="number" id="donation-amount" placeholder="100.00" min="1" step="0.01">
-            <label for="donation-message">Message (optional)</label>
-            <textarea id="donation-message" placeholder="Leave an encouraging message..." rows="3"></textarea>
-          </div>
-          <div class="modal-actions">
-            <button class="action-btn" id="send-donation">
-              <i class="fas fa-heart"></i> Donate Now
-            </button>
-          </div>
-        </div>
-        
-        <!-- QR Code Tab -->
-        <div class="tab-content" id="qr-tab">
-          <div class="qr-section">
-            <p>Scan the QR code to make a direct payment:</p>
-            <div class="qr-container" id="qr-container">
-              <div class="qr-loading">
-                <i class="fas fa-spinner fa-spin"></i>
-                <p>Generating QR Code...</p>
-              </div>
-            </div>
-            <div class="payment-details" id="payment-details" style="display: none;">
-              <h4>Payment Details:</h4>
-              <div class="detail-row">
-                <span class="label">Bank:</span>
-                <span class="value" id="bank-name-display"></span>
-              </div>
-              <div class="detail-row">
-                <span class="label">Account Holder:</span>
-                <span class="value" id="account-holder-display"></span>
-              </div>
-              <div class="detail-row">
-                <span class="label">Account Number:</span>
-                <span class="value" id="account-number-display"></span>
-              </div>
-              <div class="detail-row">
-                <span class="label">IFSC Code:</span>
-                <span class="value" id="ifsc-display"></span>
-              </div>
-              <div class="detail-row" id="upi-row" style="display: none;">
-                <span class="label">UPI ID:</span>
-                <span class="value" id="upi-display"></span>
-              </div>
-            </div>
-          </div>
+        <div class="modal-actions">
+          <button class="action-btn" id="send-donation">
+            <i class="fas fa-heart"></i> Donate Now
+          </button>
         </div>
       </div>
     </div>
