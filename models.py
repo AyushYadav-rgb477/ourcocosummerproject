@@ -13,6 +13,14 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Bank details for donations
+    bank_name = db.Column(db.String(200), nullable=True)
+    account_holder_name = db.Column(db.String(200), nullable=True)
+    account_number = db.Column(db.String(50), nullable=True)
+    ifsc_code = db.Column(db.String(20), nullable=True)
+    upi_id = db.Column(db.String(100), nullable=True)
+    preferred_currency = db.Column(db.String(10), default='INR')
+    
     # Relationships
     projects = db.relationship('Project', backref='owner', lazy=True, cascade='all, delete-orphan')
     comments = db.relationship('Comment', backref='author', lazy=True, cascade='all, delete-orphan')
@@ -33,7 +41,13 @@ class User(db.Model):
             'email': self.email,
             'full_name': self.full_name,
             'college': self.college,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat(),
+            'bank_name': self.bank_name,
+            'account_holder_name': self.account_holder_name,
+            'account_number': self.account_number,
+            'ifsc_code': self.ifsc_code,
+            'upi_id': self.upi_id,
+            'preferred_currency': self.preferred_currency
         }
 
 class Project(db.Model):

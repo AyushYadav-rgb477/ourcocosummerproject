@@ -11,20 +11,7 @@
 </head>
 <body>
 
-  <header class="navbar">
-    <div class="nav-left">
-      <div class="logo"><a href="/"><i class="fas fa-rocket"></i> CollabFund</a></div>
-      <nav class="nav-links">
-        <a href="/"><i class="fas fa-home"></i> Home</a>
-        <a href="browse.html"><i class="fas fa-search"></i> Browse Projects</a>
-        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-      </nav>
-    </div>
-    <div class="nav-right" id="nav-auth">
-      <span class="user-greeting" id="user-greeting">Welcome!</span>
-      <button class="logout-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
-    </div>
-  </header>
+
 
   <div class="dashboard-container">
     <!-- Sidebar -->
@@ -42,6 +29,18 @@
         <a href="#collaborations" class="nav-item" data-section="collaborations">
           <i class="fas fa-handshake"></i> Collaborations
         </a>
+        <a href="#profile" class="nav-item" data-section="profile">
+          <i class="fas fa-user-cog"></i> Profile
+        </a>
+        <a href="/" class="nav-item">
+          <i class="fas fa-home"></i> Home
+        </a>
+        <a href="browse.html" class="nav-item">
+          <i class="fas fa-search"></i> Browse
+        </a>
+        <button class="nav-item logout-btn" id="logout-btn" style="border: none; background: none; color: inherit;">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
       </nav>
     </aside>
 
@@ -178,17 +177,104 @@
           <p>Manage collaboration requests for your projects</p>
         </div>
 
-        <div class="collaborations-list" id="collaboration-requests">
+        <div class="collaborations-list" id="collaborations-list">
           <!-- Collaboration requests will be loaded here -->
         </div>
       </section>
 
+      <!-- Profile Section -->
+      <section id="profile" class="content-section">
+        <div class="section-header">
+          <h2><i class="fas fa-user-cog"></i> Profile Settings</h2>
+          <p>Update your profile information and bank details for donations</p>
+        </div>
+
+        <div class="profile-container">
+          <form id="profile-form" class="profile-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="profile-email">
+                  <i class="fas fa-envelope"></i> Email Address
+                </label>
+                <input type="email" id="profile-email" name="email" required>
+              </div>
+              <div class="form-group">
+                <label for="profile-full-name">
+                  <i class="fas fa-user"></i> Full Name
+                </label>
+                <input type="text" id="profile-full-name" name="full_name" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="profile-college">
+                <i class="fas fa-university"></i> College/University
+              </label>
+              <input type="text" id="profile-college" name="college" required>
+            </div>
+
+            <div class="bank-details-section">
+              <h3><i class="fas fa-university"></i> Bank Details for Donations</h3>
+              <p>Add your bank details to receive donations via QR code</p>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="bank-name">Bank Name</label>
+                  <input type="text" id="bank-name" name="bank_name" placeholder="e.g., State Bank of India">
+                </div>
+                <div class="form-group">
+                  <label for="account-holder-name">Account Holder Name</label>
+                  <input type="text" id="account-holder-name" name="account_holder_name" placeholder="Full name as per bank records">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="account-number">Account Number</label>
+                  <input type="text" id="account-number" name="account_number" placeholder="Your bank account number">
+                </div>
+                <div class="form-group">
+                  <label for="ifsc-code">IFSC Code</label>
+                  <input type="text" id="ifsc-code" name="ifsc_code" placeholder="e.g., SBIN0000123">
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="upi-id">UPI ID (Optional)</label>
+                  <input type="text" id="upi-id" name="upi_id" placeholder="e.g., yourname@paytm">
+                </div>
+                <div class="form-group">
+                  <label for="preferred-currency">Preferred Currency</label>
+                  <select id="preferred-currency" name="preferred_currency">
+                    <option value="INR">INR (₹)</option>
+                    <option value="USD">USD ($)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </form>
+        </div>
+      </section>
     </main>
   </div>
 
-  <!-- Success/Error Messages -->
+  <!-- Message Container -->
   <div id="message-container" class="message-container"></div>
 
   <script src="js/dashboard.js"></script>
 </body>
 </html>
+
+        <div class="collaborations-list" id="collaboration-requests">
+          <!-- Collaboration requests will be loaded here -->
+        </div>
+      </section>
+
+      <!-- Profile Section -->
+      <section id="profile" class="content-section">
+        <div class="section-header">

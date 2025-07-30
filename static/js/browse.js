@@ -626,3 +626,123 @@ function createMessageContainer() {
     document.body.appendChild(container);
     return container;
 }
+
+// Donation Tab Switching
+function switchDonationTab(tabName) {
+    // Update active tab button
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Show/hide tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+    
+    // If switching to QR tab, generate QR code
+    if (tabName === 'qr' && currentProject) {
+        generateDonationQR(currentProject.id);
+    }
+}
+
+// Generate QR Code for Donation
+async function generateDonationQR(projectId) {
+    const qrContainer = document.getElementById('qr-container');
+    const paymentDetails = document.getElementById('payment-details');
+    
+    try {
+        const response = await fetch(`/api/generate-qr/${projectId}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Display QR code
+            qrContainer.innerHTML = `<img src="${data.qr_code}" alt="Payment QR Code" style="max-width: 200px;">`;
+            
+            // Display payment details
+            document.getElementById('bank-name-display').textContent = data.payment_info.bank_name;
+            document.getElementById('account-holder-display').textContent = data.payment_info.account_holder;
+            document.getElementById('account-number-display').textContent = data.payment_info.account_number;
+            document.getElementById('ifsc-display').textContent = data.payment_info.ifsc_code;
+            
+            if (data.payment_info.upi_id) {
+                document.getElementById('upi-display').textContent = data.payment_info.upi_id;
+                document.getElementById('upi-row').style.display = 'flex';
+            }
+            
+            paymentDetails.style.display = 'block';
+        } else {
+            qrContainer.innerHTML = `
+                <div class="qr-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>${data.error}</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('QR generation error:', error);
+        qrContainer.innerHTML = `
+            <div class="qr-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Error generating QR code. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+// Update donation handling to support currency
+async function handleDonation() {
+    if (!currentUser || !currentProject) return;
+    
+    const amount = document.getElementById('donation-amount').value;
+    const message = document.getElementById('donation-message').value;
+    const currency = document.getElementById('donation-currency').value;
+    
+    if (!amount || amount <= 0) {
+        showMessage('Please enter a valid donation amount', 'error');
+        return;
+    }
+    
+    const donateBtn = document.getElementById('send-donation');
+    donateBtn.disabled = true;
+    donateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+    
+    try {
+        const response = await fetch(`/api/projects/${currentProject.id}/donate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: parseFloat(amount),
+                message: message,
+                currency: currency
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage(`Donation of ${currency} ${amount} sent successfully!`, 'success');
+            
+            // Update funding display
+            document.getElementById('modal-funding').textContent = `${currency === 'INR' ? '₹' : '$'}${data.current_funding.toFixed(2)}`;
+            currentProject.current_funding = data.current_funding;
+            
+            // Clear form
+            document.getElementById('donation-amount').value = '';
+            document.getElementById('donation-message').value = '';
+            
+            hideModal('donate-modal');
+        } else {
+            showMessage(data.error || 'Failed to process donation', 'error');
+        }
+    } catch (error) {
+        console.error('Donation error:', error);
+        showMessage('Network error. Please try again.', 'error');
+    } finally {
+        donateBtn.disabled = false;
+        donateBtn.innerHTML = '<i class="fas fa-heart"></i> Donate Now';
+    }
+}

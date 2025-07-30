@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup forms
     setupProjectForm();
+    setupProfileForm();
     
     // Setup logout
     setupLogout();
@@ -73,6 +74,11 @@ function switchSection(section) {
     currentSection = section;
     
     // Load section-specific data
+    if (section === 'collaborations') {
+        loadCollaborations();
+    } else if (section === 'profile') {
+        loadProfile();
+    }
     loadSectionData(section);
 }
 
