@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup logout
     setupLogout();
+    
+    // Setup donate now functionality
+    setupDonateNowButton();
 });
 
 async function checkAuthAndLoadProfile() {
@@ -359,6 +362,179 @@ function setupLogout() {
             }
         });
     }
+}
+
+function setupDonateNowButton() {
+    const donateBtn = document.getElementById('donate-now-btn');
+    const qrContainer = document.getElementById('donation-qr-container');
+    const modal = document.getElementById('qr-modal');
+    const closeBtn = document.querySelector('.close');
+    
+    donateBtn.addEventListener('click', function() {
+        const upiId = document.getElementById('upi-id').value.trim();
+        const accountHolderName = document.getElementById('account-holder-name').value.trim();
+        
+        if (!upiId) {
+            showMessage('Please provide your UPI ID to generate a QR code.', 'warning');
+            document.getElementById('upi-id').focus();
+            return;
+        }
+        
+        if (!accountHolderName) {
+            showMessage('Please provide account holder name to generate a QR code.', 'warning');
+            document.getElementById('account-holder-name').focus();
+            return;
+        }
+        
+        generateDonationQR(upiId, accountHolderName);
+    });
+    
+    // Modal close functionality
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+        });
+    }
+    
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    // Setup modal action buttons
+    setupModalActions();
+}
+
+function generateDonationQR(upiId, name) {
+    const qrContainer = document.getElementById('donation-qr-container');
+    const modalQrContainer = document.getElementById('modal-qr-code');
+    const modal = document.getElementById('qr-modal');
+    
+    // Create UPI payment URL
+    const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(name)}&cu=INR`;
+    
+    // Show the QR container
+    qrContainer.style.display = 'block';
+    
+    // Generate QR in both locations
+    generateQRInContainer(document.getElementById('donation-qr-code'), upiUrl);
+    generateQRInContainer(modalQrContainer, upiUrl);
+    
+    // Update modal text
+    document.getElementById('modal-qr-text').textContent = `Scan this QR code to donate to ${name} via UPI`;
+    
+    // Show modal
+    modal.style.display = 'block';
+    
+    // Setup download and share functionality
+    setupQRDownloadShare(upiUrl, name);
+    
+    showMessage('Donation QR code generated successfully!', 'success');
+}
+
+function generateQRInContainer(container, url) {
+    container.innerHTML = ''; // Clear previous content
+    
+    QRCode.toCanvas(container, url, {
+        width: 200,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        }
+    }, function (error) {
+        if (error) {
+            console.error('QR Code generation error:', error);
+            container.innerHTML = '<p style="color: #dc3545;">Error generating QR code</p>';
+        }
+    });
+}
+
+function setupQRDownloadShare(upiUrl, name) {
+    // Regular QR actions
+    const downloadBtn = document.getElementById('download-donation-qr-btn');
+    const shareBtn = document.getElementById('share-donation-qr-btn');
+    
+    // Modal QR actions
+    const modalDownloadBtn = document.getElementById('modal-download-btn');
+    const modalCopyBtn = document.getElementById('modal-copy-btn');
+    
+    const downloadFunction = function() {
+        const canvas = document.querySelector('#donation-qr-code canvas') || document.querySelector('#modal-qr-code canvas');
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = `${name.replace(/\s+/g, '-').toLowerCase()}-donation-qr.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+            showMessage('QR code downloaded successfully!', 'success');
+        }
+    };
+    
+    const shareFunction = function() {
+        if (navigator.share) {
+            navigator.share({
+                title: 'Donate via UPI',
+                text: `Donate to ${name} via UPI`,
+                url: upiUrl
+            }).then(() => {
+                showMessage('QR code shared successfully!', 'success');
+            }).catch(() => {
+                copyToClipboard(upiUrl);
+            });
+        } else {
+            copyToClipboard(upiUrl);
+        }
+    };
+    
+    const copyFunction = function() {
+        const upiId = document.getElementById('upi-id').value.trim();
+        copyToClipboard(upiId);
+    };
+    
+    // Attach event listeners
+    if (downloadBtn) downloadBtn.addEventListener('click', downloadFunction);
+    if (shareBtn) shareBtn.addEventListener('click', shareFunction);
+    if (modalDownloadBtn) modalDownloadBtn.addEventListener('click', downloadFunction);
+    if (modalCopyBtn) modalCopyBtn.addEventListener('click', copyFunction);
+}
+
+function setupModalActions() {
+    // This will be called during initialization, but the actual functionality
+    // is set up in setupQRDownloadShare when QR is generated
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showMessage('Copied to clipboard!', 'success');
+        }).catch(() => {
+            fallbackCopyToClipboard(text);
+        });
+    } else {
+        fallbackCopyToClipboard(text);
+    }
+}
+
+function fallbackCopyToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    
+    try {
+        document.execCommand('copy');
+        showMessage('Copied to clipboard!', 'success');
+    } catch (err) {
+        showMessage('Failed to copy to clipboard', 'error');
+    }
+    
+    document.body.removeChild(textArea);
 }
 
 function showMessage(text, type = 'info') {

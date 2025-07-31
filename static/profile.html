@@ -193,13 +193,59 @@
           </button>
         </form>
       </div>
+      
+      <!-- Donation Section -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2><i class="fas fa-donate"></i> Donation</h2>
+          <p>Enable donors to support your projects with a quick QR code scan</p>
+        </div>
+        
+        <div class="donate-section">
+          <button type="button" id="donate-now-btn" class="submit-btn">
+            <i class="fas fa-qrcode"></i> Generate Donate Now QR
+          </button>
+          <div id="donation-qr-container" style="display: none; margin-top: 20px;">
+            <div class="qr-container">
+              <div id="donation-qr-code" style="text-align: center;"></div>
+              <div class="qr-actions" style="margin-top: 15px; text-align: center;">
+                <button type="button" id="download-donation-qr-btn" class="action-btn secondary">
+                  <i class="fas fa-download"></i> Download QR
+                </button>
+                <button type="button" id="share-donation-qr-btn" class="action-btn secondary">
+                  <i class="fas fa-share-alt"></i> Share QR
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div id="qr-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Donation QR Code</h3>
+      <div id="modal-qr-code" style="text-align: center; margin: 20px 0;"></div>
+      <p id="modal-qr-text" style="text-align: center;">Scan this QR code to donate via UPI</p>
+      <div class="modal-actions" style="text-align: center; margin-top: 20px;">
+        <button type="button" id="modal-download-btn" class="action-btn primary">
+          <i class="fas fa-download"></i> Download
+        </button>
+        <button type="button" id="modal-copy-btn" class="action-btn secondary">
+          <i class="fas fa-copy"></i> Copy UPI ID
+        </button>
+      </div>
     </div>
   </div>
 
   <!-- Success/Error Messages -->
   <div id="message-container" class="message-container"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script src="js/profile.js"></script>
 </body>
 </html>
