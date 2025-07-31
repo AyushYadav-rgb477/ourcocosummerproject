@@ -1,7 +1,7 @@
 /* Dashboard Specific Styles */
 body {
-  background: #f5f7fa;
-  color: #333;
+  background: #1a1a2e;
+  color: #e0e0e0;
 }
 
 .dashboard-container {
@@ -12,8 +12,8 @@ body {
 /* Sidebar */
 .sidebar {
   width: 250px;
-  background: white;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  background: #16213e;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
   padding: 2rem 0;
 }
 
@@ -26,15 +26,15 @@ body {
   display: flex;
   align-items: center;
   padding: 1rem 2rem;
-  color: #666;
+  color: #b0b0b0;
   text-decoration: none;
   transition: all 0.3s ease;
   border-left: 3px solid transparent;
 }
 
 .nav-item:hover {
-  background: #f8f9fa;
-  color: #6a11cb;
+  background: rgba(106, 17, 203, 0.2);
+  color: #ffffff;
 }
 
 .nav-item.active {
@@ -94,10 +94,10 @@ body {
 }
 
 .stat-card {
-  background: white;
+  background: #16213e;
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   transition: transform 0.3s ease;
@@ -126,12 +126,12 @@ body {
 .stat-info h3 {
   font-size: 1.8rem;
   margin: 0 0 0.25rem 0;
-  color: #1c1c1c;
+  color: #ffffff;
 }
 
 .stat-info p {
   margin: 0;
-  color: #666;
+  color: #b0b0b0;
   font-weight: 500;
 }
 
@@ -457,6 +457,145 @@ body {
 
 .message.error {
   border-left-color: #dc3545;
+}
+
+/* User Dropdown Styles */
+.user-dropdown {
+  position: relative;
+}
+
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #16213e;
+  color: #e0e0e0;
+  border: 1px solid #6a11cb;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.user-profile-btn:hover {
+  background: #6a11cb;
+  color: white;
+}
+
+.user-profile-btn i.fa-chevron-down {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+}
+
+.user-profile-btn.active i.fa-chevron-down {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #16213e;
+  border: 1px solid #6a11cb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  min-width: 200px;
+  z-index: 1000;
+  display: none;
+}
+
+.dropdown-menu.active {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: #e0e0e0;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+  background: #6a11cb;
+  color: white;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: #333;
+  margin: 0.5rem 0;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* More Dark Theme Updates */
+.project-form-container,
+.recent-activity,
+.user-project-card,
+.collaboration-item {
+  background: #16213e;
+  color: #e0e0e0;
+}
+
+.section-header h2 {
+  color: #ffffff;
+}
+
+.section-header p {
+  color: #b0b0b0;
+}
+
+.form-group label {
+  color: #e0e0e0;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  border: 1px solid #6a11cb;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #2575fc;
+  box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
+}
+
+.recent-activity h3 {
+  color: #ffffff;
+}
+
+.activity-item {
+  background: #1a1a2e;
+  border-left: 4px solid #6a11cb;
+}
+
+.activity-info h4 {
+  color: #ffffff;
+}
+
+.activity-info p {
+  color: #b0b0b0;
+}
+
+.activity-stats {
+  color: #b0b0b0;
 }
 
 /* Responsive Design */

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile | CollabFund</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="profile.css" />
+  <!-- QR Code Library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="nav-left">
+      <div class="logo"><a href="/"><i class="fas fa-rocket"></i> CollabFund</a></div>
+      <nav class="nav-links">
+        <a href="/"><i class="fas fa-home"></i> Home</a>
+        <a href="browse.html"><i class="fas fa-search"></i> Browse Projects</a>
+        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+      </nav>
+    </div>
+    <div class="nav-right" id="nav-auth">
+      <div class="user-dropdown">
+        <button class="user-profile-btn" id="user-profile-btn">
+          <i class="fas fa-user-circle"></i>
+          <span id="user-greeting">Welcome!</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="dropdown-menu" id="dropdown-menu">
+          <a href="profile.html" class="dropdown-item">
+            <i class="fas fa-user"></i> View Profile
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="profile-container">
+    
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-avatar">
+        <i class="fas fa-user-circle"></i>
+      </div>
+      <div class="profile-info">
+        <h1 id="profile-name">Loading...</h1>
+        <p id="profile-email">Loading...</p>
+        <div class="profile-stats">
+          <div class="stat">
+            <span class="stat-number" id="user-projects-count">0</span>
+            <span class="stat-label">Projects</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number" id="user-funding-total">$0</span>
+            <span class="stat-label">Total Funding</span>
+          </div>
+          <div class="stat">
+            <span class="stat-number" id="user-votes-total">0</span>
+            <span class="stat-label">Upvotes</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="profile-content">
+      
+      <!-- Bank Details Section -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2><i class="fas fa-university"></i> Bank Details</h2>
+          <p>Add your bank details to receive donations and funding</p>
+        </div>
+        
+        <form id="bank-details-form" class="bank-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="account-holder-name">
+                <i class="fas fa-user"></i> Account Holder Name
+              </label>
+              <input type="text" id="account-holder-name" placeholder="Enter full name as per bank records" required>
+            </div>
+            <div class="form-group">
+              <label for="bank-name">
+                <i class="fas fa-university"></i> Bank Name
+              </label>
+              <input type="text" id="bank-name" placeholder="Enter bank name" required>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="account-number">
+                <i class="fas fa-credit-card"></i> Account Number
+              </label>
+              <input type="text" id="account-number" placeholder="Enter account number" required pattern="[0-9]{9,18}">
+            </div>
+            <div class="form-group">
+              <label for="ifsc-code">
+                <i class="fas fa-code"></i> IFSC Code
+              </label>
+              <input type="text" id="ifsc-code" placeholder="Enter IFSC code" required pattern="^[A-Z]{4}0[A-Z0-9]{6}$">
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="upi-id">
+                <i class="fab fa-google-pay"></i> UPI ID
+              </label>
+              <input type="text" id="upi-id" placeholder="username@bank or phone@upi" required>
+            </div>
+            <div class="form-group">
+              <label for="phone-number">
+                <i class="fas fa-phone"></i> Phone Number
+              </label>
+              <input type="tel" id="phone-number" placeholder="Enter phone number" required pattern="[0-9]{10}">
+            </div>
+          </div>
+          
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-save"></i> Save Bank Details
+          </button>
+        </form>
+      </div>
+
+      <!-- QR Code Section -->
+      <div class="section-card" id="qr-section" style="display: none;">
+        <div class="section-header">
+          <h2><i class="fas fa-qrcode"></i> Donation QR Code</h2>
+          <p>Share this QR code to receive donations via UPI</p>
+        </div>
+        
+        <div class="qr-container">
+          <div class="qr-code" id="qr-code">
+            <!-- QR code will be generated here -->
+          </div>
+          <div class="qr-info">
+            <h3>Scan to Donate</h3>
+            <p id="qr-upi-info">UPI ID: Loading...</p>
+            <p id="qr-name-info">Name: Loading...</p>
+            <div class="qr-actions">
+              <button class="download-btn" id="download-qr">
+                <i class="fas fa-download"></i> Download QR
+              </button>
+              <button class="share-btn" id="share-qr">
+                <i class="fas fa-share"></i> Share QR
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Information Section -->
+      <div class="section-card">
+        <div class="section-header">
+          <h2><i class="fas fa-user-edit"></i> Personal Information</h2>
+          <p>Update your profile information</p>
+        </div>
+        
+        <form id="profile-form" class="profile-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="full-name">
+                <i class="fas fa-user"></i> Full Name
+              </label>
+              <input type="text" id="full-name" placeholder="Enter your full name" required>
+            </div>
+            <div class="form-group">
+              <label for="college">
+                <i class="fas fa-graduation-cap"></i> College/University
+              </label>
+              <input type="text" id="college" placeholder="Enter your college name" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="email">
+              <i class="fas fa-envelope"></i> Email Address
+            </label>
+            <input type="email" id="email" placeholder="Enter your email" required readonly>
+          </div>
+          
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-save"></i> Update Profile
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Success/Error Messages -->
+  <div id="message-container" class="message-container"></div>
+
+  <script src="js/profile.js"></script>
+</body>
+</html>

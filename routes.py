@@ -25,6 +25,10 @@ def dashboard_page():
 def browse_page():
     return send_from_directory('static', 'browse.html')
 
+@app.route('/profile.html')
+def profile_page():
+    return send_from_directory('static', 'profile.html')
+
 # Serve CSS and JS files
 @app.route('/styles.css')
 def styles():
@@ -45,6 +49,10 @@ def dashboard_css():
 @app.route('/browse.css')
 def browse_css():
     return send_from_directory('static', 'browse.css')
+
+@app.route('/profile.css')
+def profile_css():
+    return send_from_directory('static', 'profile.css')
 
 @app.route('/js/<path:filename>')
 def js_files(filename):
@@ -399,4 +407,88 @@ def get_dashboard_stats():
         }), 200
         
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# User profile management endpoint
+@app.route('/api/user/profile', methods=['PUT'])
+def update_user_profile():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        data = request.get_json()
+        user_id = session['user_id']
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Update user profile
+        if 'fullName' in data:
+            user.full_name = data['fullName']
+        if 'college' in data:
+            user.college = data['college']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Profile updated successfully',
+            'user': user.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': 'Database error'}), 500
+
+# Collaborations management endpoint
+@app.route('/api/collaborations', methods=['GET'])
+def get_user_collaborations():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    try:
+        user_id = session['user_id']
+        
+        # Get collaborations where the user owns the project (collaboration requests to them)
+        collaborations = db.session.query(Collaboration).join(Project).filter(
+            Project.user_id == user_id
+        ).order_by(desc(Collaboration.created_at)).all()
+        
+        return jsonify({
+            'collaborations': [collab.to_dict() for collab in collaborations]
+        })
+        
+    except Exception as e:   
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/collaborations/<int:collab_id>/<action>', methods=['POST'])
+def handle_collaboration_action(collab_id, action):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if action not in ['accept', 'reject']:
+        return jsonify({'error': 'Invalid action'}), 400
+    
+    try:
+        user_id = session['user_id']
+        
+        # Get collaboration and verify user owns the project
+        collaboration = db.session.query(Collaboration).join(Project).filter(
+            Collaboration.id == collab_id,
+            Project.user_id == user_id
+        ).first()
+        
+        if not collaboration:
+            return jsonify({'error': 'Collaboration not found'}), 404
+        
+        collaboration.status = 'accepted' if action == 'accept' else 'rejected'
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Collaboration {action}ed successfully',
+            'collaboration': collaboration.to_dict()
+        })
+        
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500

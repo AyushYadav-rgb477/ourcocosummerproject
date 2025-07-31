@@ -21,8 +21,22 @@
       </nav>
     </div>
     <div class="nav-right" id="nav-auth">
-      <span class="user-greeting" id="user-greeting">Welcome!</span>
-      <button class="logout-btn" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</button>
+      <div class="user-dropdown">
+        <button class="user-profile-btn" id="user-profile-btn">
+          <i class="fas fa-user-circle"></i>
+          <span id="user-greeting">Welcome!</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="dropdown-menu" id="dropdown-menu">
+          <a href="profile.html" class="dropdown-item">
+            <i class="fas fa-user"></i> View Profile
+          </a>
+          <div class="dropdown-divider"></div>
+          <a href="#" class="dropdown-item" id="logout-btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+          </a>
+        </div>
+      </div>
     </div>
   </header>
 

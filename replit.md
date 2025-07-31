@@ -108,3 +108,33 @@ Preferred communication style: Simple, everyday language.
 - **Session Storage**: Server-side sessions (may need external session store for scaling)
 - **Static Assets**: Served directly by Flask (consider CDN for production)
 - **Database Connections**: Connection pooling configured for concurrent users
+
+## Recent Changes: Latest modifications with dates
+
+### July 31, 2025 - UI/UX Improvements and Profile Management
+- **Removed "Latest Projects" section** from homepage per user request
+- **Implemented dark theme for dashboard** - Changed background from light (#f5f7fa) to dark (#1a1a2e) for better contrast and visibility
+- **Added Font Awesome user profile dropdown** with:
+  - Profile button with fa-user-circle icon
+  - Dropdown menu with "View Profile" and "Logout" options
+  - Proper click handling and smooth animations
+- **Created comprehensive profile management system**:
+  - New profile.html page with dark theme consistency
+  - Bank details form with validation (Account holder, Bank name, Account number, IFSC, UPI ID, Phone)
+  - Real-time JavaScript form validation with error messages
+  - QR code generation for UPI donations using qrcode.js library
+  - Download and share QR code functionality
+  - Profile information editing (full name, college)
+- **Enhanced collaboration system**:
+  - Added proper error handling for collaboration requests
+  - Dynamic loading with placeholder states when no data exists
+  - Accept/reject functionality for collaboration requests
+- **Added new API endpoints**:
+  - PUT /api/user/profile - Update user profile information
+  - GET /api/collaborations - Get user collaboration requests
+  - POST /api/collaborations/<id>/<action> - Accept/reject collaborations
+- **UI/UX Improvements**:
+  - Dark theme consistency across dashboard and profile pages
+  - Improved form styling with proper focus states
+  - Better error message handling and display
+  - Responsive design for mobile devices

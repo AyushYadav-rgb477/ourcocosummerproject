@@ -15,6 +15,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup logout
     setupLogout();
+    
+    // Setup user dropdown
+    setupUserDropdown();
 });
 
 async function checkAuthAndLoadDashboard() {
@@ -277,7 +280,60 @@ async function loadCollaborations() {
     const container = document.getElementById('collaboration-requests');
     if (!container) return;
     
-    // For now, show empty state as collaboration management would require additional backend endpoints
+    try {
+        // Try to load collaboration data from server
+        const response = await fetch('/api/collaborations');
+        if (response.ok) {
+            const data = await response.json();
+            displayCollaborations(data.collaborations);
+        } else {
+            // Show empty state when no endpoint exists or no data
+            displayEmptyCollaborations();
+        }
+    } catch (error) {
+        console.error('Error loading collaborations:', error);
+        displayEmptyCollaborations();
+    }
+}
+
+function displayCollaborations(collaborations) {
+    const container = document.getElementById('collaboration-requests');
+    if (!container) return;
+    
+    if (collaborations.length === 0) {
+        displayEmptyCollaborations();
+        return;
+    }
+    
+    container.innerHTML = collaborations.map(collab => `
+        <div class="collaboration-item">
+            <div class="collaboration-header">
+                <div class="collaboration-user">
+                    <i class="fas fa-user"></i>
+                    <strong>${escapeHtml(collab.collaborator.username)}</strong>
+                </div>
+                <span class="collaboration-status ${collab.status}">${collab.status}</span>
+            </div>
+            ${collab.message ? `<p class="collaboration-message">"${escapeHtml(collab.message)}"</p>` : ''}
+            <p class="collaboration-project">Project: <strong>${escapeHtml(collab.project.title)}</strong></p>
+            ${collab.status === 'pending' ? `
+                <div class="collaboration-actions">
+                    <button class="action-btn accept" onclick="handleCollaborationAction(${collab.id}, 'accept')">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                    <button class="action-btn reject" onclick="handleCollaborationAction(${collab.id}, 'reject')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function displayEmptyCollaborations() {
+    const container = document.getElementById('collaboration-requests');
+    if (!container) return;
+    
     container.innerHTML = `
         <div class="empty-state">
             <i class="fas fa-handshake"></i>
@@ -285,6 +341,49 @@ async function loadCollaborations() {
             <p>Collaboration requests will appear here when other users want to work with you.</p>
         </div>
     `;
+}
+
+async function handleCollaborationAction(collabId, action) {
+    try {
+        const response = await fetch(`/api/collaborations/${collabId}/${action}`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showMessage(`Collaboration ${action}ed successfully!`, 'success');
+            loadCollaborations(); // Refresh the list
+        } else {
+            const data = await response.json();
+            showMessage(data.error || `Error ${action}ing collaboration`, 'error');
+        }
+    } catch (error) {
+        console.error(`Error ${action}ing collaboration:`, error);
+        showMessage(`Error ${action}ing collaboration`, 'error');
+    }
+}
+
+function setupUserDropdown() {
+    const profileBtn = document.getElementById('user-profile-btn');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    
+    if (profileBtn && dropdownMenu) {
+        profileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+            profileBtn.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function() {
+            dropdownMenu.classList.remove('active');
+            profileBtn.classList.remove('active');
+        });
+        
+        // Prevent dropdown from closing when clicking inside
+        dropdownMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
 }
 
 function setupLogout() {
