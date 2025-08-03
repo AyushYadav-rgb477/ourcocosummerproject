@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation, DiscussionPost, PostComment, PostLike, PostSave, PostReaction
+from models import User, Project, Comment, Vote, Collaboration, Donation, DiscussionPost, PostComment, PostLike, PostSave, PostReaction, FollowRequest
 from sqlalchemy import desc, func
 
 # Serve static HTML files
@@ -35,6 +35,14 @@ def profile_page():
 def discussion_page():
     return send_from_directory('static', 'discussion.html')
 
+@app.route('/users.html')
+def users_page():
+    return send_from_directory('static', 'users.html')
+
+@app.route('/user-profile.html')
+def user_profile_page():
+    return send_from_directory('static', 'user-profile.html')
+
 # Serve CSS and JS files
 @app.route('/styles.css')
 def styles():
@@ -63,6 +71,14 @@ def profile_css():
 @app.route('/discussion.css')
 def discussion_css():
     return send_from_directory('static', 'discussion.css')
+
+@app.route('/users.css')
+def users_css():
+    return send_from_directory('static', 'users.css')
+
+@app.route('/user-profile.css')
+def user_profile_css():
+    return send_from_directory('static', 'user-profile.css')
 
 @app.route('/js/<path:filename>')
 def js_files(filename):
@@ -772,20 +788,262 @@ def get_user_stats():
             'connections_count': 0
         }), 500
 
-# User stats endpoint
-@app.route('/api/user/stats', methods=['GET'])
-def user_stats():
+# User discovery and profile APIs
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        search_query = request.args.get('search', '')
+        
+        query = User.query
+        
+        # Filter by search query if provided
+        if search_query:
+            query = query.filter(
+                db.or_(
+                    User.username.contains(search_query),
+                    User.full_name.contains(search_query),
+                    User.college.contains(search_query)
+                )
+            )
+        
+        users = query.order_by(User.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        return jsonify({
+            'users': [user.to_dict() for user in users.items],
+            'has_next': users.has_next,
+            'has_prev': users.has_prev,
+            'total': users.total
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"Error fetching users: {str(e)}")
+        return jsonify({'error': 'Failed to fetch users'}), 500
+
+@app.route('/api/users/<int:user_id>', methods=['GET'])
+def get_user_profile(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Get user's projects
+        user_projects = Project.query.filter_by(user_id=user_id).order_by(Project.created_at.desc()).all()
+        
+        # Get user's stats
+        posts_count = DiscussionPost.query.filter_by(user_id=user_id).count()
+        projects_count = len(user_projects)
+        total_funding_received = sum(project.current_funding for project in user_projects)
+        
+        # Check if current user is following this user
+        following_status = 'none'  # none, pending, following
+        current_user_id = session.get('user_id')
+        
+        if current_user_id and current_user_id != user_id:
+            follow_request = FollowRequest.query.filter_by(
+                follower_id=current_user_id,
+                followed_id=user_id
+            ).first()
+            
+            if follow_request:
+                if follow_request.status == 'accepted':
+                    following_status = 'following'
+                elif follow_request.status == 'pending':
+                    following_status = 'pending'
+        
+        return jsonify({
+            'user': user.to_dict(),
+            'projects': [project.to_dict() for project in user_projects],
+            'stats': {
+                'posts_count': posts_count,
+                'projects_count': projects_count,
+                'total_funding_received': total_funding_received,
+                'followers_count': FollowRequest.query.filter_by(followed_id=user_id, status='accepted').count(),
+                'following_count': FollowRequest.query.filter_by(follower_id=user_id, status='accepted').count()
+            },
+            'following_status': following_status,
+            'can_interact': current_user_id is not None and current_user_id != user_id
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"Error fetching user profile: {str(e)}")
+        return jsonify({'error': 'Failed to fetch user profile'}), 500
+
+# Follow request management APIs
+@app.route('/api/follow-requests', methods=['POST'])
+def send_follow_request():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json()
+        followed_id = data.get('user_id')
+        
+        if not followed_id:
+            return jsonify({'error': 'User ID is required'}), 400
+        
+        follower_id = session['user_id']
+        
+        # Can't follow yourself
+        if follower_id == followed_id:
+            return jsonify({'error': 'Cannot follow yourself'}), 400
+        
+        # Check if user exists
+        followed_user = User.query.get(followed_id)
+        if not followed_user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Check if follow request already exists
+        existing_request = FollowRequest.query.filter_by(
+            follower_id=follower_id,
+            followed_id=followed_id
+        ).first()
+        
+        if existing_request:
+            if existing_request.status == 'pending':
+                return jsonify({'error': 'Follow request already sent'}), 400
+            elif existing_request.status == 'accepted':
+                return jsonify({'error': 'Already following this user'}), 400
+            else:  # rejected - allow resending
+                existing_request.status = 'pending'
+                existing_request.created_at = datetime.utcnow()
+        else:
+            # Create new follow request
+            follow_request = FollowRequest(
+                follower_id=follower_id,
+                followed_id=followed_id
+            )
+            db.session.add(follow_request)
+        
+        db.session.commit()
+        
+        return jsonify({'message': 'Follow request sent successfully'}), 201
+        
+    except Exception as e:
+        logging.error(f"Error sending follow request: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to send follow request'}), 500
+
+@app.route('/api/follow-requests', methods=['GET'])
+def get_follow_requests():
     if 'user_id' not in session:
         return jsonify({'error': 'Authentication required'}), 401
     
     try:
         user_id = session['user_id']
-        posts_count = DiscussionPost.query.filter_by(user_id=user_id).count()
-        connections_count = 0  # Placeholder for connections functionality
+        
+        # Get follow requests received by this user
+        received_requests = FollowRequest.query.filter_by(
+            followed_id=user_id,
+            status='pending'
+        ).order_by(FollowRequest.created_at.desc()).all()
+        
+        # Get follow requests sent by this user
+        sent_requests = FollowRequest.query.filter_by(
+            follower_id=user_id
+        ).order_by(FollowRequest.created_at.desc()).all()
         
         return jsonify({
-            'posts_count': posts_count,
-            'connections_count': connections_count
-        })
+            'received_requests': [req.to_dict() for req in received_requests],
+            'sent_requests': [req.to_dict() for req in sent_requests]
+        }), 200
+        
     except Exception as e:
-        return jsonify({'error': 'Failed to load stats'}), 500
+        logging.error(f"Error fetching follow requests: {str(e)}")
+        return jsonify({'error': 'Failed to fetch follow requests'}), 500
+
+@app.route('/api/follow-requests/<int:request_id>/<action>', methods=['POST'])
+def handle_follow_request(request_id, action):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    if action not in ['accept', 'reject']:
+        return jsonify({'error': 'Invalid action'}), 400
+    
+    try:
+        user_id = session['user_id']
+        
+        # Get follow request and verify user is the one being followed
+        follow_request = FollowRequest.query.filter_by(
+            id=request_id,
+            followed_id=user_id,
+            status='pending'
+        ).first()
+        
+        if not follow_request:
+            return jsonify({'error': 'Follow request not found'}), 404
+        
+        follow_request.status = 'accepted' if action == 'accept' else 'rejected'
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Follow request {action}ed successfully',
+            'request': follow_request.to_dict()
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"Error handling follow request: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': f'Failed to {action} follow request'}), 500
+
+# Collaboration request from user profile
+@app.route('/api/collaboration-requests', methods=['POST'])
+def send_collaboration_request():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json()
+        project_id = data.get('project_id')
+        message = data.get('message', '')
+        
+        if not project_id:
+            return jsonify({'error': 'Project ID is required'}), 400
+        
+        user_id = session['user_id']
+        
+        # Check if project exists
+        project = Project.query.get(project_id)
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+        
+        # Can't collaborate on your own project
+        if project.user_id == user_id:
+            return jsonify({'error': 'Cannot collaborate on your own project'}), 400
+        
+        # Check if collaboration request already exists
+        existing_collab = Collaboration.query.filter_by(
+            user_id=user_id,
+            project_id=project_id
+        ).first()
+        
+        if existing_collab:
+            if existing_collab.status == 'pending':
+                return jsonify({'error': 'Collaboration request already sent'}), 400
+            elif existing_collab.status == 'accepted':
+                return jsonify({'error': 'Already collaborating on this project'}), 400
+            else:  # rejected - allow resending
+                existing_collab.status = 'pending'
+                existing_collab.message = message
+                existing_collab.created_at = datetime.utcnow()
+        else:
+            # Create new collaboration request
+            collaboration = Collaboration(
+                user_id=user_id,
+                project_id=project_id,
+                message=message
+            )
+            db.session.add(collaboration)
+        
+        db.session.commit()
+        
+        return jsonify({'message': 'Collaboration request sent successfully'}), 201
+        
+    except Exception as e:
+        logging.error(f"Error sending collaboration request: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to send collaboration request'}), 500
+

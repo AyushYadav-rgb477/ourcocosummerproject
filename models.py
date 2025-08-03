@@ -293,3 +293,30 @@ class PostReaction(db.Model):
             'created_at': self.created_at.isoformat(),
             'user': self.user.to_dict() if self.user else None
         }
+
+class FollowRequest(db.Model):
+    __tablename__ = 'follow_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Who sent the request
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Who received the request
+    
+    # Relationships
+    follower = db.relationship('User', foreign_keys=[follower_id], backref='sent_follow_requests')
+    followed = db.relationship('User', foreign_keys=[followed_id], backref='received_follow_requests')
+    
+    # Ensure one follow request per user pair
+    __table_args__ = (db.UniqueConstraint('follower_id', 'followed_id', name='unique_follow_request'),)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'status': self.status,
+            'created_at': self.created_at.isoformat(),
+            'follower': self.follower.to_dict() if self.follower else None,
+            'followed': self.followed.to_dict() if self.followed else None
+        }
