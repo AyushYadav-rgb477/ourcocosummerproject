@@ -431,8 +431,25 @@ html, body, * {
 }
 
 .reaction-btn:hover {
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.reaction-btn.like-btn:hover {
+    background: rgba(24, 119, 242, 0.2);
+    color: #1877f2;
+}
+
+.reaction-btn.comment-btn:hover {
+    background: rgba(255, 215, 0, 0.2);
+    color: #ffd700;
+}
+
+.reaction-btn.share-btn:hover {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
 }
 
 .reaction-btn i {
@@ -799,6 +816,30 @@ html, body, * {
     color: white;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.type-btn[data-type="discussion"]:hover {
+    background: rgba(24, 119, 242, 0.2);
+    color: #1877f2;
+    border-color: #1877f2;
+}
+
+.type-btn[data-type="help"]:hover {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+    border-color: #ff9800;
+}
+
+.type-btn[data-type="poll"]:hover {
+    background: rgba(156, 39, 176, 0.2);
+    color: #9c27b0;
+    border-color: #9c27b0;
+}
+
+.type-btn[data-type="event"]:hover {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+    border-color: #4caf50;
 }
 
 .type-btn.active {

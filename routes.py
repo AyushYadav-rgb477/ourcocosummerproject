@@ -3,7 +3,7 @@ import logging
 from datetime import datetime
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation, DiscussionPost, PostComment, PostLike, PostSave, PostReaction, FollowRequest
+from models import User, Project, Comment, Vote, Collaboration, Donation, DiscussionPost, PostComment, PostLike, PostSave, PostReaction, FollowRequest, Notification
 from sqlalchemy import desc, func
 
 # Serve static HTML files
@@ -357,6 +357,19 @@ def request_collaboration(project_id):
         collaboration.message = data.get('message', '')
         
         db.session.add(collaboration)
+        db.session.flush()  # To get the collaboration ID
+        
+        # Create notification for project owner
+        notification = Notification()
+        notification.sender_id = user_id
+        notification.recipient_id = project.user_id
+        notification.title = "New Collaboration Request"
+        notification.message = f"{User.query.get(user_id).username} wants to collaborate on your project '{project.title}'"
+        notification.type = "collaboration_request"
+        notification.related_entity_id = collaboration.id
+        notification.related_entity_type = "collaboration"
+        
+        db.session.add(notification)
         db.session.commit()
         
         return jsonify({
@@ -500,6 +513,18 @@ def handle_collaboration_action(collab_id, action):
             return jsonify({'error': 'Collaboration not found'}), 404
         
         collaboration.status = 'accepted' if action == 'accept' else 'rejected'
+        
+        # Create notification for the collaborator
+        notification = Notification()
+        notification.sender_id = user_id
+        notification.recipient_id = collaboration.user_id
+        notification.title = f"Collaboration Request {action.title()}ed"
+        notification.message = f"Your collaboration request for '{collaboration.project.title}' has been {action}ed"
+        notification.type = f"collaboration_{action}ed"
+        notification.related_entity_id = collaboration.id
+        notification.related_entity_type = "collaboration"
+        
+        db.session.add(notification)
         db.session.commit()
         
         return jsonify({
@@ -1021,6 +1046,18 @@ def send_collaboration_request():
                 existing_collab.status = 'pending'
                 existing_collab.message = message
                 existing_collab.created_at = datetime.utcnow()
+                
+                # Create notification for resent collaboration request
+                notification = Notification(
+                    sender_id=user_id,
+                    recipient_id=project.user_id,
+                    title="New Collaboration Request",
+                    message=f"{User.query.get(user_id).username} wants to collaborate on your project '{project.title}'",
+                    type="collaboration_request",
+                    related_entity_id=existing_collab.id,
+                    related_entity_type="collaboration"
+                )
+                db.session.add(notification)
         else:
             # Create new collaboration request
             collaboration = Collaboration(
@@ -1029,6 +1066,19 @@ def send_collaboration_request():
                 message=message
             )
             db.session.add(collaboration)
+            db.session.flush()  # To get the collaboration ID
+            
+            # Create notification for project owner
+            notification = Notification(
+                sender_id=user_id,
+                recipient_id=project.user_id,
+                title="New Collaboration Request",
+                message=f"{User.query.get(user_id).username} wants to collaborate on your project '{project.title}'",
+                type="collaboration_request",
+                related_entity_id=collaboration.id,
+                related_entity_type="collaboration"
+            )
+            db.session.add(notification)
         
         db.session.commit()
         
@@ -1038,4 +1088,82 @@ def send_collaboration_request():
         logging.error(f"Error sending collaboration request: {str(e)}")
         db.session.rollback()
         return jsonify({'error': 'Failed to send collaboration request'}), 500
+
+# Notification endpoints
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        user_id = session['user_id']
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        # Get notifications for the current user
+        notifications_query = Notification.query.filter_by(recipient_id=user_id).order_by(desc(Notification.created_at))
+        notifications = notifications_query.paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        # Count unread notifications
+        unread_count = Notification.query.filter_by(recipient_id=user_id, is_read=False).count()
+        
+        return jsonify({
+            'notifications': [notif.to_dict() for notif in notifications.items],
+            'unread_count': unread_count,
+            'total': notifications.total,
+            'page': page,
+            'per_page': per_page,
+            'has_next': notifications.has_next,
+            'has_prev': notifications.has_prev
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"Error fetching notifications: {str(e)}")
+        return jsonify({'error': 'Failed to fetch notifications'}), 500
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+def mark_notification_read(notification_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        user_id = session['user_id']
+        notification = Notification.query.filter_by(id=notification_id, recipient_id=user_id).first()
+        
+        if not notification:
+            return jsonify({'error': 'Notification not found'}), 404
+        
+        notification.is_read = True
+        db.session.commit()
+        
+        return jsonify({'message': 'Notification marked as read'}), 200
+        
+    except Exception as e:
+        logging.error(f"Error marking notification as read: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to mark notification as read'}), 500
+
+@app.route('/api/notifications/mark-all-read', methods=['POST'])
+def mark_all_notifications_read():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        user_id = session['user_id']
+        
+        # Mark all unread notifications as read
+        unread_notifications = Notification.query.filter_by(recipient_id=user_id, is_read=False).all()
+        for notification in unread_notifications:
+            notification.is_read = True
+        
+        db.session.commit()
+        
+        return jsonify({'message': f'Marked {len(unread_notifications)} notifications as read'}), 200
+        
+    except Exception as e:
+        logging.error(f"Error marking all notifications as read: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to mark all notifications as read'}), 500
 

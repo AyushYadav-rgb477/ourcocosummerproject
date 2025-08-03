@@ -23,6 +23,10 @@ class User(db.Model):
     post_comments = db.relationship('PostComment', backref='author', lazy=True, cascade='all, delete-orphan')
     post_reactions = db.relationship('PostReaction', backref='user', lazy=True, cascade='all, delete-orphan')
     
+    # Notification relationships
+    sent_notifications = db.relationship('Notification', foreign_keys='Notification.sender_id', backref='sender', lazy=True, cascade='all, delete-orphan')
+    received_notifications = db.relationship('Notification', foreign_keys='Notification.recipient_id', backref='recipient', lazy=True, cascade='all, delete-orphan')
+    
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
     
@@ -144,7 +148,37 @@ class Collaboration(db.Model):
             'message': self.message,
             'status': self.status,
             'created_at': self.created_at.isoformat(),
-            'collaborator': self.collaborator.to_dict() if self.collaborator else None
+            'collaborator': self.collaborator.to_dict() if self.collaborator else None,
+            'project': self.project.to_dict() if self.project else None
+        }
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # collaboration_request, collaboration_accepted, collaboration_rejected, etc.
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    related_entity_id = db.Column(db.Integer, nullable=True)  # ID of collaboration, project, etc.
+    related_entity_type = db.Column(db.String(50), nullable=True)  # 'collaboration', 'project', etc.
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'message': self.message,
+            'type': self.type,
+            'is_read': self.is_read,
+            'created_at': self.created_at.isoformat(),
+            'sender': self.sender.to_dict() if self.sender else None,
+            'related_entity_id': self.related_entity_id,
+            'related_entity_type': self.related_entity_type
         }
 
 class Donation(db.Model):

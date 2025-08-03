@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup user dropdown
     setupUserDropdown();
+    
+    // Setup notifications
+    setupNotifications();
 });
 
 async function checkAuthAndLoadDashboard() {
@@ -89,6 +92,9 @@ async function loadSectionData(section) {
             break;
         case 'collaborations':
             loadCollaborations();
+            break;
+        case 'notifications':
+            loadNotifications();
             break;
     }
 }
@@ -425,6 +431,178 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Notification Functions
+function setupNotifications() {
+    // Setup notification button click
+    const notificationBtn = document.getElementById('notification-btn');
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', function() {
+            switchSection('notifications');
+        });
+    }
+    
+    // Setup mark all read button
+    const markAllReadBtn = document.getElementById('mark-all-read-btn');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', markAllNotificationsRead);
+    }
+    
+    // Load initial notification count
+    updateNotificationCount();
+}
+
+async function loadNotifications() {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
+    
+    try {
+        const response = await fetch('/api/notifications');
+        if (response.ok) {
+            const data = await response.json();
+            displayNotifications(data.notifications);
+            updateNotificationCount(data.unread_count);
+        } else {
+            displayEmptyNotifications();
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        displayEmptyNotifications();
+    }
+}
+
+function displayNotifications(notifications) {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
+    
+    if (notifications.length === 0) {
+        displayEmptyNotifications();
+        return;
+    }
+    
+    container.innerHTML = notifications.map(notification => `
+        <div class="notification-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}">
+            <div class="notification-header">
+                <h4 class="notification-title">${escapeHtml(notification.title)}</h4>
+                <span class="notification-time">${formatTimeAgo(notification.created_at)}</span>
+            </div>
+            <p class="notification-message">${escapeHtml(notification.message)}</p>
+            <span class="notification-type ${notification.type}">${notification.type.replace('_', ' ')}</span>
+            ${!notification.is_read ? `
+                <button class="mark-read-btn" onclick="markNotificationRead(${notification.id})">
+                    <i class="fas fa-check"></i> Mark as read
+                </button>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function displayEmptyNotifications() {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-bell"></i>
+            <h3>No notifications</h3>
+            <p>You're all caught up! Notifications will appear here when you receive them.</p>
+        </div>
+    `;
+}
+
+async function markNotificationRead(notificationId) {
+    try {
+        const response = await fetch(`/api/notifications/${notificationId}/read`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            const notificationElement = document.querySelector(`[data-id="${notificationId}"]`);
+            if (notificationElement) {
+                notificationElement.classList.remove('unread');
+                const markReadBtn = notificationElement.querySelector('.mark-read-btn');
+                if (markReadBtn) {
+                    markReadBtn.remove();
+                }
+            }
+            updateNotificationCount();
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllNotificationsRead() {
+    try {
+        const response = await fetch('/api/notifications/mark-all-read', {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            loadNotifications();
+            updateNotificationCount(0);
+            showMessage('All notifications marked as read', 'success');
+        }
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+        showMessage('Failed to mark notifications as read', 'error');
+    }
+}
+
+async function updateNotificationCount(count) {
+    if (typeof count === 'undefined') {
+        try {
+            const response = await fetch('/api/notifications');
+            if (response.ok) {
+                const data = await response.json();
+                count = data.unread_count;
+            }
+        } catch (error) {
+            console.error('Error getting notification count:', error);
+            return;
+        }
+    }
+    
+    const countElement = document.getElementById('notification-count');
+    const badgeElement = document.getElementById('notification-badge');
+    
+    if (count > 0) {
+        if (countElement) {
+            countElement.textContent = count;
+            countElement.style.display = 'flex';
+        }
+        if (badgeElement) {
+            badgeElement.textContent = count;
+            badgeElement.style.display = 'inline-flex';
+        }
+    } else {
+        if (countElement) {
+            countElement.style.display = 'none';
+        }
+        if (badgeElement) {
+            badgeElement.style.display = 'none';
+        }
+    }
+}
+
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) {
+        return 'Just now';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    } else {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
 }
 
 function showMessage(message, type = 'info') {
