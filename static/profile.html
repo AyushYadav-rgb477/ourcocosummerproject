@@ -17,29 +17,11 @@
     <div class="nav-left">
       <div class="logo"><a href="/"><i class="fas fa-rocket"></i> CollabFund</a></div>
       <nav class="nav-links">
-        <a href="/"><i class="fas fa-home"></i> Home</a>
-        <a href="browse.html"><i class="fas fa-search"></i> Browse Projects</a>
-        <a href="discussion.html"><i class="fas fa-comments"></i> Discussion</a>
-        <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+        <!-- Navigation links will be populated by navigation.js -->
       </nav>
     </div>
     <div class="nav-right" id="nav-auth">
-      <div class="user-dropdown">
-        <button class="user-profile-btn" id="user-profile-btn">
-          <i class="fas fa-user-circle"></i>
-          <span id="user-greeting">Welcome!</span>
-          <i class="fas fa-chevron-down"></i>
-        </button>
-        <div class="dropdown-menu" id="dropdown-menu">
-          <a href="profile.html" class="dropdown-item">
-            <i class="fas fa-user"></i> View Profile
-          </a>
-          <div class="dropdown-divider"></div>
-          <a href="#" class="dropdown-item" id="logout-btn">
-            <i class="fas fa-sign-out-alt"></i> Logout
-          </a>
-        </div>
-      </div>
+      <!-- Auth buttons will be populated by navigation.js -->
     </div>
   </header>
 
@@ -247,6 +229,7 @@
   <div id="message-container" class="message-container"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="js/navigation.js"></script>
   <script src="js/profile.js"></script>
 </body>
 </html>
