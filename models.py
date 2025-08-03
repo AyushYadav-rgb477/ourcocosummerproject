@@ -164,3 +164,92 @@ class Donation(db.Model):
             'created_at': self.created_at.isoformat(),
             'donor': self.donor.to_dict() if self.donor else None
         }
+
+class DiscussionPost(db.Model):
+    __tablename__ = 'discussion_posts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.Text, nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    post_type = db.Column(db.String(20), nullable=False, default='discussion')  # discussion, help, poll, event
+    tags = db.Column(db.Text)  # JSON string of tags
+    anonymous = db.Column(db.Boolean, default=False)
+    allow_comments = db.Column(db.Boolean, default=True)
+    likes_count = db.Column(db.Integer, default=0)
+    comments_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Additional fields for specific post types
+    poll_options = db.Column(db.Text)  # JSON string for poll options
+    event_date = db.Column(db.DateTime)
+    event_location = db.Column(db.String(200))
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'content': self.content,
+            'post_type': self.post_type,
+            'tags': self.tags,
+            'anonymous': self.anonymous,
+            'allow_comments': self.allow_comments,
+            'likes_count': self.likes_count,
+            'comments_count': self.comments_count,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+            'poll_options': self.poll_options,
+            'event_date': self.event_date.isoformat() if self.event_date else None,
+            'event_location': self.event_location,
+            'author': self.author.to_dict() if self.author and not self.anonymous else None
+        }
+
+class PostComment(db.Model):
+    __tablename__ = 'post_comments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('post_comments.id'))  # For nested comments
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    post_id = db.Column(db.Integer, db.ForeignKey('discussion_posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'parent_id': self.parent_id,
+            'created_at': self.created_at.isoformat(),
+            'author': self.author.to_dict() if self.author else None
+        }
+
+class PostLike(db.Model):
+    __tablename__ = 'post_likes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    post_id = db.Column(db.Integer, db.ForeignKey('discussion_posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Ensure one like per user per post
+    __table_args__ = (db.UniqueConstraint('post_id', 'user_id', name='unique_post_like'),)
+
+class PostSave(db.Model):
+    __tablename__ = 'post_saves'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    post_id = db.Column(db.Integer, db.ForeignKey('discussion_posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Ensure one save per user per post
+    __table_args__ = (db.UniqueConstraint('post_id', 'user_id', name='unique_post_save'),)

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discussion - CollabFund</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="discussion.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <a href="/">
+                    <i class="fas fa-handshake"></i>
+                    <span>CollabFund</span>
+                </a>
+            </div>
+            
+            <nav class="nav">
+                <a href="/" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <a href="/browse.html" class="nav-link">
+                    <i class="fas fa-search"></i>
+                    <span>Browse</span>
+                </a>
+                <a href="/discussion.html" class="nav-link active">
+                    <i class="fas fa-comments"></i>
+                    <span>Discussion</span>
+                </a>
+                <a href="/dashboard.html" class="nav-link">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
+                </a>
+            </nav>
+            
+            <div class="header-actions">
+                <div class="user-profile">
+                    <button class="profile-btn" id="user-profile-btn">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="user-greeting">Profile</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-menu" id="dropdown-menu">
+                        <a href="/profile.html" class="dropdown-item">
+                            <i class="fas fa-user"></i>
+                            View Profile
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" class="dropdown-item" id="logout-btn">
+                            <i class="fas fa-sign-out-alt"></i>
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <div class="discussion-container">
+            <!-- Left Sidebar -->
+            <aside class="left-sidebar">
+                <div class="user-card">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-info">
+                        <h3 id="sidebar-user-name">Loading...</h3>
+                        <p id="sidebar-user-college">Student</p>
+                    </div>
+                    <div class="user-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="user-posts-count">0</span>
+                            <span class="stat-label">Posts</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number" id="user-connections-count">0</span>
+                            <span class="stat-label">Connections</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trending-topics">
+                    <h3>Trending Topics</h3>
+                    <div class="topic-list">
+                        <div class="topic-item">
+                            <span class="hashtag">#StartupIdeas</span>
+                            <span class="post-count">24 posts</span>
+                        </div>
+                        <div class="topic-item">
+                            <span class="hashtag">#TechHelp</span>
+                            <span class="post-count">18 posts</span>
+                        </div>
+                        <div class="topic-item">
+                            <span class="hashtag">#Funding</span>
+                            <span class="post-count">15 posts</span>
+                        </div>
+                        <div class="topic-item">
+                            <span class="hashtag">#Collaboration</span>
+                            <span class="post-count">12 posts</span>
+                        </div>
+                        <div class="topic-item">
+                            <span class="hashtag">#StudentLife</span>
+                            <span class="post-count">9 posts</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h3>Quick Actions</h3>
+                    <button class="action-btn" onclick="showCreatePost()">
+                        <i class="fas fa-plus"></i>
+                        Create Post
+                    </button>
+                    <button class="action-btn" onclick="showAskHelp()">
+                        <i class="fas fa-question-circle"></i>
+                        Ask for Help
+                    </button>
+                    <button class="action-btn" onclick="showPollModal()">
+                        <i class="fas fa-poll"></i>
+                        Create Poll
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Feed -->
+            <div class="main-feed">
+                <!-- Post Creation Box -->
+                <div class="create-post-box">
+                    <div class="create-post-header">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <input type="text" placeholder="Share your thoughts, ask for help, or start a discussion..." 
+                               class="post-input" onclick="showCreatePost()">
+                    </div>
+                    <div class="create-post-actions">
+                        <button class="post-action-btn" onclick="showCreatePost()">
+                            <i class="fas fa-edit"></i>
+                            Write Post
+                        </button>
+                        <button class="post-action-btn" onclick="showAskHelp()">
+                            <i class="fas fa-question-circle"></i>
+                            Ask Help
+                        </button>
+                        <button class="post-action-btn" onclick="showPollModal()">
+                            <i class="fas fa-poll"></i>
+                            Poll
+                        </button>
+                        <button class="post-action-btn" onclick="showEventModal()">
+                            <i class="fas fa-calendar"></i>
+                            Event
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="feed-filters">
+                    <button class="filter-tab active" data-filter="all">
+                        <i class="fas fa-stream"></i>
+                        All Posts
+                    </button>
+                    <button class="filter-tab" data-filter="help">
+                        <i class="fas fa-question-circle"></i>
+                        Help Requests
+                    </button>
+                    <button class="filter-tab" data-filter="discussion">
+                        <i class="fas fa-comments"></i>
+                        Discussions
+                    </button>
+                    <button class="filter-tab" data-filter="polls">
+                        <i class="fas fa-poll"></i>
+                        Polls
+                    </button>
+                    <button class="filter-tab" data-filter="events">
+                        <i class="fas fa-calendar"></i>
+                        Events
+                    </button>
+                </div>
+
+                <!-- Posts Feed -->
+                <div class="posts-feed" id="posts-feed">
+                    <!-- Posts will be loaded here dynamically -->
+                    <div class="loading-posts">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>Loading discussions...</p>
+                    </div>
+                </div>
+
+                <!-- Load More Button -->
+                <div class="load-more-container">
+                    <button class="load-more-btn" id="load-more-btn">
+                        <i class="fas fa-plus"></i>
+                        Load More Posts
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <aside class="right-sidebar">
+                <div class="suggestions-card">
+                    <h3>People You May Know</h3>
+                    <div class="suggestions-list" id="user-suggestions">
+                        <!-- User suggestions will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="active-users">
+                    <h3>Active Now</h3>
+                    <div class="active-users-list" id="active-users-list">
+                        <!-- Active users will be loaded here -->
+                    </div>
+                </div>
+
+                <div class="upcoming-events">
+                    <h3>Upcoming Events</h3>
+                    <div class="events-list" id="upcoming-events-list">
+                        <!-- Events will be loaded here -->
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- Create Post Modal -->
+    <div id="create-post-modal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 id="modal-title">Create Post</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="create-post-form">
+                    <input type="hidden" id="post-type" value="discussion">
+                    
+                    <div class="form-group">
+                        <label for="post-title">Title</label>
+                        <input type="text" id="post-title" placeholder="What's the main topic?" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="post-content">Content</label>
+                        <textarea id="post-content" rows="6" placeholder="Share your thoughts, ask questions, or start a discussion..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="post-tags">Tags (comma-separated)</label>
+                        <input type="text" id="post-tags" placeholder="e.g., startup, tech, help, collaboration">
+                    </div>
+                    
+                    <div class="form-group" id="poll-options" style="display: none;">
+                        <label>Poll Options</label>
+                        <div class="poll-options-container">
+                            <input type="text" class="poll-option" placeholder="Option 1">
+                            <input type="text" class="poll-option" placeholder="Option 2">
+                            <button type="button" class="add-option-btn">+ Add Option</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="event-details" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="event-date">Date</label>
+                                <input type="datetime-local" id="event-date">
+                            </div>
+                            <div class="form-col">
+                                <label for="event-location">Location</label>
+                                <input type="text" id="event-location" placeholder="Online/Address">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="post-settings">
+                        <div class="setting-item">
+                            <input type="checkbox" id="allow-comments" checked>
+                            <label for="allow-comments">Allow comments</label>
+                        </div>
+                        <div class="setting-item">
+                            <input type="checkbox" id="anonymous-post">
+                            <label for="anonymous-post">Post anonymously</label>
+                        </div>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-paper-plane"></i>
+                            Post
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div id="message-container" class="message-container"></div>
+
+    <script src="js/discussion.js"></script>
+</body>
+</html>

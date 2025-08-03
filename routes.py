@@ -1,7 +1,7 @@
 import os
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation
+from models import User, Project, Comment, Vote, Collaboration, Donation, DiscussionPost, PostComment, PostLike, PostSave
 from sqlalchemy import desc, func
 
 # Serve static HTML files
@@ -29,6 +29,10 @@ def browse_page():
 def profile_page():
     return send_from_directory('static', 'profile.html')
 
+@app.route('/discussion.html')
+def discussion_page():
+    return send_from_directory('static', 'discussion.html')
+
 # Serve CSS and JS files
 @app.route('/styles.css')
 def styles():
@@ -53,6 +57,10 @@ def browse_css():
 @app.route('/profile.css')
 def profile_css():
     return send_from_directory('static', 'profile.css')
+
+@app.route('/discussion.css')
+def discussion_css():
+    return send_from_directory('static', 'discussion.css')
 
 @app.route('/js/<path:filename>')
 def js_files(filename):
@@ -492,3 +500,62 @@ def handle_collaboration_action(collab_id, action):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+# Discussion API endpoints
+@app.route('/api/posts', methods=['GET'])
+def get_posts():
+    try:
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 10, type=int)
+        post_type = request.args.get('type', 'all')
+        
+        query = DiscussionPost.query
+        
+        if post_type != 'all':
+            query = query.filter(DiscussionPost.post_type == post_type)
+        
+        posts = query.order_by(DiscussionPost.created_at.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        
+        return jsonify({
+            'posts': [post.to_dict() for post in posts.items],
+            'has_next': posts.has_next,
+            'has_prev': posts.has_prev,
+            'total': posts.total
+        })
+        
+    except Exception as e:
+        logging.error(f"Error fetching posts: {str(e)}")
+        return jsonify({'error': 'Failed to fetch posts'}), 500
+
+@app.route('/api/posts', methods=['POST'])
+def create_post():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json()
+        
+        post = DiscussionPost(
+            user_id=session['user_id'],
+            title=data.get('title'),
+            content=data.get('content'),
+            post_type=data.get('type', 'discussion'),
+            tags=','.join(data.get('tags', [])) if data.get('tags') else None,
+            anonymous=data.get('anonymous', False),
+            allow_comments=data.get('allowComments', True),
+            poll_options=','.join(data.get('pollOptions', [])) if data.get('pollOptions') else None,
+            event_date=datetime.fromisoformat(data.get('eventDate').replace('Z', '+00:00')) if data.get('eventDate') else None,
+            event_location=data.get('eventLocation')
+        )
+        
+        db.session.add(post)
+        db.session.commit()
+        
+        return jsonify({'message': 'Post created successfully', 'post': post.to_dict()}), 201
+        
+    except Exception as e:
+        logging.error(f"Error creating post: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to create post'}), 500

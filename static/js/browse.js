@@ -44,6 +44,7 @@ async function checkAuthStatus() {
 function updateNavbarForLoggedInUser() {
     const navAuth = document.getElementById('nav-auth');
     const dashboardLink = document.getElementById('dashboard-link');
+    const discussionLink = document.getElementById('discussion-link');
     
     if (navAuth && currentUser) {
         navAuth.innerHTML = `
@@ -54,6 +55,10 @@ function updateNavbarForLoggedInUser() {
     
     if (dashboardLink) {
         dashboardLink.style.display = 'inline-flex';
+    }
+    
+    if (discussionLink) {
+        discussionLink.style.display = 'inline-flex';
     }
 }
 
