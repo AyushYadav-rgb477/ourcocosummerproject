@@ -19,6 +19,9 @@ class User(db.Model):
     votes = db.relationship('Vote', backref='user', lazy=True, cascade='all, delete-orphan')
     collaborations = db.relationship('Collaboration', backref='collaborator', lazy=True, cascade='all, delete-orphan')
     donations = db.relationship('Donation', backref='donor', lazy=True, cascade='all, delete-orphan')
+    discussion_posts = db.relationship('DiscussionPost', backref='author', lazy=True, cascade='all, delete-orphan')
+    post_comments = db.relationship('PostComment', backref='author', lazy=True, cascade='all, delete-orphan')
+    post_reactions = db.relationship('PostReaction', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -188,6 +191,20 @@ class DiscussionPost(db.Model):
     # Foreign Keys
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     
+    # Relationships
+    reactions = db.relationship('PostReaction', backref='post', lazy=True, cascade='all, delete-orphan')
+    comments = db.relationship('PostComment', backref='post', lazy=True, cascade='all, delete-orphan')
+    
+    def get_reaction_counts(self):
+        """Get counts for each reaction type"""
+        reaction_counts = {}
+        for reaction in self.reactions:
+            reaction_type = reaction.reaction_type
+            if reaction_type not in reaction_counts:
+                reaction_counts[reaction_type] = 0
+            reaction_counts[reaction_type] += 1
+        return reaction_counts
+    
     def to_dict(self):
         return {
             'id': self.id,
@@ -204,7 +221,8 @@ class DiscussionPost(db.Model):
             'poll_options': self.poll_options,
             'event_date': self.event_date.isoformat() if self.event_date else None,
             'event_location': self.event_location,
-            'author': self.author.to_dict() if self.author and not self.anonymous else None
+            'author': self.author.to_dict() if self.author and not self.anonymous else None,
+            'reaction_counts': self.get_reaction_counts()
         }
 
 class PostComment(db.Model):
@@ -253,3 +271,25 @@ class PostSave(db.Model):
     
     # Ensure one save per user per post
     __table_args__ = (db.UniqueConstraint('post_id', 'user_id', name='unique_post_save'),)
+
+class PostReaction(db.Model):
+    __tablename__ = 'post_reactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    reaction_type = db.Column(db.String(20), nullable=False)  # like, celebrate, support, insightful, curious
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    post_id = db.Column(db.Integer, db.ForeignKey('discussion_posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Ensure one reaction per user per post (but user can change reaction type)
+    __table_args__ = (db.UniqueConstraint('post_id', 'user_id', name='unique_post_reaction'),)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'reaction_type': self.reaction_type,
+            'created_at': self.created_at.isoformat(),
+            'user': self.user.to_dict() if self.user else None
+        }

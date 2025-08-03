@@ -7,69 +7,28 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="discussion.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-container">
-            <div class="logo">
-                <a href="/">
-                    <i class="fas fa-handshake"></i>
-                    <span>CollabFund</span>
-                </a>
-            </div>
-            
-            <nav class="nav">
-                <a href="/" class="nav-link">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </a>
-                <a href="/browse.html" class="nav-link">
-                    <i class="fas fa-search"></i>
-                    <span>Browse</span>
-                </a>
-                <a href="/discussion.html" class="nav-link active">
-                    <i class="fas fa-comments"></i>
-                    <span>Discussion</span>
-                </a>
-                <a href="/dashboard.html" class="nav-link">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
-                </a>
+    <!-- Navbar - consistent with homepage -->
+    <header class="navbar">
+        <div class="nav-left">
+            <div class="logo"><a href="/"><i class="fas fa-rocket"></i> CollabFund</a></div>
+            <nav class="nav-links">
+                <a href="/"><i class="bi bi-house-door-fill"></i> Home</a>
+                <a href="browse.html"><i class="bi bi-search-heart-fill"></i> Browse Projects</a>
+                <a href="discussion.html" class="active"><i class="fas fa-comments"></i> Discussion</a>
             </nav>
-            
-            <div class="header-actions">
-                <div class="user-profile" style="display: none;">
-                    <button class="profile-btn" id="user-profile-btn">
-                        <i class="fas fa-user-circle"></i>
-                        <span id="user-greeting">Profile</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </button>
-                    <div class="dropdown-menu" id="dropdown-menu">
-                        <a href="/profile.html" class="dropdown-item">
-                            <i class="fas fa-user"></i>
-                            View Profile
-                        </a>
-                        <div class="dropdown-divider"></div>
-                        <a href="#" class="dropdown-item" id="logout-btn">
-                            <i class="fas fa-sign-out-alt"></i>
-                            Logout
-                        </a>
-                    </div>
-                </div>
-                <a href="/login.html" class="login-btn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Login
-                </a>
-                <a href="/register.html" class="register-btn">
-                    <i class="fas fa-user-plus"></i>
-                    Register
-                </a>
-            </div>
+        </div>
+        <div class="nav-right" id="nav-auth">
+            <!-- Will be populated by JavaScript based on auth status -->
+            <a href="login.html" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+            <a href="register.html" class="register-btn"><i class="fas fa-user-plus"></i> Register</a>
         </div>
     </header>
 
-    <main class="main-content">
+    <!-- Main Content -->
+    <main class="discussion-main">
         <div class="discussion-container">
             <!-- Left Sidebar -->
             <aside class="left-sidebar">
@@ -78,16 +37,16 @@
                         <i class="fas fa-user-circle"></i>
                     </div>
                     <div class="user-info">
-                        <h3 id="sidebar-user-name">Loading...</h3>
-                        <p id="sidebar-user-college">Student</p>
+                        <h3 id="sidebar-user-name">Welcome to Discussion</h3>
+                        <p id="sidebar-user-college">Join the conversation</p>
                     </div>
                     <div class="user-stats">
                         <div class="stat">
-                            <span class="stat-number" id="user-posts-count">0</span>
+                            <span class="stat-number" id="user-posts-count">-</span>
                             <span class="stat-label">Posts</span>
                         </div>
                         <div class="stat">
-                            <span class="stat-number" id="user-connections-count">0</span>
+                            <span class="stat-number" id="user-connections-count">-</span>
                             <span class="stat-label">Connections</span>
                         </div>
                     </div>
@@ -118,196 +77,149 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="quick-actions">
-                    <h3>Quick Actions</h3>
-                    <button class="action-btn" onclick="showCreatePost()">
-                        <i class="fas fa-plus"></i>
-                        Create Post
-                    </button>
-                    <button class="action-btn" onclick="showAskHelp()">
-                        <i class="fas fa-question-circle"></i>
-                        Ask for Help
-                    </button>
-                    <button class="action-btn" onclick="showPollModal()">
-                        <i class="fas fa-poll"></i>
-                        Create Poll
-                    </button>
-                </div>
             </aside>
 
             <!-- Main Feed -->
-            <div class="main-feed">
-                <!-- Post Creation Box -->
-                <div class="create-post-box">
-                    <div class="create-post-header">
-                        <div class="user-avatar">
-                            <i class="fas fa-user-circle"></i>
-                        </div>
-                        <input type="text" placeholder="Share your thoughts, ask for help, or start a discussion..." 
-                               class="post-input" onclick="showCreatePost()">
+            <section class="main-feed">
+                <!-- Post Creation Area -->
+                <div class="post-creator" id="post-creator">
+                    <div class="post-input-container">
+                        <input type="text" 
+                               class="post-input" 
+                               id="post-input" 
+                               placeholder="Share your thoughts with the community..." 
+                               onclick="handlePostInputClick()">
                     </div>
-                    <div class="create-post-actions">
-                        <button class="post-action-btn" onclick="showCreatePost()">
-                            <i class="fas fa-edit"></i>
-                            Write Post
-                        </button>
-                        <button class="post-action-btn" onclick="showAskHelp()">
-                            <i class="fas fa-question-circle"></i>
-                            Ask Help
-                        </button>
-                        <button class="post-action-btn" onclick="showPollModal()">
-                            <i class="fas fa-poll"></i>
-                            Poll
-                        </button>
-                        <button class="post-action-btn" onclick="showEventModal()">
-                            <i class="fas fa-calendar"></i>
-                            Event
-                        </button>
+                </div>
+
+                <!-- Guest Notice -->
+                <div class="guest-notice" id="guest-notice" style="display: none;">
+                    <div class="notice-content">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Join the conversation! <a href="login.html">Login</a> or <a href="register.html">Register</a> to create posts and interact with the community.</p>
                     </div>
                 </div>
 
                 <!-- Filter Tabs -->
-                <div class="feed-filters">
-                    <button class="filter-tab active" data-filter="all">
-                        <i class="fas fa-stream"></i>
-                        All Posts
-                    </button>
-                    <button class="filter-tab" data-filter="help">
-                        <i class="fas fa-question-circle"></i>
-                        Help Requests
-                    </button>
-                    <button class="filter-tab" data-filter="discussion">
-                        <i class="fas fa-comments"></i>
-                        Discussions
-                    </button>
-                    <button class="filter-tab" data-filter="polls">
-                        <i class="fas fa-poll"></i>
-                        Polls
-                    </button>
-                    <button class="filter-tab" data-filter="events">
-                        <i class="fas fa-calendar"></i>
-                        Events
-                    </button>
+                <div class="filter-tabs">
+                    <button class="tab-btn active" data-filter="all">All Posts</button>
+                    <button class="tab-btn" data-filter="discussion">Discussions</button>
+                    <button class="tab-btn" data-filter="help">Help</button>
+                    <button class="tab-btn" data-filter="poll">Polls</button>
+                    <button class="tab-btn" data-filter="event">Events</button>
                 </div>
 
                 <!-- Posts Feed -->
                 <div class="posts-feed" id="posts-feed">
-                    <!-- Posts will be loaded here dynamically -->
-                    <div class="loading-posts">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <p>Loading discussions...</p>
+                    <div class="loading-skeleton" id="loading-skeleton">
+                        <div class="skeleton-post">
+                            <div class="skeleton-avatar"></div>
+                            <div class="skeleton-content">
+                                <div class="skeleton-line skeleton-title"></div>
+                                <div class="skeleton-line"></div>
+                                <div class="skeleton-line skeleton-short"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="empty-state" id="empty-state" style="display: none;">
+                        <i class="fas fa-comments"></i>
+                        <h3>No posts yet</h3>
+                        <p>Be the first to start a discussion!</p>
                     </div>
                 </div>
-
-                <!-- Load More Button -->
-                <div class="load-more-container">
-                    <button class="load-more-btn" id="load-more-btn">
-                        <i class="fas fa-plus"></i>
-                        Load More Posts
-                    </button>
-                </div>
-            </div>
+            </section>
 
             <!-- Right Sidebar -->
             <aside class="right-sidebar">
-                <div class="suggestions-card">
+                <div class="suggestions-widget">
                     <h3>People You May Know</h3>
-                    <div class="suggestions-list" id="user-suggestions">
-                        <!-- User suggestions will be loaded here -->
+                    <div class="suggestion-list">
+                        <div class="suggestion-item">
+                            <div class="suggestion-avatar">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="suggestion-info">
+                                <h4>Connect with peers</h4>
+                                <p>Join to see suggestions</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="active-users">
                     <h3>Active Now</h3>
-                    <div class="active-users-list" id="active-users-list">
-                        <!-- Active users will be loaded here -->
-                    </div>
-                </div>
-
-                <div class="upcoming-events">
-                    <h3>Upcoming Events</h3>
-                    <div class="events-list" id="upcoming-events-list">
-                        <!-- Events will be loaded here -->
+                    <div class="active-list">
+                        <div class="active-item">
+                            <div class="active-avatar">
+                                <i class="fas fa-circle active-indicator"></i>
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <span>Join to see active users</span>
+                        </div>
                     </div>
                 </div>
             </aside>
         </div>
     </main>
 
-    <!-- Create Post Modal -->
-    <div id="create-post-modal" class="modal">
-        <div class="modal-content large">
+    <!-- Post Creation Modal -->
+    <div class="modal" id="post-modal">
+        <div class="modal-content">
             <div class="modal-header">
-                <h3 id="modal-title">Create Post</h3>
-                <span class="close">&times;</span>
+                <h3>Create Post</h3>
+                <button class="close-btn" onclick="closePostModal()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="modal-body">
-                <form id="create-post-form">
-                    <input type="hidden" id="post-type" value="discussion">
+                <div class="post-type-selector">
+                    <button class="type-btn active" data-type="discussion">
+                        <i class="fas fa-comments"></i> Discussion
+                    </button>
+                    <button class="type-btn" data-type="help">
+                        <i class="fas fa-question-circle"></i> Help
+                    </button>
+                    <button class="type-btn" data-type="poll">
+                        <i class="fas fa-poll"></i> Poll
+                    </button>
+                    <button class="type-btn" data-type="event">
+                        <i class="fas fa-calendar"></i> Event
+                    </button>
+                </div>
+                
+                <form id="post-form">
+                    <input type="text" id="post-title" placeholder="Post title..." required>
+                    <textarea id="post-content" placeholder="Share your thoughts..." required></textarea>
                     
-                    <div class="form-group">
-                        <label for="post-title">Title</label>
-                        <input type="text" id="post-title" placeholder="What's the main topic?" required>
+                    <div class="additional-fields" id="additional-fields">
+                        <!-- Dynamic fields based on post type -->
                     </div>
                     
-                    <div class="form-group">
-                        <label for="post-content">Content</label>
-                        <textarea id="post-content" rows="6" placeholder="Share your thoughts, ask questions, or start a discussion..." required></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="post-tags">Tags (comma-separated)</label>
-                        <input type="text" id="post-tags" placeholder="e.g., startup, tech, help, collaboration">
-                    </div>
-                    
-                    <div class="form-group" id="poll-options" style="display: none;">
-                        <label>Poll Options</label>
-                        <div class="poll-options-container">
-                            <input type="text" class="poll-option" placeholder="Option 1">
-                            <input type="text" class="poll-option" placeholder="Option 2">
-                            <button type="button" class="add-option-btn">+ Add Option</button>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group" id="event-details" style="display: none;">
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label for="event-date">Date</label>
-                                <input type="datetime-local" id="event-date">
-                            </div>
-                            <div class="form-col">
-                                <label for="event-location">Location</label>
-                                <input type="text" id="event-location" placeholder="Online/Address">
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="post-settings">
-                        <div class="setting-item">
-                            <input type="checkbox" id="allow-comments" checked>
-                            <label for="allow-comments">Allow comments</label>
-                        </div>
-                        <div class="setting-item">
+                    <div class="post-options">
+                        <label class="checkbox-label">
                             <input type="checkbox" id="anonymous-post">
-                            <label for="anonymous-post">Post anonymously</label>
-                        </div>
+                            <span class="checkmark"></span>
+                            Post anonymously
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="allow-comments" checked>
+                            <span class="checkmark"></span>
+                            Allow comments
+                        </label>
                     </div>
                     
                     <div class="modal-actions">
-                        <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
-                        <button type="submit" class="btn-primary">
-                            <i class="fas fa-paper-plane"></i>
-                            Post
-                        </button>
+                        <button type="button" class="btn-secondary" onclick="closePostModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Post</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Success/Error Messages -->
-    <div id="message-container" class="message-container"></div>
+    <!-- Message Container -->
+    <div class="message-container" id="message-container"></div>
 
     <script src="js/discussion.js"></script>
 </body>

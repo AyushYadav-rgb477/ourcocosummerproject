@@ -1,7 +1,7 @@
 import os
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation, DiscussionPost, PostComment, PostLike, PostSave
+from models import User, Project, Comment, Vote, Collaboration, Donation, DiscussionPost, PostComment, PostLike, PostSave, PostReaction
 from sqlalchemy import desc, func
 
 # Serve static HTML files
@@ -559,3 +559,133 @@ def create_post():
         logging.error(f"Error creating post: {str(e)}")
         db.session.rollback()
         return jsonify({'error': 'Failed to create post'}), 500
+
+@app.route('/api/posts/<int:post_id>/reactions', methods=['POST'])
+def toggle_reaction(post_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json()
+        reaction_type = data.get('reaction_type')
+        
+        if reaction_type not in ['like', 'celebrate', 'support', 'insightful', 'curious']:
+            return jsonify({'error': 'Invalid reaction type'}), 400
+        
+        user_id = session['user_id']
+        
+        # Check if user already reacted to this post
+        existing_reaction = PostReaction.query.filter_by(
+            post_id=post_id, user_id=user_id
+        ).first()
+        
+        if existing_reaction:
+            if existing_reaction.reaction_type == reaction_type:
+                # Remove reaction if same type
+                db.session.delete(existing_reaction)
+                action = 'removed'
+            else:
+                # Update reaction type
+                existing_reaction.reaction_type = reaction_type
+                action = 'updated'
+        else:
+            # Add new reaction
+            new_reaction = PostReaction(
+                post_id=post_id,
+                user_id=user_id,
+                reaction_type=reaction_type
+            )
+            db.session.add(new_reaction)
+            action = 'added'
+        
+        db.session.commit()
+        
+        # Get updated post with reaction counts
+        post = DiscussionPost.query.get(post_id)
+        return jsonify({
+            'message': f'Reaction {action}',
+            'reaction_counts': post.get_reaction_counts()
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"Error toggling reaction: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to update reaction'}), 500
+
+@app.route('/api/posts/<int:post_id>/comments', methods=['GET'])
+def get_post_comments(post_id):
+    try:
+        comments = PostComment.query.filter_by(post_id=post_id)\
+                                  .order_by(PostComment.created_at.asc()).all()
+        return jsonify({
+            'comments': [comment.to_dict() for comment in comments]
+        }), 200
+    except Exception as e:
+        logging.error(f"Error fetching comments: {str(e)}")
+        return jsonify({'error': 'Failed to fetch comments'}), 500
+
+@app.route('/api/posts/<int:post_id>/comments', methods=['POST'])
+def add_post_comment(post_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        data = request.get_json()
+        if not data.get('content'):
+            return jsonify({'error': 'Content is required'}), 400
+        
+        comment = PostComment(
+            post_id=post_id,
+            user_id=session['user_id'],
+            content=data['content'],
+            parent_id=data.get('parent_id')
+        )
+        
+        db.session.add(comment)
+        
+        # Update comment count on post
+        post = DiscussionPost.query.get(post_id)
+        post.comments_count += 1
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Comment added successfully',
+            'comment': comment.to_dict()
+        }), 201
+        
+    except Exception as e:
+        logging.error(f"Error adding comment: {str(e)}")
+        db.session.rollback()
+        return jsonify({'error': 'Failed to add comment'}), 500
+
+# Auth status endpoint for discussion page
+@app.route('/api/auth/status', methods=['GET'])
+def auth_status():
+    if 'user_id' in session:
+        user = User.query.get(session['user_id'])
+        if user:
+            return jsonify({
+                'authenticated': True,
+                'user': user.to_dict()
+            })
+    
+    return jsonify({'authenticated': False})
+
+# User stats endpoint
+@app.route('/api/user/stats', methods=['GET'])
+def user_stats():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        user_id = session['user_id']
+        posts_count = DiscussionPost.query.filter_by(user_id=user_id).count()
+        connections_count = 0  # Placeholder for connections functionality
+        
+        return jsonify({
+            'posts_count': posts_count,
+            'connections_count': connections_count
+        })
+    except Exception as e:
+        return jsonify({'error': 'Failed to load stats'}), 500
