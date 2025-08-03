@@ -39,9 +39,7 @@ def discussion_page():
 def users_page():
     return send_from_directory('static', 'users.html')
 
-@app.route('/user-profile.html')
-def user_profile_page():
-    return send_from_directory('static', 'user-profile.html')
+
 
 # Serve CSS and JS files
 @app.route('/styles.css')

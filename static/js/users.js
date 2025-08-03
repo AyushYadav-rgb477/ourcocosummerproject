@@ -311,7 +311,8 @@ function loadNextPage() {
 }
 
 function viewProfile(userId) {
-    window.location.href = `user-profile.html?id=${userId}`;
+    // User profile page has been removed - redirect to profile page for now
+    window.location.href = `profile.html`;
 }
 
 async function followUser(userId) {

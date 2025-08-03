@@ -111,6 +111,28 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes: Latest modifications with dates
 
+### August 3, 2025 - User Profile Page Removal and UI Enhancements
+- **Removed user-profile.html page completely** as requested by user:
+  - Deleted static/user-profile.html, static/user-profile.css, and static/js/user-profile.js files
+  - Removed corresponding route /user-profile.html from routes.py
+  - Updated viewProfile function in users.js to redirect to profile.html instead
+  - Cleaned up all references to the removed user profile page
+- **Enhanced discussion page with improved interactions**:
+  - Added comprehensive tags functionality with interactive suggestions and selection
+  - Implemented enhanced hover effects for post type buttons (events, polls, help, discussion)
+  - Fixed time display formatting with proper date handling for posts
+  - Disabled all popup messages across the application as requested
+- **Updated users page with consistent dark theme**:
+  - Applied same dark background (#0d0d0d) as discussion page
+  - Updated navigation bar styling to match discussion page
+  - Enhanced user profile dropdown functionality
+  - Filtered out current user from users list when authenticated
+- **Improved overall user experience**:
+  - Color-coded hover effects for different post types
+  - Smooth animations and transitions for interactive elements
+  - Consistent scrollbar styling across dark theme pages
+  - Enhanced dropdown menu functionality with proper event handling
+
 ### August 3, 2025 - Complete LinkedIn-style Discussion Platform with Public Access and Reactions
 - **Created comprehensive discussion platform** similar to LinkedIn home feed:
   - New discussion.html page with full social media functionality
