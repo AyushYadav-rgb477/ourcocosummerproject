@@ -54,26 +54,10 @@
 
                 <div class="trending-topics">
                     <h3>Trending Topics</h3>
-                    <div class="topic-list">
-                        <div class="topic-item">
-                            <span class="hashtag">#StartupIdeas</span>
-                            <span class="post-count">24 posts</span>
-                        </div>
-                        <div class="topic-item">
-                            <span class="hashtag">#TechHelp</span>
-                            <span class="post-count">18 posts</span>
-                        </div>
-                        <div class="topic-item">
-                            <span class="hashtag">#Funding</span>
-                            <span class="post-count">15 posts</span>
-                        </div>
-                        <div class="topic-item">
-                            <span class="hashtag">#Collaboration</span>
-                            <span class="post-count">12 posts</span>
-                        </div>
-                        <div class="topic-item">
-                            <span class="hashtag">#StudentLife</span>
-                            <span class="post-count">9 posts</span>
+                    <div class="topic-list" id="trending-topics-list">
+                        <div class="topic-loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading trending topics...</span>
                         </div>
                     </div>
                 </div>
@@ -132,33 +116,7 @@
 
             <!-- Right Sidebar -->
             <aside class="right-sidebar">
-                <div class="suggestions-widget">
-                    <h3>People You May Know</h3>
-                    <div class="suggestion-list">
-                        <div class="suggestion-item">
-                            <div class="suggestion-avatar">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <div class="suggestion-info">
-                                <h4>Connect with peers</h4>
-                                <p>Join to see suggestions</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="active-users">
-                    <h3>Active Now</h3>
-                    <div class="active-list">
-                        <div class="active-item">
-                            <div class="active-avatar">
-                                <i class="fas fa-circle active-indicator"></i>
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <span>Join to see active users</span>
-                        </div>
-                    </div>
-                </div>
+                <!-- Additional widgets can be added here in the future -->
             </aside>
         </div>
     </main>

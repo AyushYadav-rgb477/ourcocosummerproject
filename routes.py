@@ -674,6 +674,49 @@ def auth_status():
     
     return jsonify({'authenticated': False})
 
+# Trending topics endpoint
+@app.route('/api/trending-topics', methods=['GET'])
+def get_trending_topics():
+    try:
+        # Get all posts with tags
+        posts_with_tags = DiscussionPost.query.filter(
+            DiscussionPost.tags.isnot(None),
+            DiscussionPost.tags != ''
+        ).order_by(DiscussionPost.created_at.desc()).all()
+        
+        # Count hashtags
+        hashtag_counts = {}
+        
+        for post in posts_with_tags:
+            if post.tags:
+                tags = [tag.strip() for tag in post.tags.split(',') if tag.strip()]
+                for tag in tags:
+                    # Ensure tag starts with #
+                    if not tag.startswith('#'):
+                        tag = '#' + tag
+                    
+                    if tag in hashtag_counts:
+                        hashtag_counts[tag] += 1
+                    else:
+                        hashtag_counts[tag] = 1
+        
+        # Sort by count and get top 5
+        trending_topics = sorted(hashtag_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        # Format for response
+        topics_data = []
+        for hashtag, count in trending_topics:
+            topics_data.append({
+                'hashtag': hashtag,
+                'count': count
+            })
+        
+        return jsonify({'topics': topics_data}), 200
+        
+    except Exception as e:
+        logging.error(f"Error fetching trending topics: {str(e)}")
+        return jsonify({'error': 'Failed to fetch trending topics', 'topics': []}), 500
+
 # User stats endpoint
 @app.route('/api/user/stats', methods=['GET'])
 def user_stats():

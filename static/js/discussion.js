@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
     initializeEventListeners();
     loadPosts();
+    loadTrendingTopics();
 });
 
 // Check authentication status
@@ -655,6 +656,44 @@ function formatTimeAgo(date) {
     if (diffInDays < 7) return `${diffInDays}d ago`;
     
     return date.toLocaleDateString();
+}
+
+// Load trending topics from API
+async function loadTrendingTopics() {
+    try {
+        const response = await fetch('/api/trending-topics');
+        if (response.ok) {
+            const data = await response.json();
+            displayTrendingTopics(data.topics);
+        } else {
+            displayTrendingTopics([]);
+        }
+    } catch (error) {
+        console.log('Failed to load trending topics');
+        displayTrendingTopics([]);
+    }
+}
+
+// Display trending topics in the sidebar
+function displayTrendingTopics(topics) {
+    const topicsList = document.getElementById('trending-topics-list');
+    
+    if (topics.length === 0) {
+        topicsList.innerHTML = `
+            <div class="no-topics">
+                <i class="fas fa-hashtag"></i>
+                <span>No trending topics yet. Be the first to add hashtags to your posts!</span>
+            </div>
+        `;
+        return;
+    }
+    
+    topicsList.innerHTML = topics.map(topic => `
+        <div class="topic-item">
+            <span class="hashtag">${topic.hashtag}</span>
+            <span class="post-count">${topic.count} post${topic.count !== 1 ? 's' : ''}</span>
+        </div>
+    `).join('');
 }
 
 // Show message to user
