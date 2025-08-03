@@ -35,9 +35,7 @@ def profile_page():
 def discussion_page():
     return send_from_directory('static', 'discussion.html')
 
-@app.route('/users.html')
-def users_page():
-    return send_from_directory('static', 'users.html')
+
 
 
 
@@ -70,13 +68,9 @@ def profile_css():
 def discussion_css():
     return send_from_directory('static', 'discussion.css')
 
-@app.route('/users.css')
-def users_css():
-    return send_from_directory('static', 'users.css')
 
-@app.route('/user-profile.css')
-def user_profile_css():
-    return send_from_directory('static', 'user-profile.css')
+
+
 
 @app.route('/js/<path:filename>')
 def js_files(filename):
