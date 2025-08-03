@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
     initializeEventListeners();
     loadPosts();
-    loadTrendingTopics();
 });
 
 // Check authentication status
@@ -140,8 +139,10 @@ function handlePostInputClick() {
 
 // Show login prompt for guests
 function showLoginPrompt() {
-    // Redirect immediately to login page
-    window.location.href = '/login.html';
+    showMessage('Please login to create posts and interact with the community', 'info');
+    setTimeout(() => {
+        window.location.href = '/login.html';
+    }, 2000);
 }
 
 // Setup profile dropdown functionality
@@ -669,46 +670,4 @@ function showMessage(text, type = 'info') {
     setTimeout(() => {
         messageDiv.remove();
     }, 1500);
-}
-
-// Load trending topics from API
-async function loadTrendingTopics() {
-    try {
-        const response = await fetch('/api/trending-topics');
-        if (response.ok) {
-            const data = await response.json();
-            displayTrendingTopics(data.trending_topics);
-        } else {
-            // If API fails, hide the trending topics section or show empty state
-            const topicList = document.querySelector('.topic-list');
-            if (topicList) {
-                topicList.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center; padding: 10px;">No trending topics yet</p>';
-            }
-        }
-    } catch (error) {
-        console.error('Failed to load trending topics:', error);
-        // Hide or show empty state for trending topics
-        const topicList = document.querySelector('.topic-list');
-        if (topicList) {
-            topicList.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center; padding: 10px;">Unable to load topics</p>';
-        }
-    }
-}
-
-// Display trending topics
-function displayTrendingTopics(topics) {
-    const topicList = document.querySelector('.topic-list');
-    if (!topicList) return;
-    
-    if (topics.length === 0) {
-        topicList.innerHTML = '<p style="color: rgba(255,255,255,0.6); text-align: center; padding: 10px;">No trending topics yet</p>';
-        return;
-    }
-    
-    topicList.innerHTML = topics.map(topic => `
-        <div class="topic-item">
-            <span class="hashtag">${topic.hashtag}</span>
-            <span class="post-count">${topic.post_count} post${topic.post_count !== 1 ? 's' : ''}</span>
-        </div>
-    `).join('');
 }
