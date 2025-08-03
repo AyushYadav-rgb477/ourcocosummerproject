@@ -6,6 +6,95 @@
     padding: 20px 0;
 }
 
+/* Guest UI Styles */
+.login-btn, .register-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+}
+
+.login-btn {
+    background: transparent;
+    color: #e2e8f0;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.login-btn:hover {
+    background: rgba(51, 65, 85, 0.5);
+    border-color: #667eea;
+}
+
+.register-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+}
+
+.register-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.post-input:disabled {
+    background: rgba(51, 65, 85, 0.3);
+    color: #94a3b8;
+    cursor: pointer;
+}
+
+.post-input:disabled:hover {
+    border-color: #667eea;
+}
+
+/* Message styles for shorter duration */
+.message {
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: 500;
+    animation: slideIn 0.3s ease-out;
+}
+
+.message.success {
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.message.error {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.message.info {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.message.warning {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
 .discussion-container {
     max-width: 1200px;
     margin: 0 auto;

@@ -27,13 +27,15 @@ async function checkAuthAndLoadDiscussion() {
             const data = await response.json();
             currentUser = data.user;
             updateUserInfo();
-            loadDiscussionData();
+            updateAuthenticatedUI();
         } else {
-            window.location.href = '/login.html';
+            updateGuestUI();
         }
+        loadDiscussionData();
     } catch (error) {
         console.error('Auth check error:', error);
-        window.location.href = '/login.html';
+        updateGuestUI();
+        loadDiscussionData();
     }
 }
 
@@ -49,6 +51,60 @@ function updateUserInfo() {
     // Update sidebar user info
     document.getElementById('sidebar-user-name').textContent = currentUser.full_name || currentUser.username;
     document.getElementById('sidebar-user-college').textContent = currentUser.college || 'Student';
+}
+
+function updateAuthenticatedUI() {
+    // Show authenticated elements
+    const userDropdown = document.querySelector('.user-profile');
+    if (userDropdown) {
+        userDropdown.style.display = 'block';
+    }
+    
+    // Enable post creation
+    const createPostInput = document.querySelector('.post-input');
+    if (createPostInput) {
+        createPostInput.disabled = false;
+        createPostInput.placeholder = "Share your thoughts, ask for help, or start a discussion...";
+    }
+}
+
+function updateGuestUI() {
+    // Update navigation for guests
+    const navAuth = document.querySelector('.header-actions');
+    if (navAuth) {
+        navAuth.innerHTML = `
+            <a href="/login.html" class="login-btn">
+                <i class="fas fa-sign-in-alt"></i>
+                Login
+            </a>
+            <a href="/register.html" class="register-btn">
+                <i class="fas fa-user-plus"></i>
+                Register
+            </a>
+        `;
+    }
+    
+    // Update sidebar for guests
+    document.getElementById('sidebar-user-name').textContent = 'Guest User';
+    document.getElementById('sidebar-user-college').textContent = 'Visitor';
+    
+    // Disable post creation for guests
+    const createPostInput = document.querySelector('.post-input');
+    if (createPostInput) {
+        createPostInput.disabled = true;
+        createPostInput.placeholder = "Please login to create posts and join discussions...";
+        createPostInput.style.cursor = 'pointer';
+        createPostInput.onclick = () => window.location.href = '/login.html';
+    }
+    
+    // Update post action buttons
+    const postActions = document.querySelectorAll('.post-action-btn');
+    postActions.forEach(btn => {
+        btn.onclick = () => {
+            showMessage('Please login to interact with posts', 'info');
+            setTimeout(() => window.location.href = '/login.html', 1500);
+        };
+    });
 }
 
 async function loadDiscussionData() {
@@ -748,12 +804,12 @@ function showMessage(text, type = 'info') {
     
     container.appendChild(message);
     
-    // Auto remove after 4 seconds
+    // Auto remove after 1.5 seconds
     setTimeout(() => {
         if (message.parentNode) {
             message.parentNode.removeChild(message);
         }
-    }, 4000);
+    }, 1500);
 }
 
 function createMessageContainer() {
