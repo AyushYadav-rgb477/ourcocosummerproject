@@ -61,19 +61,25 @@ function updateNavbarForLoggedInUser(user) {
     const navAuth = document.getElementById('nav-auth');
     if (navAuth) {
         navAuth.innerHTML = `
-            <div class="user-dropdown">
-                <button class="user-profile-btn" id="user-profile-btn">
+            <div class="user-profile">
+                <button class="profile-btn" id="user-profile-btn">
                     <i class="fas fa-user-circle"></i>
-                    <span>Welcome, ${user.username}!</span>
+                    <span id="user-greeting">${user.username}</span>
                     <i class="fas fa-chevron-down"></i>
                 </button>
                 <div class="dropdown-menu" id="dropdown-menu">
-                    <a href="profile.html" class="dropdown-item">
-                        <i class="fas fa-user"></i> View Profile
+                    <a href="/dashboard.html" class="dropdown-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Dashboard
+                    </a>
+                    <a href="/profile.html" class="dropdown-item">
+                        <i class="fas fa-user"></i>
+                        View Profile
                     </a>
                     <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item" onclick="handleLogout()">
-                        <i class="fas fa-sign-out-alt"></i> Logout
+                    <a href="#" class="dropdown-item" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
                     </a>
                 </div>
             </div>
@@ -82,34 +88,36 @@ function updateNavbarForLoggedInUser(user) {
         // Setup dropdown functionality
         setupUserDropdown();
     }
-    
-    // Hide auth-only elements for guests
-    const authOnlyElements = document.querySelectorAll('.auth-only');
-    authOnlyElements.forEach(element => {
-        element.style.display = 'block';
-    });
 }
 
 function setupUserDropdown() {
     const profileBtn = document.getElementById('user-profile-btn');
     const dropdownMenu = document.getElementById('dropdown-menu');
+    const logoutBtn = document.getElementById('logout-btn');
     
     if (profileBtn && dropdownMenu) {
         profileBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            dropdownMenu.classList.toggle('active');
-            profileBtn.classList.toggle('active');
+            dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
         });
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function() {
-            dropdownMenu.classList.remove('active');
-            profileBtn.classList.remove('active');
+            if (dropdownMenu) {
+                dropdownMenu.style.display = 'none';
+            }
         });
         
         // Prevent dropdown from closing when clicking inside
         dropdownMenu.addEventListener('click', function(e) {
             e.stopPropagation();
+        });
+    }
+    
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            handleLogout();
         });
     }
 }
@@ -142,7 +150,12 @@ async function loadUsers(page = 1, search = '') {
         const data = await response.json();
         
         if (response.ok) {
-            displayUsers(data.users);
+            // Filter out current user from the list if authenticated
+            let filteredUsers = data.users;
+            if (currentUser) {
+                filteredUsers = data.users.filter(user => user.id !== currentUser.id);
+            }
+            displayUsers(filteredUsers);
             totalUsers = data.total;
             hasNextPage = data.has_next;
             
@@ -386,20 +399,8 @@ function escapeHtml(text) {
 }
 
 function showMessage(message, type = 'info') {
-    const container = document.getElementById('message-container') || createMessageContainer();
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
-    
-    container.appendChild(messageDiv);
-    
-    // Remove message after 3 seconds
-    setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.parentNode.removeChild(messageDiv);
-        }
-    }, 3000);
+    // Disabled popup messages as requested by user
+    return;
 }
 
 function createMessageContainer() {

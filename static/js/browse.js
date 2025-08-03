@@ -603,20 +603,8 @@ function escapeHtml(text) {
 }
 
 function showMessage(message, type = 'info') {
-    const container = document.getElementById('message-container') || createMessageContainer();
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
-    
-    container.appendChild(messageDiv);
-    
-    // Remove message after 5 seconds
-    setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.parentNode.removeChild(messageDiv);
-        }
-    }, 5000);
+    // Disabled popup messages as requested by user
+    return;
 }
 
 function createMessageContainer() {

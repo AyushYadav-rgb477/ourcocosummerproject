@@ -1,18 +1,110 @@
-/* Users Discovery Page Dark Theme Styles */
+/* Users Discovery Page Dark Theme Styles - Consistent with Discussion Page */
 
-/* Base Dark Theme Override */
+/* Base Dark Theme Override - Match Discussion Page */
 body {
-    background-color: #1a1a2e !important;
+    background-color: #0d0d0d !important;
     color: #ffffff !important;
     font-family: 'Segoe UI', sans-serif !important;
     margin: 0 !important;
     padding: 0 !important;
 }
 
-/* Dark navbar override */
+/* Dark navbar override - Match Discussion Page */
 .navbar {
-    background-color: #1a1a2e !important;
+    background-color: #0d0d0d !important;
+    background: #0d0d0d !important;
     border-bottom: 1px solid #333 !important;
+}
+
+/* Ensure all scrollable areas maintain dark background */
+html, body, * {
+    scrollbar-color: #333 #0d0d0d;
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    background-color: #0d0d0d;
+}
+
+*::-webkit-scrollbar-track {
+    background-color: #0d0d0d;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: #333;
+    border-radius: 4px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: #555;
+}
+
+/* Active navigation state */
+.nav-links a.active {
+    color: #ffd700;
+    border-bottom: 2px solid #ffd700;
+}
+
+/* User Profile Dropdown - Match Discussion Page */
+.user-profile {
+    position: relative;
+}
+
+.profile-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 25px;
+    color: white;
+    padding: 8px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.profile-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #ffd700;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #0d0d0d;
+    backdrop-filter: blur(12px);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 0;
+    min-width: 160px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: none;
+    margin-top: 8px;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 4px 0;
 }
 
 /* Main Container */

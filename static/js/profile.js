@@ -538,19 +538,6 @@ function fallbackCopyToClipboard(text) {
 }
 
 function showMessage(text, type = 'info') {
-    const container = document.getElementById('message-container');
-    if (!container) return;
-    
-    const message = document.createElement('div');
-    message.className = `message ${type}`;
-    message.textContent = text;
-    
-    container.appendChild(message);
-    
-    // Auto remove after 4 seconds
-    setTimeout(() => {
-        if (message.parentNode) {
-            message.parentNode.removeChild(message);
-        }
-    }, 4000);
+    // Disabled popup messages as requested by user
+    return;
 }

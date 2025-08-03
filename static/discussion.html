@@ -155,6 +155,24 @@
                         <!-- Dynamic fields based on post type -->
                     </div>
                     
+                    <div class="tags-section">
+                        <label for="post-tags">Tags (related topics):</label>
+                        <div class="tags-input-container">
+                            <input type="text" id="post-tags" placeholder="e.g. technology, collaboration, startup..." autocomplete="off">
+                            <div class="suggested-tags">
+                                <span class="tag-suggestion" data-tag="technology"># technology</span>
+                                <span class="tag-suggestion" data-tag="collaboration"># collaboration</span>
+                                <span class="tag-suggestion" data-tag="startup"># startup</span>
+                                <span class="tag-suggestion" data-tag="innovation"># innovation</span>
+                                <span class="tag-suggestion" data-tag="funding"># funding</span>
+                                <span class="tag-suggestion" data-tag="project"># project</span>
+                            </div>
+                        </div>
+                        <div class="selected-tags" id="selected-tags">
+                            <!-- Selected tags will appear here -->
+                        </div>
+                    </div>
+                    
                     <div class="post-options">
                         <label class="checkbox-label">
                             <input type="checkbox" id="anonymous-post">

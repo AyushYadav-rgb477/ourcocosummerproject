@@ -797,12 +797,16 @@ html, body, * {
 .type-btn:hover {
     background: rgba(255, 255, 255, 0.15);
     color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
 }
 
 .type-btn.active {
     background: linear-gradient(135deg, #ffd700, #ffed4e);
     color: #6a11cb;
     border-color: #ffd700;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.3);
 }
 
 #post-form {
@@ -1012,4 +1016,136 @@ html, body, * {
         grid-template-columns: 240px 1fr 260px;
         gap: 20px;
     }
+}
+
+/* Tags Section Styles */
+.tags-section {
+    margin-bottom: 16px;
+}
+
+.tags-section label {
+    display: block;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.tags-input-container {
+    position: relative;
+}
+
+#post-tags {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: white;
+    font-size: 0.9rem;
+    font-family: inherit;
+}
+
+#post-tags::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+#post-tags:focus {
+    outline: none;
+    border-color: #ffd700;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.suggested-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    padding: 8px 0;
+}
+
+.tag-suggestion {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tag-suggestion:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+}
+
+.selected-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+    min-height: 20px;
+}
+
+.selected-tag {
+    background: linear-gradient(135deg, #ffd700, #ffed4e);
+    color: #6a11cb;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    animation: tagSlideIn 0.3s ease;
+}
+
+.selected-tag .remove-tag {
+    cursor: pointer;
+    font-weight: bold;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.selected-tag .remove-tag:hover {
+    opacity: 1;
+}
+
+@keyframes tagSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Enhanced Post Type Button Hover Effects */
+.type-btn[data-type="poll"]:hover {
+    background: linear-gradient(135deg, rgba(156, 39, 176, 0.3), rgba(233, 30, 99, 0.3));
+    border-color: #e91e63;
+    color: #e91e63;
+}
+
+.type-btn[data-type="event"]:hover {
+    background: linear-gradient(135deg, rgba(255, 152, 0, 0.3), rgba(255, 193, 7, 0.3));
+    border-color: #ff9800;
+    color: #ff9800;
+}
+
+.type-btn[data-type="help"]:hover {
+    background: linear-gradient(135deg, rgba(33, 150, 243, 0.3), rgba(3, 169, 244, 0.3));
+    border-color: #2196f3;
+    color: #2196f3;
+}
+
+.type-btn[data-type="discussion"]:hover {
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(139, 195, 74, 0.3));
+    border-color: #4caf50;
+    color: #4caf50;
 }

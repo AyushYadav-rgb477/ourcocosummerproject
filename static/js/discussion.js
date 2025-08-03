@@ -127,6 +127,9 @@ function initializeEventListeners() {
             closePostModal();
         }
     });
+    
+    // Tags functionality
+    initializeTagsHandling();
 }
 
 // Handle post input click
@@ -577,7 +580,8 @@ async function handlePostSubmission(event) {
         content: document.getElementById('post-content').value,
         type: document.querySelector('.type-btn.active').dataset.type,
         anonymous: document.getElementById('anonymous-post').checked,
-        allowComments: document.getElementById('allow-comments').checked
+        allowComments: document.getElementById('allow-comments').checked,
+        tags: selectedTags
     };
     
     // Add type-specific data
@@ -601,7 +605,10 @@ async function handlePostSubmission(event) {
         
         if (response.ok) {
             closePostModal();
-            showMessage('Post created successfully!', 'success');
+            // Clear form and tags
+            document.getElementById('post-form').reset();
+            selectedTags = [];
+            renderSelectedTags();
             loadPosts(); // Reload posts to show the new one
         } else {
             const error = await response.json();
@@ -612,21 +619,7 @@ async function handlePostSubmission(event) {
     }
 }
 
-// Utility function to format time ago
-function formatTimeAgo(date) {
-    const now = new Date();
-    const diffInMs = now - date;
-    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-    
-    if (diffInMinutes < 1) return 'Just now';
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    if (diffInDays < 7) return `${diffInDays}d ago`;
-    
-    return date.toLocaleDateString();
-}
+// This function was replaced with an enhanced version below
 
 // Load trending topics from API
 async function loadTrendingTopics() {
@@ -668,15 +661,105 @@ function displayTrendingTopics(topics) {
 
 // Show message to user
 function showMessage(text, type = 'info') {
-    const messageContainer = document.getElementById('message-container');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = text;
+    // Disabled popup messages as requested by user
+    return;
+}
+
+// Tags handling functionality
+let selectedTags = [];
+
+function initializeTagsHandling() {
+    const tagsInput = document.getElementById('post-tags');
+    const suggestedTags = document.querySelectorAll('.tag-suggestion');
     
-    messageContainer.appendChild(messageDiv);
+    // Handle tag suggestions click
+    suggestedTags.forEach(tag => {
+        tag.addEventListener('click', function() {
+            const tagValue = this.dataset.tag;
+            addTag(tagValue);
+        });
+    });
     
-    // Auto-remove after 1.5 seconds (reduced for better UX)
-    setTimeout(() => {
-        messageDiv.remove();
-    }, 1500);
+    // Handle Enter key in tags input
+    tagsInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const tagValue = this.value.trim().toLowerCase();
+            if (tagValue) {
+                addTag(tagValue);
+                this.value = '';
+            }
+        }
+    });
+    
+    // Handle comma separation
+    tagsInput.addEventListener('input', function(e) {
+        const value = this.value;
+        if (value.includes(',')) {
+            const tags = value.split(',').map(tag => tag.trim().toLowerCase()).filter(tag => tag);
+            tags.forEach(tag => addTag(tag));
+            this.value = '';
+        }
+    });
+}
+
+function addTag(tagValue) {
+    if (!tagValue || selectedTags.includes(tagValue)) return;
+    
+    selectedTags.push(tagValue);
+    renderSelectedTags();
+}
+
+function removeTag(tagValue) {
+    selectedTags = selectedTags.filter(tag => tag !== tagValue);
+    renderSelectedTags();
+}
+
+function renderSelectedTags() {
+    const selectedTagsContainer = document.getElementById('selected-tags');
+    selectedTagsContainer.innerHTML = selectedTags.map(tag => `
+        <span class="selected-tag">
+            #${tag}
+            <span class="remove-tag" onclick="removeTag('${tag}')">&times;</span>
+        </span>
+    `).join('');
+}
+
+// Enhanced time formatting with proper date handling
+function formatTimeAgo(dateInput) {
+    let date;
+    
+    // Handle different date input types
+    if (typeof dateInput === 'string') {
+        // Try to parse ISO string or other formats
+        date = new Date(dateInput);
+    } else if (dateInput instanceof Date) {
+        date = dateInput;
+    } else {
+        // Fallback to current time if invalid
+        date = new Date();
+    }
+    
+    // Validate the date
+    if (isNaN(date.getTime())) {
+        return 'Just now';
+    }
+    
+    const now = new Date();
+    const diffInMs = now - date;
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+    
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+    
+    // For older posts, show the actual date
+    return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
 }
