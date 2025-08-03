@@ -363,23 +363,35 @@ function createPostElement(post) {
     return postDiv;
 }
 
-// Create reaction buttons with LinkedIn-style picker
+// Create reaction buttons with LinkedIn-style picker and press-and-hold
 function createReactionButtons(postId, reactionCounts, totalReactions) {
     const reactionTypes = [
-        { type: 'like', icon: 'thumbs-up', color: '#1877f2' },
-        { type: 'celebrate', icon: 'star', color: '#ffd700' },
-        { type: 'support', icon: 'heart', color: '#e91e63' },
-        { type: 'insightful', icon: 'lightbulb', color: '#00bcd4' },
-        { type: 'curious', icon: 'question', color: '#ff9800' }
+        { type: 'like', icon: 'thumbs-up', emoji: '👍', color: '#1877f2' },
+        { type: 'celebrate', icon: 'star', emoji: '🎉', color: '#ffd700' },
+        { type: 'support', icon: 'heart', emoji: '❤️', color: '#e91e63' },
+        { type: 'insightful', icon: 'lightbulb', emoji: '💡', color: '#00bcd4' },
+        { type: 'curious', icon: 'question', emoji: '🤔', color: '#ff9800' }
     ];
     
     return `
-        <button class="reaction-btn" onmouseenter="showReactionPicker(${postId})" onmouseleave="hideReactionPicker(${postId})" onclick="handleQuickReaction(${postId})">
+        <button class="reaction-btn" 
+                onmouseenter="showReactionPicker(${postId})" 
+                onmouseleave="hideReactionPicker(${postId})" 
+                onclick="handleQuickReaction(${postId})"
+                onmousedown="startLongPress(${postId})"
+                onmouseup="endLongPress(${postId})"
+                onmouseleave="endLongPress(${postId})"
+                ontouchstart="startLongPress(${postId})"
+                ontouchend="endLongPress(${postId})">
             <i class="fas fa-thumbs-up"></i>
-            <span class="reaction-count">${totalReactions}</span>
+            <span class="reaction-count" onclick="event.stopPropagation(); showReactionModal(${postId})">${totalReactions}</span>
             <div class="reaction-picker" id="reaction-picker-${postId}">
                 ${reactionTypes.map(reaction => `
-                    <button class="reaction-option ${reaction.type}" onclick="handleReaction(${postId}, '${reaction.type}')" style="color: ${reaction.color}">
+                    <button class="reaction-option ${reaction.type}" 
+                            onclick="event.stopPropagation(); handleReaction(${postId}, '${reaction.type}')" 
+                            style="color: ${reaction.color}"
+                            title="${reaction.type}">
+                        <span class="reaction-emoji">${reaction.emoji}</span>
                         <i class="fas fa-${reaction.icon}"></i>
                     </button>
                 `).join('')}
@@ -656,6 +668,184 @@ function formatTimeAgo(date) {
     
     return date.toLocaleDateString();
 }
+
+// Long press functionality for reaction picker
+let longPressTimer = null;
+let isLongPressing = false;
+
+function startLongPress(postId) {
+    isLongPressing = true;
+    longPressTimer = setTimeout(() => {
+        if (isLongPressing) {
+            showReactionPicker(postId);
+            // Add haptic feedback on mobile devices
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+    }, 500); // 500ms long press
+}
+
+function endLongPress(postId) {
+    isLongPressing = false;
+    if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        longPressTimer = null;
+    }
+}
+
+// Enhanced reaction modal functionality
+function showReactionModal(postId) {
+    loadReactionDetails(postId);
+    document.getElementById('reaction-modal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeReactionModal() {
+    document.getElementById('reaction-modal').classList.remove('show');
+    document.body.style.overflow = 'auto';
+}
+
+// Load reaction details for modal
+async function loadReactionDetails(postId) {
+    try {
+        const response = await fetch(`/api/posts/${postId}/reactions/details`);
+        if (response.ok) {
+            const data = await response.json();
+            displayReactionDetails(data);
+        }
+    } catch (error) {
+        console.error('Failed to load reaction details:', error);
+        showMessage('Failed to load reaction details', 'error');
+    }
+}
+
+// Display reaction details in modal
+function displayReactionDetails(data) {
+    const modal = document.getElementById('reaction-modal');
+    if (!modal) {
+        // Create modal if it doesn't exist
+        createReactionModal();
+    }
+    
+    const tabs = document.getElementById('reaction-tabs');
+    const usersList = document.getElementById('reaction-users-list');
+    
+    // Create reaction tabs
+    tabs.innerHTML = '';
+    const reactionTypes = Object.keys(data.reactions);
+    
+    if (reactionTypes.length === 0) {
+        usersList.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.6); padding: 2rem;">No reactions yet</p>';
+        return;
+    }
+    
+    reactionTypes.forEach((type, index) => {
+        const count = data.reactions[type].length;
+        const tab = document.createElement('button');
+        tab.className = `reaction-tab ${index === 0 ? 'active' : ''}`;
+        tab.dataset.reactionType = type;
+        tab.innerHTML = `
+            ${getReactionEmoji(type)} ${type} (${count})
+        `;
+        tab.addEventListener('click', () => showReactionUsers(type, data.reactions[type]));
+        tabs.appendChild(tab);
+    });
+    
+    // Show first reaction type by default
+    if (reactionTypes.length > 0) {
+        showReactionUsers(reactionTypes[0], data.reactions[reactionTypes[0]]);
+    }
+}
+
+// Show users for specific reaction type
+function showReactionUsers(reactionType, users) {
+    const usersList = document.getElementById('reaction-users-list');
+    
+    // Update active tab
+    document.querySelectorAll('.reaction-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-reaction-type="${reactionType}"]`).classList.add('active');
+    
+    // Display users
+    usersList.innerHTML = users.map(user => `
+        <div class="reaction-user-item">
+            <div class="reaction-user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="reaction-user-info">
+                <p class="reaction-user-name">${user.full_name || user.username}</p>
+                <p class="reaction-user-college">${user.college || 'Student'}</p>
+            </div>
+            <span class="reaction-emoji">${getReactionEmoji(reactionType)}</span>
+        </div>
+    `).join('');
+}
+
+// Get reaction emoji
+function getReactionEmoji(reactionType) {
+    const emojiMap = {
+        'like': '👍',
+        'celebrate': '🎉',
+        'support': '❤️',
+        'insightful': '💡',
+        'curious': '🤔'
+    };
+    return emojiMap[reactionType] || '👍';
+}
+
+// Create reaction modal if it doesn't exist
+function createReactionModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.id = 'reaction-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Who reacted</h3>
+                <button class="close-btn" onclick="closeReactionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="reaction-tabs" id="reaction-tabs"></div>
+                <div class="reaction-users-list" id="reaction-users-list"></div>
+            </div>
+        </div>
+    `;
+    
+    // Add click to close functionality
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeReactionModal();
+        }
+    });
+    
+    document.body.appendChild(modal);
+}
+
+// Update notification badge count
+function updateNotificationBadge() {
+    // This will be implemented when we add real-time notifications
+    fetch('/api/notifications/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('notification-count');
+            if (badge && data.count > 0) {
+                badge.textContent = data.count > 99 ? '99+' : data.count.toString();
+                badge.style.display = 'flex';
+            } else if (badge) {
+                badge.style.display = 'none';
+            }
+        })
+        .catch(error => console.log('Failed to update notification badge'));
+}
+
+// Call update notification badge on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateNotificationBadge();
+});
 
 // Show message to user
 function showMessage(text, type = 'info') {

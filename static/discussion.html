@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discussion - CollabFund</title>
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="dark-theme-override.css">
     <link rel="stylesheet" href="discussion.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
@@ -18,6 +19,7 @@
                 <a href="/"><i class="bi bi-house-door-fill"></i> Home</a>
                 <a href="browse.html"><i class="bi bi-search-heart-fill"></i> Browse Projects</a>
                 <a href="discussion.html" class="active"><i class="fas fa-comments"></i> Discussion</a>
+                <a href="notifications.html" class="notifications-tab"><i class="fas fa-bell"></i> Notifications <span class="notification-badge" id="notification-count" style="display: none;">0</span></a>
             </nav>
         </div>
         <div class="nav-right" id="nav-auth">
@@ -132,30 +134,24 @@
 
             <!-- Right Sidebar -->
             <aside class="right-sidebar">
-                <div class="suggestions-widget">
-                    <h3>People You May Know</h3>
-                    <div class="suggestion-list">
-                        <div class="suggestion-item">
-                            <div class="suggestion-avatar">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <div class="suggestion-info">
-                                <h4>Connect with peers</h4>
-                                <p>Join to see suggestions</p>
-                            </div>
+                <div class="trending-topics">
+                    <h3>Trending Topics</h3>
+                    <div class="topic-list">
+                        <div class="topic-item">
+                            <span class="hashtag">#Innovation</span>
+                            <span class="post-count">42 posts</span>
                         </div>
-                    </div>
-                </div>
-
-                <div class="active-users">
-                    <h3>Active Now</h3>
-                    <div class="active-list">
-                        <div class="active-item">
-                            <div class="active-avatar">
-                                <i class="fas fa-circle active-indicator"></i>
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <span>Join to see active users</span>
+                        <div class="topic-item">
+                            <span class="hashtag">#Collaboration</span>
+                            <span class="post-count">28 posts</span>
+                        </div>
+                        <div class="topic-item">
+                            <span class="hashtag">#TechStartup</span>
+                            <span class="post-count">15 posts</span>
+                        </div>
+                        <div class="topic-item">
+                            <span class="hashtag">#StudentLife</span>
+                            <span class="post-count">9 posts</span>
                         </div>
                     </div>
                 </div>
