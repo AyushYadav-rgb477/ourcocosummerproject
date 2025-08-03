@@ -145,6 +145,47 @@ def get_current_user():
     user_id = session.get('user_id')
     if not user_id:
         return jsonify({'error': 'Not authenticated'}), 401
+
+# Trending topics API endpoint
+@app.route('/api/trending-topics', methods=['GET'])
+def get_trending_topics():
+    try:
+        # Get all posts with tags from the last 30 days
+        from datetime import datetime, timedelta
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        
+        posts_with_tags = DiscussionPost.query.filter(
+            DiscussionPost.tags.isnot(None),
+            DiscussionPost.created_at >= thirty_days_ago
+        ).order_by(DiscussionPost.created_at.desc()).all()
+        
+        # Extract and count hashtags
+        tag_counts = {}
+        for post in posts_with_tags:
+            if post.tags:
+                tags = [tag.strip() for tag in post.tags.split(',') if tag.strip()]
+                for tag in tags:
+                    # Add # if not present
+                    if not tag.startswith('#'):
+                        tag = '#' + tag
+                    tag_counts[tag] = tag_counts.get(tag, 0) + 1
+        
+        # Sort by count and take top 5
+        sorted_tags = sorted(tag_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        
+        trending_topics = [
+            {
+                'hashtag': tag,
+                'post_count': count
+            }
+            for tag, count in sorted_tags
+        ]
+        
+        return jsonify({'trending_topics': trending_topics}), 200
+        
+    except Exception as e:
+        logging.error(f"Error fetching trending topics: {str(e)}")
+        return jsonify({'error': 'Failed to fetch trending topics'}), 500
     
     user = User.query.get(user_id)
     if not user:
@@ -660,6 +701,30 @@ def add_post_comment(post_id):
         logging.error(f"Error adding comment: {str(e)}")
         db.session.rollback()
         return jsonify({'error': 'Failed to add comment'}), 500
+
+# User stats API endpoint
+@app.route('/api/user/stats', methods=['GET'])
+def get_user_stats():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        user_id = session['user_id']
+        
+        # Count user's posts
+        posts_count = DiscussionPost.query.filter_by(user_id=user_id).count()
+        
+        # Count user's connections (collaborations)
+        connections_count = Collaboration.query.filter_by(user_id=user_id).count()
+        
+        return jsonify({
+            'posts_count': posts_count,
+            'connections_count': connections_count
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"Error fetching user stats: {str(e)}")
+        return jsonify({'error': 'Failed to fetch user stats'}), 500
 
 # Auth status endpoint for discussion page
 @app.route('/api/auth/status', methods=['GET'])
