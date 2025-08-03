@@ -15,11 +15,15 @@
     <div class="nav-left">
       <div class="logo"><a href="/"><i class="fas fa-rocket"></i> CollabFund</a></div>
       <nav class="nav-links">
-        <!-- Navigation links will be populated by navigation.js -->
+        <a href="/"><i class="fas fa-home"></i> Home</a>
+        <a href="browse.html"><i class="fas fa-search"></i> Browse Projects</a>
+        <a href="discussion.html"><i class="fas fa-comments"></i> Discussion</a>
+        <a href="dashboard.html" id="dashboard-link" style="display: none;"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
       </nav>
     </div>
     <div class="nav-right" id="nav-auth">
-      <!-- Auth buttons will be populated by navigation.js -->
+      <a href="login.html" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+      <a href="register.html" class="register-btn"><i class="fas fa-user-plus"></i> Register</a>
     </div>
   </header>
 
@@ -217,7 +221,6 @@
   <!-- Message Container -->
   <div id="message-container" class="message-container"></div>
 
-  <script src="js/navigation.js"></script>
   <script src="js/browse.js"></script>
 </body>
 </html>
