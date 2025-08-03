@@ -407,42 +407,46 @@ html, body, * {
 .post-reactions {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px 0;
+    gap: 0;
+    padding: 0.75rem 1rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.02);
 }
 
 .reaction-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: transparent;
+    gap: 0.5rem;
+    background: none;
     border: none;
     color: rgba(255, 255, 255, 0.7);
     cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 20px;
-    transition: all 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
     font-size: 0.9rem;
+    flex: 1;
+    justify-content: center;
     position: relative;
 }
 
 .reaction-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.reaction-btn.active {
-    color: #ffd700;
-    background: rgba(255, 215, 0, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .reaction-btn i {
     font-size: 1rem;
 }
 
-.reaction-count {
+.reaction-text {
     font-weight: 500;
+}
+
+.reaction-count {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 0.25rem;
 }
 
 /* Reaction picker (LinkedIn-style) */

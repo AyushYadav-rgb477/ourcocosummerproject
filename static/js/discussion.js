@@ -340,11 +340,12 @@ function createPostElement(post) {
             ${createReactionButtons(post.id, reactionCounts, totalReactions)}
             <button class="reaction-btn" onclick="toggleComments(${post.id})">
                 <i class="fas fa-comment"></i>
-                <span class="reaction-count">${post.comments_count || 0}</span>
+                <span class="reaction-text">Comment</span>
+                <span class="reaction-count">${post.comments_count > 0 ? post.comments_count : ''}</span>
             </button>
             <button class="reaction-btn" onclick="sharePost(${post.id})">
                 <i class="fas fa-share"></i>
-                <span>Share</span>
+                <span class="reaction-text">Share</span>
             </button>
         </div>
         
@@ -364,51 +365,21 @@ function createPostElement(post) {
     return postDiv;
 }
 
-// Create reaction buttons with LinkedIn-style picker
+// Create simple reaction buttons in a single row
 function createReactionButtons(postId, reactionCounts, totalReactions) {
-    const reactionTypes = [
-        { type: 'like', icon: 'thumbs-up', color: '#1877f2' },
-        { type: 'celebrate', icon: 'star', color: '#ffd700' },
-        { type: 'support', icon: 'heart', color: '#e91e63' },
-        { type: 'insightful', icon: 'lightbulb', color: '#00bcd4' },
-        { type: 'curious', icon: 'question', color: '#ff9800' }
-    ];
-    
     return `
-        <button class="reaction-btn" onmouseenter="showReactionPicker(${postId})" onmouseleave="hideReactionPicker(${postId})" onclick="handleQuickReaction(${postId})">
+        <button class="reaction-btn" onclick="handleSimpleReaction(${postId})">
             <i class="fas fa-thumbs-up"></i>
-            <span class="reaction-count">${totalReactions}</span>
-            <div class="reaction-picker" id="reaction-picker-${postId}">
-                ${reactionTypes.map(reaction => `
-                    <button class="reaction-option ${reaction.type}" onclick="handleReaction(${postId}, '${reaction.type}')" style="color: ${reaction.color}">
-                        <i class="fas fa-${reaction.icon}"></i>
-                    </button>
-                `).join('')}
-            </div>
+            <span class="reaction-text">Like</span>
+            <span class="reaction-count">${totalReactions > 0 ? totalReactions : ''}</span>
         </button>
     `;
 }
 
-// Show reaction picker
-function showReactionPicker(postId) {
-    const picker = document.getElementById(`reaction-picker-${postId}`);
-    if (picker) {
-        picker.classList.add('show');
-    }
-}
+// Simplified reaction functions - no picker needed
 
-// Hide reaction picker
-function hideReactionPicker(postId) {
-    setTimeout(() => {
-        const picker = document.getElementById(`reaction-picker-${postId}`);
-        if (picker) {
-            picker.classList.remove('show');
-        }
-    }, 300);
-}
-
-// Handle quick reaction (like)
-function handleQuickReaction(postId) {
+// Handle simple reaction (like only)
+function handleSimpleReaction(postId) {
     if (!isAuthenticated) {
         showLoginPrompt();
         return;
@@ -441,8 +412,7 @@ async function handleReaction(postId, reactionType) {
         showMessage('Failed to update reaction', 'error');
     }
     
-    // Hide reaction picker
-    hideReactionPicker(postId);
+    // No picker to hide in simplified version
 }
 
 // Update reaction counts in UI

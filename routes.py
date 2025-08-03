@@ -717,6 +717,61 @@ def get_trending_topics():
         logging.error(f"Error fetching trending topics: {str(e)}")
         return jsonify({'error': 'Failed to fetch trending topics', 'topics': []}), 500
 
+# Homepage statistics endpoint
+@app.route('/api/homepage/stats', methods=['GET'])
+def get_homepage_stats():
+    try:
+        # Count total unique users (Students Connected)
+        total_users = User.query.count()
+        
+        # Count users who made at least one donation (Projects Funded - means users who funded)
+        users_who_funded = db.session.query(Donation.user_id).distinct().count()
+        
+        # Sum of all donations (Total Funding)
+        total_funding_result = db.session.query(func.sum(Donation.amount)).scalar()
+        total_funding = total_funding_result if total_funding_result else 0.0
+        
+        return jsonify({
+            'students_connected': total_users,
+            'projects_funded': users_who_funded,
+            'total_funding': total_funding
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"Error fetching homepage stats: {str(e)}")
+        return jsonify({
+            'students_connected': 0,
+            'projects_funded': 0,
+            'total_funding': 0.0
+        }), 500
+
+# User stats endpoint for discussion page
+@app.route('/api/user/stats', methods=['GET'])
+def get_user_stats():
+    if 'user_id' not in session:
+        return jsonify({'error': 'Authentication required'}), 401
+    
+    try:
+        user_id = session['user_id']
+        
+        # Count user's posts
+        posts_count = DiscussionPost.query.filter_by(user_id=user_id).count()
+        
+        # Count collaborations (connections) - users who collaborated with this user
+        connections_count = Collaboration.query.filter_by(user_id=user_id, status='accepted').count()
+        
+        return jsonify({
+            'posts_count': posts_count,
+            'connections_count': connections_count
+        }), 200
+        
+    except Exception as e:
+        logging.error(f"Error fetching user stats: {str(e)}")
+        return jsonify({
+            'posts_count': 0,
+            'connections_count': 0
+        }), 500
+
 # User stats endpoint
 @app.route('/api/user/stats', methods=['GET'])
 def user_stats():
