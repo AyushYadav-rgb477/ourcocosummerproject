@@ -19,6 +19,13 @@ class User(db.Model):
     votes = db.relationship('Vote', backref='user', lazy=True, cascade='all, delete-orphan')
     collaborations = db.relationship('Collaboration', backref='collaborator', lazy=True, cascade='all, delete-orphan')
     donations = db.relationship('Donation', backref='donor', lazy=True, cascade='all, delete-orphan')
+    discussion_posts = db.relationship('DiscussionPost', backref='author', lazy=True, cascade='all, delete-orphan')
+    post_comments = db.relationship('PostComment', backref='author', lazy=True, cascade='all, delete-orphan')
+    post_reactions = db.relationship('PostReaction', backref='user', lazy=True, cascade='all, delete-orphan')
+    
+    # Notification relationships
+    sent_notifications = db.relationship('Notification', foreign_keys='Notification.sender_id', backref='sender', lazy=True, cascade='all, delete-orphan')
+    received_notifications = db.relationship('Notification', foreign_keys='Notification.recipient_id', backref='recipient', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -141,7 +148,37 @@ class Collaboration(db.Model):
             'message': self.message,
             'status': self.status,
             'created_at': self.created_at.isoformat(),
-            'collaborator': self.collaborator.to_dict() if self.collaborator else None
+            'collaborator': self.collaborator.to_dict() if self.collaborator else None,
+            'project': self.project.to_dict() if self.project else None
+        }
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    type = db.Column(db.String(50), nullable=False)  # collaboration_request, collaboration_accepted, collaboration_rejected, etc.
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    related_entity_id = db.Column(db.Integer, nullable=True)  # ID of collaboration, project, etc.
+    related_entity_type = db.Column(db.String(50), nullable=True)  # 'collaboration', 'project', etc.
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'message': self.message,
+            'type': self.type,
+            'is_read': self.is_read,
+            'created_at': self.created_at.isoformat(),
+            'sender': self.sender.to_dict() if self.sender else None,
+            'related_entity_id': self.related_entity_id,
+            'related_entity_type': self.related_entity_type
         }
 
 class Donation(db.Model):
@@ -163,4 +200,157 @@ class Donation(db.Model):
             'message': self.message,
             'created_at': self.created_at.isoformat(),
             'donor': self.donor.to_dict() if self.donor else None
+        }
+
+class DiscussionPost(db.Model):
+    __tablename__ = 'discussion_posts'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.Text, nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    post_type = db.Column(db.String(20), nullable=False, default='discussion')  # discussion, help, poll, event
+    tags = db.Column(db.Text)  # JSON string of tags
+    anonymous = db.Column(db.Boolean, default=False)
+    allow_comments = db.Column(db.Boolean, default=True)
+    likes_count = db.Column(db.Integer, default=0)
+    comments_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Additional fields for specific post types
+    poll_options = db.Column(db.Text)  # JSON string for poll options
+    event_date = db.Column(db.DateTime)
+    event_location = db.Column(db.String(200))
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Relationships
+    reactions = db.relationship('PostReaction', backref='post', lazy=True, cascade='all, delete-orphan')
+    comments = db.relationship('PostComment', backref='post', lazy=True, cascade='all, delete-orphan')
+    
+    def get_reaction_counts(self):
+        """Get counts for each reaction type"""
+        reaction_counts = {}
+        for reaction in self.reactions:
+            reaction_type = reaction.reaction_type
+            if reaction_type not in reaction_counts:
+                reaction_counts[reaction_type] = 0
+            reaction_counts[reaction_type] += 1
+        return reaction_counts
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'content': self.content,
+            'post_type': self.post_type,
+            'tags': self.tags,
+            'anonymous': self.anonymous,
+            'allow_comments': self.allow_comments,
+            'likes_count': self.likes_count,
+            'comments_count': self.comments_count,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+            'poll_options': self.poll_options,
+            'event_date': self.event_date.isoformat() if self.event_date else None,
+            'event_location': self.event_location,
+            'author': self.author.to_dict() if self.author and not self.anonymous else None,
+            'reaction_counts': self.get_reaction_counts()
+        }
+
+class PostComment(db.Model):
+    __tablename__ = 'post_comments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('post_comments.id'))  # For nested comments
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    post_id = db.Column(db.Integer, db.ForeignKey('discussion_posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'parent_id': self.parent_id,
+            'created_at': self.created_at.isoformat(),
+            'author': self.author.to_dict() if self.author else None
+        }
+
+class PostLike(db.Model):
+    __tablename__ = 'post_likes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    post_id = db.Column(db.Integer, db.ForeignKey('discussion_posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Ensure one like per user per post
+    __table_args__ = (db.UniqueConstraint('post_id', 'user_id', name='unique_post_like'),)
+
+class PostSave(db.Model):
+    __tablename__ = 'post_saves'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    post_id = db.Column(db.Integer, db.ForeignKey('discussion_posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Ensure one save per user per post
+    __table_args__ = (db.UniqueConstraint('post_id', 'user_id', name='unique_post_save'),)
+
+class PostReaction(db.Model):
+    __tablename__ = 'post_reactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    reaction_type = db.Column(db.String(20), nullable=False)  # like, celebrate, support, insightful, curious
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    post_id = db.Column(db.Integer, db.ForeignKey('discussion_posts.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Ensure one reaction per user per post (but user can change reaction type)
+    __table_args__ = (db.UniqueConstraint('post_id', 'user_id', name='unique_post_reaction'),)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'reaction_type': self.reaction_type,
+            'created_at': self.created_at.isoformat(),
+            'user': self.user.to_dict() if self.user else None
+        }
+
+class FollowRequest(db.Model):
+    __tablename__ = 'follow_requests'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    follower_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Who sent the request
+    followed_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Who received the request
+    
+    # Relationships
+    follower = db.relationship('User', foreign_keys=[follower_id], backref='sent_follow_requests')
+    followed = db.relationship('User', foreign_keys=[followed_id], backref='received_follow_requests')
+    
+    # Ensure one follow request per user pair
+    __table_args__ = (db.UniqueConstraint('follower_id', 'followed_id', name='unique_follow_request'),)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'status': self.status,
+            'created_at': self.created_at.isoformat(),
+            'follower': self.follower.to_dict() if self.follower else None,
+            'followed': self.followed.to_dict() if self.followed else None
         }

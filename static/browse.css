@@ -113,24 +113,27 @@ body {
 
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 2.5rem;
   margin-bottom: 2rem;
+  justify-items: center;
 }
 
 .project-card {
   background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
   transition: all 0.3s ease;
-  cursor: pointer;
   border: 2px solid transparent;
+  cursor: pointer;
 }
 
 .project-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(106, 17, 203, 0.3);
   border-color: #6a11cb;
 }
 
@@ -156,11 +159,15 @@ body {
 }
 
 .project-title {
-  font-size: 1.3rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
   color: #1c1c1c;
-  line-height: 1.3;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .project-owner {
@@ -178,26 +185,30 @@ body {
 
 .project-description {
   color: #555;
-  line-height: 1.5;
-  margin-bottom: 1rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  font-size: 0.95rem;
 }
 
 .project-stats {
   display: flex;
   justify-content: space-between;
-  padding-top: 1rem;
+  padding-top: 1.25rem;
   border-top: 1px solid #e0e0e0;
   font-size: 0.9rem;
+  align-items: center;
 }
 
 .project-stat {
   display: flex;
   align-items: center;
   color: #666;
+  font-weight: 500;
+  padding: 0.25rem 0;
 }
 
 .project-stat i {

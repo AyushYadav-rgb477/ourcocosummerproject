@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discussion - CollabFund</title>
+    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="discussion.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+</head>
+<body>
+    <!-- Navbar - consistent with homepage -->
+    <header class="navbar">
+        <div class="nav-left">
+            <div class="logo"><a href="/"><i class="fas fa-rocket"></i> CollabFund</a></div>
+            <nav class="nav-links">
+                <a href="/"><i class="bi bi-house-door-fill"></i> Home</a>
+                <a href="browse.html"><i class="bi bi-search-heart-fill"></i> Browse Projects</a>
+                <a href="discussion.html" class="active"><i class="fas fa-comments"></i> Discussion</a>
+            </nav>
+        </div>
+        <div class="nav-right" id="nav-auth">
+            <!-- Will be populated by JavaScript based on auth status -->
+            <a href="login.html" class="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
+            <a href="register.html" class="register-btn"><i class="fas fa-user-plus"></i> Register</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="discussion-main">
+        <div class="discussion-container">
+            <!-- Left Sidebar -->
+            <aside class="left-sidebar">
+                <div class="user-card">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-info">
+                        <h3 id="sidebar-user-name">Welcome to Discussion</h3>
+                        <p id="sidebar-user-college">Join the conversation</p>
+                    </div>
+                    <div class="user-stats">
+                        <div class="stat">
+                            <span class="stat-number" id="user-posts-count">-</span>
+                            <span class="stat-label">Posts</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-number" id="user-connections-count">-</span>
+                            <span class="stat-label">Connections</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="trending-topics">
+                    <h3>Trending Topics</h3>
+                    <div class="topic-list" id="trending-topics-list">
+                        <div class="topic-loading">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <span>Loading trending topics...</span>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Feed -->
+            <section class="main-feed">
+                <!-- Post Creation Area -->
+                <div class="post-creator" id="post-creator">
+                    <div class="post-input-container">
+                        <input type="text" 
+                               class="post-input" 
+                               id="post-input" 
+                               placeholder="Share your thoughts with the community..." 
+                               onclick="handlePostInputClick()">
+                    </div>
+                </div>
+
+                <!-- Guest Notice -->
+                <div class="guest-notice" id="guest-notice" style="display: none;">
+                    <div class="notice-content">
+                        <i class="fas fa-info-circle"></i>
+                        <p>Join the conversation! <a href="login.html">Login</a> or <a href="register.html">Register</a> to create posts and interact with the community.</p>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="filter-tabs">
+                    <button class="tab-btn active" data-filter="all">All Posts</button>
+                    <button class="tab-btn" data-filter="discussion">Discussions</button>
+                    <button class="tab-btn" data-filter="help">Help</button>
+                    <button class="tab-btn" data-filter="poll">Polls</button>
+                    <button class="tab-btn" data-filter="event">Events</button>
+                </div>
+
+                <!-- Posts Feed -->
+                <div class="posts-feed" id="posts-feed">
+                    <div class="loading-skeleton" id="loading-skeleton">
+                        <div class="skeleton-post">
+                            <div class="skeleton-avatar"></div>
+                            <div class="skeleton-content">
+                                <div class="skeleton-line skeleton-title"></div>
+                                <div class="skeleton-line"></div>
+                                <div class="skeleton-line skeleton-short"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="empty-state" id="empty-state" style="display: none;">
+                        <i class="fas fa-comments"></i>
+                        <h3>No posts yet</h3>
+                        <p>Be the first to start a discussion!</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Sidebar -->
+            <aside class="right-sidebar">
+                <!-- Additional widgets can be added here in the future -->
+            </aside>
+        </div>
+    </main>
+
+    <!-- Post Creation Modal -->
+    <div class="modal" id="post-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Post</h3>
+                <button class="close-btn" onclick="closePostModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="post-type-selector">
+                    <button class="type-btn active" data-type="discussion">
+                        <i class="fas fa-comments"></i> Discussion
+                    </button>
+                    <button class="type-btn" data-type="help">
+                        <i class="fas fa-question-circle"></i> Help
+                    </button>
+                    <button class="type-btn" data-type="poll">
+                        <i class="fas fa-poll"></i> Poll
+                    </button>
+                    <button class="type-btn" data-type="event">
+                        <i class="fas fa-calendar"></i> Event
+                    </button>
+                </div>
+                
+                <form id="post-form">
+                    <input type="text" id="post-title" placeholder="Post title..." required>
+                    <textarea id="post-content" placeholder="Share your thoughts..." required></textarea>
+                    
+                    <div class="additional-fields" id="additional-fields">
+                        <!-- Dynamic fields based on post type -->
+                    </div>
+                    
+                    <div class="tags-section">
+                        <label for="post-tags">Tags (related topics):</label>
+                        <div class="tags-input-container">
+                            <input type="text" id="post-tags" placeholder="e.g. technology, collaboration, startup..." autocomplete="off">
+                            <div class="suggested-tags">
+                                <span class="tag-suggestion" data-tag="technology"># technology</span>
+                                <span class="tag-suggestion" data-tag="collaboration"># collaboration</span>
+                                <span class="tag-suggestion" data-tag="startup"># startup</span>
+                                <span class="tag-suggestion" data-tag="innovation"># innovation</span>
+                                <span class="tag-suggestion" data-tag="funding"># funding</span>
+                                <span class="tag-suggestion" data-tag="project"># project</span>
+                            </div>
+                        </div>
+                        <div class="selected-tags" id="selected-tags">
+                            <!-- Selected tags will appear here -->
+                        </div>
+                    </div>
+                    
+                    <div class="post-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="anonymous-post">
+                            <span class="checkmark"></span>
+                            Post anonymously
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="allow-comments" checked>
+                            <span class="checkmark"></span>
+                            Allow comments
+                        </label>
+                    </div>
+                    
+                    <div class="modal-actions">
+                        <button type="button" class="btn-secondary" onclick="closePostModal()">Cancel</button>
+                        <button type="submit" class="btn-primary">Post</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Container -->
+    <div class="message-container" id="message-container"></div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/discussion.js"></script>
+</body>
+</html>

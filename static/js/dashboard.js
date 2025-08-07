@@ -8,13 +8,19 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuthAndLoadDashboard();
     
     // Setup navigation
-    setupNavigation();
+    setupSidebarNavigation();
     
     // Setup forms
     setupProjectForm();
     
     // Setup logout
     setupLogout();
+    
+    // Setup user dropdown
+    setupUserDropdown();
+    
+    // Setup notifications
+    setupNotifications();
 });
 
 async function checkAuthAndLoadDashboard() {
@@ -37,23 +43,16 @@ async function checkAuthAndLoadDashboard() {
 
 function updateUserGreeting() {
     const greetingEl = document.getElementById('user-greeting');
-    const usernameDisplay = document.getElementById('username-display');
-    
     if (greetingEl && currentUser) {
         greetingEl.textContent = `Welcome, ${currentUser.username}!`;
     }
-    
-    if (usernameDisplay && currentUser) {
-        usernameDisplay.textContent = currentUser.username;
-    }
 }
 
-function setupNavigation() {
-    // Setup all buttons with data-section attributes
-    const sectionButtons = document.querySelectorAll('[data-section]');
+function setupSidebarNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
     
-    sectionButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
+    navItems.forEach(item => {
+        item.addEventListener('click', function(e) {
             e.preventDefault();
             
             const section = this.getAttribute('data-section');
@@ -93,6 +92,9 @@ async function loadSectionData(section) {
             break;
         case 'collaborations':
             loadCollaborations();
+            break;
+        case 'notifications':
+            loadNotifications();
             break;
     }
 }
@@ -242,31 +244,37 @@ function displayUserProjects(projects) {
                 <i class="fas fa-plus-circle"></i>
                 <h3>No projects yet</h3>
                 <p>Create your first project to get started!</p>
-                <button class="new-project-btn" data-section="create-project">
-                    <i class="fas fa-plus"></i> Create Your First Project
-                </button>
             </div>
         `;
-        // Re-setup navigation for new button
-        setupNavigation();
         return;
     }
     
     container.innerHTML = projects.map(project => `
-        <div class="project-item">
+        <div class="user-project-card">
             <div class="project-header">
+                <h3>${escapeHtml(project.title)}</h3>
+                <span class="project-status ${project.status}">${project.status}</span>
+            </div>
+            <div class="project-meta">
                 <span class="project-category">${project.category}</span>
                 <span class="project-date">${formatDate(project.created_at)}</span>
             </div>
-            <h3 class="project-title">${escapeHtml(project.title)}</h3>
-            <p class="project-description">${escapeHtml(project.description.substring(0, 120))}${project.description.length > 120 ? '...' : ''}</p>
+            <p class="project-description">${escapeHtml(project.description.substring(0, 150))}${project.description.length > 150 ? '...' : ''}</p>
             <div class="project-stats">
-                <div class="project-funding">
-                    <span class="funding-amount">$${project.current_funding.toFixed(2)}</span>
-                    <span class="funding-goal">of $${project.funding_goal.toFixed(2)}</span>
+                <div class="project-stat">
+                    <i class="fas fa-thumbs-up"></i>
+                    <span>${project.vote_count} votes</span>
                 </div>
-            </div>
-        </div>
+                <div class="project-stat">
+                    <i class="fas fa-dollar-sign"></i>
+                    <span>$${project.current_funding.toFixed(2)} / $${project.funding_goal.toFixed(2)}</span>
+                </div>
+                <div class="project-stat">
+                    <i class="fas fa-users"></i>
+                    <span>${project.collaboration_count} collaborators</span>
+                </div>
+                <div class="project-stat">
+                    <i class="fas fa-comments"></i>
                     <span>${project.comment_count} comments</span>
                 </div>
             </div>
@@ -278,7 +286,60 @@ async function loadCollaborations() {
     const container = document.getElementById('collaboration-requests');
     if (!container) return;
     
-    // For now, show empty state as collaboration management would require additional backend endpoints
+    try {
+        // Try to load collaboration data from server
+        const response = await fetch('/api/collaborations');
+        if (response.ok) {
+            const data = await response.json();
+            displayCollaborations(data.collaborations);
+        } else {
+            // Show empty state when no endpoint exists or no data
+            displayEmptyCollaborations();
+        }
+    } catch (error) {
+        console.error('Error loading collaborations:', error);
+        displayEmptyCollaborations();
+    }
+}
+
+function displayCollaborations(collaborations) {
+    const container = document.getElementById('collaboration-requests');
+    if (!container) return;
+    
+    if (collaborations.length === 0) {
+        displayEmptyCollaborations();
+        return;
+    }
+    
+    container.innerHTML = collaborations.map(collab => `
+        <div class="collaboration-item">
+            <div class="collaboration-header">
+                <div class="collaboration-user">
+                    <i class="fas fa-user"></i>
+                    <strong>${escapeHtml(collab.collaborator.username)}</strong>
+                </div>
+                <span class="collaboration-status ${collab.status}">${collab.status}</span>
+            </div>
+            ${collab.message ? `<p class="collaboration-message">"${escapeHtml(collab.message)}"</p>` : ''}
+            <p class="collaboration-project">Project: <strong>${escapeHtml(collab.project.title)}</strong></p>
+            ${collab.status === 'pending' ? `
+                <div class="collaboration-actions">
+                    <button class="action-btn accept" onclick="handleCollaborationAction(${collab.id}, 'accept')">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                    <button class="action-btn reject" onclick="handleCollaborationAction(${collab.id}, 'reject')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function displayEmptyCollaborations() {
+    const container = document.getElementById('collaboration-requests');
+    if (!container) return;
+    
     container.innerHTML = `
         <div class="empty-state">
             <i class="fas fa-handshake"></i>
@@ -286,6 +347,49 @@ async function loadCollaborations() {
             <p>Collaboration requests will appear here when other users want to work with you.</p>
         </div>
     `;
+}
+
+async function handleCollaborationAction(collabId, action) {
+    try {
+        const response = await fetch(`/api/collaborations/${collabId}/${action}`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showMessage(`Collaboration ${action}ed successfully!`, 'success');
+            loadCollaborations(); // Refresh the list
+        } else {
+            const data = await response.json();
+            showMessage(data.error || `Error ${action}ing collaboration`, 'error');
+        }
+    } catch (error) {
+        console.error(`Error ${action}ing collaboration:`, error);
+        showMessage(`Error ${action}ing collaboration`, 'error');
+    }
+}
+
+function setupUserDropdown() {
+    const profileBtn = document.getElementById('user-profile-btn');
+    const dropdownMenu = document.getElementById('dropdown-menu');
+    
+    if (profileBtn && dropdownMenu) {
+        profileBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('active');
+            profileBtn.classList.toggle('active');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function() {
+            dropdownMenu.classList.remove('active');
+            profileBtn.classList.remove('active');
+        });
+        
+        // Prevent dropdown from closing when clicking inside
+        dropdownMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    }
 }
 
 function setupLogout() {
@@ -329,21 +433,181 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function showMessage(message, type = 'info') {
-    const container = document.getElementById('message-container') || createMessageContainer();
+// Notification Functions
+function setupNotifications() {
+    // Setup notification button click
+    const notificationBtn = document.getElementById('notification-btn');
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', function() {
+            switchSection('notifications');
+        });
+    }
     
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
+    // Setup mark all read button
+    const markAllReadBtn = document.getElementById('mark-all-read-btn');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', markAllNotificationsRead);
+    }
     
-    container.appendChild(messageDiv);
+    // Load initial notification count
+    updateNotificationCount();
+}
+
+async function loadNotifications() {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
     
-    // Remove message after 5 seconds
-    setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.parentNode.removeChild(messageDiv);
+    try {
+        const response = await fetch('/api/notifications');
+        if (response.ok) {
+            const data = await response.json();
+            displayNotifications(data.notifications);
+            updateNotificationCount(data.unread_count);
+        } else {
+            displayEmptyNotifications();
         }
-    }, 5000);
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        displayEmptyNotifications();
+    }
+}
+
+function displayNotifications(notifications) {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
+    
+    if (notifications.length === 0) {
+        displayEmptyNotifications();
+        return;
+    }
+    
+    container.innerHTML = notifications.map(notification => `
+        <div class="notification-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}">
+            <div class="notification-header">
+                <h4 class="notification-title">${escapeHtml(notification.title)}</h4>
+                <span class="notification-time">${formatTimeAgo(notification.created_at)}</span>
+            </div>
+            <p class="notification-message">${escapeHtml(notification.message)}</p>
+            <span class="notification-type ${notification.type}">${notification.type.replace('_', ' ')}</span>
+            ${!notification.is_read ? `
+                <button class="mark-read-btn" onclick="markNotificationRead(${notification.id})">
+                    <i class="fas fa-check"></i> Mark as read
+                </button>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function displayEmptyNotifications() {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-bell"></i>
+            <h3>No notifications</h3>
+            <p>You're all caught up! Notifications will appear here when you receive them.</p>
+        </div>
+    `;
+}
+
+async function markNotificationRead(notificationId) {
+    try {
+        const response = await fetch(`/api/notifications/${notificationId}/read`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            const notificationElement = document.querySelector(`[data-id="${notificationId}"]`);
+            if (notificationElement) {
+                notificationElement.classList.remove('unread');
+                const markReadBtn = notificationElement.querySelector('.mark-read-btn');
+                if (markReadBtn) {
+                    markReadBtn.remove();
+                }
+            }
+            updateNotificationCount();
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+    }
+}
+
+async function markAllNotificationsRead() {
+    try {
+        const response = await fetch('/api/notifications/mark-all-read', {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            loadNotifications();
+            updateNotificationCount(0);
+            showMessage('All notifications marked as read', 'success');
+        }
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+        showMessage('Failed to mark notifications as read', 'error');
+    }
+}
+
+async function updateNotificationCount(count) {
+    if (typeof count === 'undefined') {
+        try {
+            const response = await fetch('/api/notifications');
+            if (response.ok) {
+                const data = await response.json();
+                count = data.unread_count;
+            }
+        } catch (error) {
+            console.error('Error getting notification count:', error);
+            return;
+        }
+    }
+    
+    const countElement = document.getElementById('notification-count');
+    const badgeElement = document.getElementById('notification-badge');
+    
+    if (count > 0) {
+        if (countElement) {
+            countElement.textContent = count;
+            countElement.style.display = 'flex';
+        }
+        if (badgeElement) {
+            badgeElement.textContent = count;
+            badgeElement.style.display = 'inline-flex';
+        }
+    } else {
+        if (countElement) {
+            countElement.style.display = 'none';
+        }
+        if (badgeElement) {
+            badgeElement.style.display = 'none';
+        }
+    }
+}
+
+function formatTimeAgo(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+    
+    if (diffInSeconds < 60) {
+        return 'Just now';
+    } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    } else {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+}
+
+function showMessage(message, type = 'info') {
+    // Disabled popup messages as requested by user
+    return;
 }
 
 function createMessageContainer() {
