@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkAuthAndLoadDashboard();
     
     // Setup navigation
-    setupSidebarNavigation();
+    setupNavigation();
     
     // Setup forms
     setupProjectForm();
@@ -37,16 +37,23 @@ async function checkAuthAndLoadDashboard() {
 
 function updateUserGreeting() {
     const greetingEl = document.getElementById('user-greeting');
+    const usernameDisplay = document.getElementById('username-display');
+    
     if (greetingEl && currentUser) {
         greetingEl.textContent = `Welcome, ${currentUser.username}!`;
     }
+    
+    if (usernameDisplay && currentUser) {
+        usernameDisplay.textContent = currentUser.username;
+    }
 }
 
-function setupSidebarNavigation() {
-    const navItems = document.querySelectorAll('.nav-item');
+function setupNavigation() {
+    // Setup all buttons with data-section attributes
+    const sectionButtons = document.querySelectorAll('[data-section]');
     
-    navItems.forEach(item => {
-        item.addEventListener('click', function(e) {
+    sectionButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
             e.preventDefault();
             
             const section = this.getAttribute('data-section');
@@ -235,37 +242,31 @@ function displayUserProjects(projects) {
                 <i class="fas fa-plus-circle"></i>
                 <h3>No projects yet</h3>
                 <p>Create your first project to get started!</p>
+                <button class="new-project-btn" data-section="create-project">
+                    <i class="fas fa-plus"></i> Create Your First Project
+                </button>
             </div>
         `;
+        // Re-setup navigation for new button
+        setupNavigation();
         return;
     }
     
     container.innerHTML = projects.map(project => `
-        <div class="user-project-card">
+        <div class="project-item">
             <div class="project-header">
-                <h3>${escapeHtml(project.title)}</h3>
-                <span class="project-status ${project.status}">${project.status}</span>
-            </div>
-            <div class="project-meta">
                 <span class="project-category">${project.category}</span>
                 <span class="project-date">${formatDate(project.created_at)}</span>
             </div>
-            <p class="project-description">${escapeHtml(project.description.substring(0, 150))}${project.description.length > 150 ? '...' : ''}</p>
+            <h3 class="project-title">${escapeHtml(project.title)}</h3>
+            <p class="project-description">${escapeHtml(project.description.substring(0, 120))}${project.description.length > 120 ? '...' : ''}</p>
             <div class="project-stats">
-                <div class="project-stat">
-                    <i class="fas fa-thumbs-up"></i>
-                    <span>${project.vote_count} votes</span>
+                <div class="project-funding">
+                    <span class="funding-amount">$${project.current_funding.toFixed(2)}</span>
+                    <span class="funding-goal">of $${project.funding_goal.toFixed(2)}</span>
                 </div>
-                <div class="project-stat">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span>$${project.current_funding.toFixed(2)} / $${project.funding_goal.toFixed(2)}</span>
-                </div>
-                <div class="project-stat">
-                    <i class="fas fa-users"></i>
-                    <span>${project.collaboration_count} collaborators</span>
-                </div>
-                <div class="project-stat">
-                    <i class="fas fa-comments"></i>
+            </div>
+        </div>
                     <span>${project.comment_count} comments</span>
                 </div>
             </div>

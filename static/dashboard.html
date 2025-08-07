@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="dashboard.css" />
 </head>
-<body>
+<body class="dashboard-page">
 
   <header class="navbar">
     <div class="nav-left">
@@ -27,80 +27,99 @@
   </header>
 
   <div class="dashboard-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <nav class="sidebar-nav">
-        <a href="#overview" class="nav-item active" data-section="overview">
-          <i class="fas fa-chart-bar"></i> Overview
-        </a>
-        <a href="#create-project" class="nav-item" data-section="create-project">
-          <i class="fas fa-plus-circle"></i> Create Project
-        </a>
-        <a href="#my-projects" class="nav-item" data-section="my-projects">
-          <i class="fas fa-folder-open"></i> My Projects
-        </a>
-        <a href="#collaborations" class="nav-item" data-section="collaborations">
-          <i class="fas fa-handshake"></i> Collaborations
-        </a>
-      </nav>
-    </aside>
-
     <!-- Main Content -->
     <main class="main-content">
       
+      <!-- Dashboard Header -->
+      <div class="dashboard-header">
+        <div class="header-text">
+          <h1>Dashboard</h1>
+          <p>Welcome back, <span id="username-display">Project!</span></p>
+        </div>
+        <button class="new-project-btn" data-section="create-project">
+          <i class="fas fa-plus"></i> New Project
+        </button>
+      </div>
+
       <!-- Overview Section -->
       <section id="overview" class="content-section active">
-        <div class="section-header">
-          <h2><i class="fas fa-chart-bar"></i> Dashboard Overview</h2>
-          <p>Your project statistics and activity summary</p>
-        </div>
-
         <div class="stats-grid">
-          <div class="stat-card">
+          <div class="stat-card projects-card">
             <div class="stat-icon">
-              <i class="fas fa-project-diagram"></i>
+              <i class="fas fa-folder"></i>
             </div>
             <div class="stat-info">
-              <h3 id="total-projects-count">0</h3>
-              <p>Total Projects</p>
+              <h3 id="total-projects-count">1</h3>
+              <p>My Projects</p>
             </div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card collaborations-card">
             <div class="stat-icon">
-              <i class="fas fa-dollar-sign"></i>
-            </div>
-            <div class="stat-info">
-              <h3 id="total-funding-amount">$0</h3>
-              <p>Total Funding</p>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-thumbs-up"></i>
-            </div>
-            <div class="stat-info">
-              <h3 id="total-votes-count">0</h3>
-              <p>Total Upvotes</p>
-            </div>
-          </div>
-
-          <div class="stat-card">
-            <div class="stat-icon">
-              <i class="fas fa-users"></i>
+              <i class="fas fa-handshake"></i>
             </div>
             <div class="stat-info">
               <h3 id="total-collabs-count">0</h3>
               <p>Collaborations</p>
             </div>
           </div>
+
+          <div class="stat-card funding-card">
+            <div class="stat-icon">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="total-funding-amount">$0.0</h3>
+              <p>Total Received</p>
+            </div>
+          </div>
+
+          <div class="stat-card donations-card">
+            <div class="stat-icon">
+              <i class="fas fa-heart"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="total-donated-amount">$0</h3>
+              <p>Total Donated</p>
+            </div>
+          </div>
         </div>
 
-        <div class="recent-activity">
-          <h3>Recent Projects</h3>
-          <div class="activity-list" id="recent-projects">
-            <!-- Recent projects will be loaded here -->
+        <div class="dashboard-grid">
+          <!-- My Projects Section -->
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h2><i class="fas fa-folder"></i> My Projects</h2>
+              <button class="add-new-btn" data-section="create-project">+ Add New</button>
+            </div>
+            <div class="projects-list" id="user-projects">
+              <!-- User projects will be loaded here -->
+            </div>
+          </div>
+
+          <!-- Quick Actions Section -->
+          <div class="dashboard-section quick-actions">
+            <div class="section-header">
+              <h2><i class="fas fa-bolt"></i> Quick Actions</h2>
+            </div>
+            <div class="actions-grid">
+              <button class="action-btn upload-btn" data-section="create-project">
+                <i class="fas fa-plus"></i>
+                <span>Upload Project</span>
+              </button>
+              <button class="action-btn find-btn" onclick="window.location.href='browse.html'">
+                <i class="fas fa-search"></i>
+                <span>Find Projects</span>
+              </button>
+              <button class="action-btn messages-btn" data-section="collaborations">
+                <i class="fas fa-comment"></i>
+                <span>Messages</span>
+              </button>
+              <button class="action-btn profile-btn">
+                <i class="fas fa-user-edit"></i>
+                <span>Edit Profile</span>
+              </button>
+            </div>
           </div>
         </div>
       </section>
