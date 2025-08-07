@@ -128,17 +128,14 @@ function viewProject(projectId) {
     window.location.href = `browse.html?project=${projectId}`;
 }
 
-// Load platform statistics using new API endpoint
+// Load platform statistics
 async function loadStats() {
     try {
-        const response = await fetch('/api/homepage/stats');
+        const response = await fetch('/api/projects?per_page=1000'); // Get all projects for stats
         
         if (response.ok) {
-            const stats = await response.json();
-            updateStatsElements(stats.projects_funded, stats.students_connected, stats.total_funding);
-        } else {
-            // Set default values if API fails
-            updateStatsElements(0, 0, 0);
+            const data = await response.json();
+            updateStats(data);
         }
     } catch (error) {
         console.error('Error loading stats:', error);
@@ -147,32 +144,30 @@ async function loadStats() {
     }
 }
 
-function updateStatsElements(projectsFunded, studentsConnected, totalFunding) {
+function updateStats(data) {
+    const projects = data.projects || [];
+    const totalProjects = projects.length;
+    const totalUsers = new Set(projects.map(p => p.owner?.id)).size;
+    const totalFunding = projects.reduce((sum, p) => sum + (p.current_funding || 0), 0);
+    
+    updateStatsElements(totalProjects, totalUsers, totalFunding);
+}
+
+function updateStatsElements(projects, users, funding) {
     const totalProjectsEl = document.getElementById('total-projects');
     const totalUsersEl = document.getElementById('total-users');
     const totalFundingEl = document.getElementById('total-funding');
     
     if (totalProjectsEl) {
-        totalProjectsEl.textContent = `${projectsFunded}+`;
+        totalProjectsEl.textContent = `${projects}+`;
     }
     
     if (totalUsersEl) {
-        totalUsersEl.textContent = `${studentsConnected}+`;
+        totalUsersEl.textContent = `${users}+`;
     }
     
     if (totalFundingEl) {
-        totalFundingEl.textContent = `$${formatCurrency(totalFunding)}+`;
-    }
-}
-
-// Format currency for display
-function formatCurrency(amount) {
-    if (amount >= 1000000) {
-        return (amount / 1000000).toFixed(1) + 'M';
-    } else if (amount >= 1000) {
-        return (amount / 1000).toFixed(1) + 'K';
-    } else {
-        return Math.round(amount);
+        totalFundingEl.textContent = `$${funding.toFixed(0)}K+`;
     }
 }
 
@@ -193,8 +188,20 @@ function escapeHtml(text) {
 }
 
 function showMessage(message, type = 'info') {
-    // Disabled popup messages as requested by user
-    return;
+    const container = document.getElementById('message-container') || createMessageContainer();
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
+    
+    container.appendChild(messageDiv);
+    
+    // Remove message after 5 seconds
+    setTimeout(() => {
+        if (messageDiv.parentNode) {
+            messageDiv.parentNode.removeChild(messageDiv);
+        }
+    }, 5000);
 }
 
 function createMessageContainer() {
