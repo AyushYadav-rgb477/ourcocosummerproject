@@ -1,21 +1,25 @@
-/* Reset & Base */
+/* Reset & Base - Using CSS Variables from theme.css */
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
-  background: linear-gradient(to right, #6a11cb, #b16cea);
-  color: white;
+  background: var(--body-bg);
+  color: var(--text-primary);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* Navbar */
+/* Navbar - Using CSS Variables */
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 4rem;
-  background-color: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
+  background: var(--navbar-bg);
+  backdrop-filter: var(--backdrop-blur);
+  border-bottom: 1px solid var(--border-color);
+  position: sticky;
   top: 0;
   z-index: 1000;
+  transition: all 0.3s ease;
 }
 
 .nav-left {
@@ -28,30 +32,43 @@ body {
   align-items: center;
   font-size: 1.4rem;
   font-weight: bold;
-  color: white;
+  color: var(--text-navbar);
   margin-right: 2rem;
   text-decoration: none;
+  transition: color 0.3s ease;
 }
 
 .logo a {
   text-decoration: none;
-  color: white;
+  color: var(--text-navbar);
 }
 
 .logo i {
   margin-right: 8px;
-  color: white;
+  color: var(--accent-color);
 }
 
 .nav-links a {
   margin: 0 1rem;
   text-decoration: none;
-  color: white;
+  color: var(--text-navbar);
   font-weight: 500;
   display: inline-flex;
   align-items: center;
   font-size: 1rem;
-  transition: color 0.3s ease;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+}
+
+.nav-links a:hover {
+  color: var(--accent-color);
+  background: var(--hover-bg);
+}
+
+.nav-links a.active {
+  color: var(--accent-color);
+  border-bottom: 2px solid var(--accent-color);
 }
 
 .nav-links a i {
@@ -69,10 +86,10 @@ body {
 .register-btn,
 .logout-btn {
   text-decoration: none;
-  color: white;
+  color: var(--text-navbar);
   font-weight: 500;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
   transition: all 0.3s ease;
   margin-left: 0.5rem;
   font-size: 1rem;
@@ -90,47 +107,52 @@ body {
 }
 
 .register-btn {
-  border: 1px solid white;
+  border: 1px solid var(--text-white);
+  color: var(--text-white);
 }
 
 .register-btn:hover {
-  background-color: white;
-  color: #6a11cb;
+  background-color: var(--text-white);
+  color: var(--primary-color);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-medium);
 }
 
 .login-btn:hover {
-  color: yellow;
-}
-
-.nav-links a:hover {
-  color: yellow;
+  color: var(--accent-color);
+  transform: translateY(-2px);
 }
 
 .user-greeting {
-  color: white;
+  color: var(--text-navbar);
   margin-right: 1rem;
   font-weight: 500;
+  transition: color 0.3s ease;
 }
 
 /* HERO SECTION */
 .hero {
-  color: white;
+  color: var(--text-white);
   text-align: center;
+  padding: 4rem 2rem;
+  background: var(--primary-bg);
 }
 
 .hero-text h1 {
-  font-size: 2.8rem;
+  font-size: 3rem;
   font-weight: bold;
   min-height: 60px;
   margin-bottom: 1rem;
   letter-spacing: 1px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .hero-text p {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   max-width: 700px;
   margin: 0 auto 2rem auto;
-  color: #f0f0f0;
+  color: var(--text-white);
+  opacity: 0.9;
 }
 
 .cta-buttons {
@@ -148,12 +170,18 @@ body {
   display: inline-flex;
   align-items: center;
   transition: all 0.3s ease;
+  text-decoration: none;
 }
 
 .btn-primary {
-  background: linear-gradient(to right, #6a11cb, #2575fc);
-  color: white;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  background: var(--btn-primary);
+  color: var(--btn-text);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-heavy);
 }
 
 .btn-primary a{

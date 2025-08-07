@@ -1,8 +1,5 @@
-/* Dashboard Specific Styles */
-body {
-  background: #1a1a2e;
-  color: #e0e0e0;
-}
+/* Dashboard Specific Styles - Using CSS Variables */
+/* Dashboard defaults to dark theme but respects user's theme choice */
 
 .dashboard-container {
   display: flex;
@@ -12,9 +9,10 @@ body {
 /* Sidebar */
 .sidebar {
   width: 250px;
-  background: #16213e;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+  background: var(--sidebar-bg);
+  box-shadow: var(--shadow-medium);
   padding: 2rem 0;
+  transition: background 0.3s ease;
 }
 
 .sidebar-nav {
@@ -26,21 +24,21 @@ body {
   display: flex;
   align-items: center;
   padding: 1rem 2rem;
-  color: #b0b0b0;
+  color: var(--text-muted);
   text-decoration: none;
   transition: all 0.3s ease;
   border-left: 3px solid transparent;
 }
 
 .nav-item:hover {
-  background: rgba(106, 17, 203, 0.2);
-  color: #ffffff;
+  background: var(--hover-bg);
+  color: var(--text-primary);
 }
 
 .nav-item.active {
-  background: linear-gradient(to right, rgba(106, 17, 203, 0.1), rgba(37, 117, 252, 0.1));
-  color: #6a11cb;
-  border-left-color: #6a11cb;
+  background: var(--hover-bg);
+  color: var(--primary-color);
+  border-left-color: var(--primary-color);
 }
 
 .nav-item i {

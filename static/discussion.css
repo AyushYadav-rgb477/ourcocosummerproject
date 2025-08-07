@@ -1,13 +1,5 @@
-/* Discussion Page Dark Theme Styles */
-
-/* Override body styles for fully dark theme */
-body {
-    background-color: #0d0d0d !important;
-    color: #ffffff !important;
-    font-family: 'Segoe UI', sans-serif !important;
-    margin: 0 !important;
-    padding: 0 !important;
-}
+/* Discussion Page Styles - Using CSS Variables */
+/* Discussion page works with both light and dark themes */
 
 /* Ensure all scrollable areas maintain dark background */
 html, body, * {
@@ -32,19 +24,12 @@ html, body, * {
     background-color: #555;
 }
 
-/* Dark navbar override */
-.navbar {
-    background-color: #0d0d0d !important;
-    background: #0d0d0d !important;
-    border-bottom: 1px solid #333 !important;
-}
-
-/* Base Styles - fully dark theme */
+/* Discussion Main Styles */
 .discussion-main {
-    background-color: #0d0d0d !important;
-    background: #0d0d0d !important;
+    background: var(--body-bg);
     min-height: 100vh;
     padding: 2rem 0;
+    transition: background 0.3s ease;
 }
 
 .discussion-container {
