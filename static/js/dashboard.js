@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Start notification polling
     startNotificationPolling();
+    
+    // Start real-time clock updates
+    startRealTimeUpdates();
 });
 
 async function checkAuthAndLoadDashboard() {
@@ -193,7 +196,7 @@ function displayRecentProjects(projects) {
         <div class="activity-item">
             <div class="activity-info">
                 <h4>${escapeHtml(project.title)}</h4>
-                <p>${project.category} • Created ${formatDate(project.created_at)}</p>
+                <p>${project.category} • Created <span data-timestamp="${project.created_at}">${formatDate(project.created_at)}</span></p>
             </div>
             <div class="activity-stats">
                 <div class="activity-stat">
@@ -214,6 +217,28 @@ function setupProjectForm() {
     if (form) {
         form.addEventListener('submit', handleProjectSubmission);
     }
+    
+    // Setup word count for project description
+    const descriptionTextarea = document.getElementById('project-description');
+    const wordCountSpan = document.getElementById('word-count');
+    
+    if (descriptionTextarea && wordCountSpan) {
+        descriptionTextarea.addEventListener('input', function() {
+            const words = this.value.trim().split(/\s+/).filter(word => word.length > 0);
+            const wordCount = words.length;
+            wordCountSpan.textContent = wordCount;
+            
+            // Update styling based on word count
+            const wordCountContainer = wordCountSpan.parentElement;
+            if (wordCount < 50) {
+                wordCountContainer.style.color = '#dc3545'; // Red
+                wordCountContainer.style.fontWeight = 'bold';
+            } else {
+                wordCountContainer.style.color = '#28a745'; // Green
+                wordCountContainer.style.fontWeight = 'normal';
+            }
+        });
+    }
 }
 
 async function handleProjectSubmission(e) {
@@ -223,6 +248,13 @@ async function handleProjectSubmission(e) {
     const category = document.getElementById('project-category').value;
     const description = document.getElementById('project-description').value;
     const fundingGoal = document.getElementById('funding-goal').value;
+    
+    // Validate minimum word count for description
+    const words = description.trim().split(/\s+/).filter(word => word.length > 0);
+    if (words.length < 50) {
+        showMessage('Project description must be at least 50 words. Please provide more details about your project idea.', 'error');
+        return;
+    }
     
     const submitBtn = e.target.querySelector('.submit-btn');
     
@@ -305,7 +337,7 @@ function displayUserProjects(projects) {
             </div>
             <div class="project-meta">
                 <span class="project-category">${project.category}</span>
-                <span class="project-date">${formatDate(project.created_at)}</span>
+                <span class="project-date" data-timestamp="${project.created_at}">${formatDate(project.created_at)}</span>
             </div>
             <p class="project-description">${escapeHtml(project.description.substring(0, 150))}${project.description.length > 150 ? '...' : ''}</p>
             <div class="project-stats">
@@ -373,7 +405,7 @@ function displayCollaborations(collaborations) {
                 "${escapeHtml(collab.message || 'No message provided')}"
             </div>
             <div class="collaboration-date">
-                Requested ${formatDate(collab.created_at)}
+                Requested <span data-timestamp="${collab.created_at}">${formatDate(collab.created_at)}</span>
             </div>
             ${collab.status === 'pending' ? `
                 <div class="collaboration-actions">
@@ -447,14 +479,30 @@ async function handleLogout() {
     }
 }
 
-// Utility functions
+// Utility functions - Real-time date formatting
 function formatDate(dateString) {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffMinutes < 1) {
+        return 'Just now';
+    } else if (diffMinutes < 60) {
+        return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    } else if (diffHours < 24) {
+        return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else if (diffDays < 7) {
+        return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    } else {
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    }
 }
 
 function escapeHtml(text) {
@@ -532,8 +580,15 @@ async function loadNotifications() {
 function updateNotificationCount() {
     const countEl = document.getElementById('notification-count');
     if (countEl) {
-        countEl.textContent = unreadCount;
-        countEl.setAttribute('data-count', unreadCount);
+        if (unreadCount > 0) {
+            countEl.textContent = unreadCount;
+            countEl.setAttribute('data-count', unreadCount);
+            countEl.style.display = 'inline-block';
+        } else {
+            countEl.textContent = '';
+            countEl.setAttribute('data-count', '0');
+            countEl.style.display = 'none';
+        }
     }
 }
 
@@ -560,7 +615,7 @@ function displayFilteredNotifications() {
             <div class="notification-content">
                 <div class="notification-title">${escapeHtml(notification.title)}</div>
                 <div class="notification-message">${escapeHtml(notification.message)}</div>
-                <div class="notification-time">${formatNotificationTime(notification.created_at)}</div>
+                <div class="notification-time" data-timestamp="${notification.created_at}">${formatNotificationTime(notification.created_at)}</div>
                 ${!notification.is_read ? `
                     <div class="notification-actions">
                         <button class="notification-action" onclick="markNotificationAsRead(${notification.id})">
@@ -708,4 +763,28 @@ function startNotificationPolling() {
             console.log('Notification polling error:', error);
         }
     }, 30000);
+}
+
+// Real-time updates for timestamps
+function startRealTimeUpdates() {
+    // Update all timestamps every minute
+    setInterval(updateAllTimestamps, 60000);
+}
+
+function updateAllTimestamps() {
+    // Update project timestamps
+    document.querySelectorAll('[data-timestamp]').forEach(element => {
+        const timestamp = element.getAttribute('data-timestamp');
+        if (timestamp) {
+            element.textContent = formatDate(timestamp);
+        }
+    });
+    
+    // Update notification timestamps
+    document.querySelectorAll('.notification-time[data-timestamp]').forEach(element => {
+        const timestamp = element.getAttribute('data-timestamp');
+        if (timestamp) {
+            element.textContent = formatNotificationTime(timestamp);
+        }
+    });
 }

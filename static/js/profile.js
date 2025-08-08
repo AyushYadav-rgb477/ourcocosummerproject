@@ -14,6 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load profile data
     loadProfileData();
+    
+    // Start real-time updates
+    startRealTimeUpdates();
 });
 
 async function checkAuthStatus() {
@@ -178,7 +181,7 @@ function displayUserCollaborations(collaborations) {
             <div class="list-item-content">
                 <p><strong>Project Owner:</strong> ${escapeHtml(collab.owner_name)}</p>
                 ${collab.message ? `<p><strong>Message:</strong> ${escapeHtml(collab.message)}</p>` : ''}
-                <span class="list-item-date">${formatDate(collab.created_at)}</span>
+                <span class="list-item-date" data-timestamp="${collab.created_at}">${formatDate(collab.created_at)}</span>
             </div>
         </div>
     `).join('');
@@ -224,7 +227,7 @@ function displayUserDonations(donations) {
             <div class="list-item-content">
                 <p><strong>Project Owner:</strong> ${escapeHtml(donation.owner_name)}</p>
                 ${donation.message ? `<p><strong>Message:</strong> ${escapeHtml(donation.message)}</p>` : ''}
-                <span class="list-item-date">${formatDate(donation.created_at)}</span>
+                <span class="list-item-date" data-timestamp="${donation.created_at}">${formatDate(donation.created_at)}</span>
             </div>
         </div>
     `).join('');
@@ -267,7 +270,7 @@ function displayUserActivity(activities) {
             </div>
             <div class="activity-content">
                 <div class="activity-text">${activity.text}</div>
-                <div class="activity-time">${formatDate(activity.time)}</div>
+                <div class="activity-time" data-timestamp="${activity.time}">${formatDate(activity.time)}</div>
             </div>
         </div>
     `).join('');
@@ -413,14 +416,26 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
-    if (diffDays === 1) {
+    if (diffMinutes < 1) {
+        return 'Just now';
+    } else if (diffMinutes < 60) {
+        return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    } else if (diffHours < 24) {
+        return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else if (diffDays === 1) {
         return 'Yesterday';
     } else if (diffDays < 7) {
-        return `${diffDays} days ago`;
+        return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
     } else {
-        return date.toLocaleDateString();
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
     }
 }
 
@@ -447,4 +462,36 @@ async function handleLogout() {
     } catch (error) {
         console.error('Logout error:', error);
     }
+}
+
+// Real-time updates for timestamps
+function startRealTimeUpdates() {
+    // Update all timestamps every minute
+    setInterval(updateAllTimestamps, 60000);
+}
+
+function updateAllTimestamps() {
+    // Update project timestamps
+    document.querySelectorAll('[data-timestamp]').forEach(element => {
+        const timestamp = element.getAttribute('data-timestamp');
+        if (timestamp) {
+            element.textContent = formatDate(timestamp);
+        }
+    });
+    
+    // Update activity timestamps
+    document.querySelectorAll('.activity-time[data-timestamp]').forEach(element => {
+        const timestamp = element.getAttribute('data-timestamp');
+        if (timestamp) {
+            element.textContent = formatDate(timestamp);
+        }
+    });
+    
+    // Update list item timestamps
+    document.querySelectorAll('.list-item-date[data-timestamp]').forEach(element => {
+        const timestamp = element.getAttribute('data-timestamp');
+        if (timestamp) {
+            element.textContent = formatDate(timestamp);
+        }
+    });
 }

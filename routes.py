@@ -210,6 +210,11 @@ def create_project():
             if not data.get(field):
                 return jsonify({'error': f'{field} is required'}), 400
         
+        # Validate minimum word count for description
+        description_words = data['description'].strip().split()
+        if len(description_words) < 50:
+            return jsonify({'error': 'Project description must be at least 50 words. Please provide more details about your project idea.'}), 400
+        
         project = Project()
         project.title = data['title']
         project.description = data['description']
