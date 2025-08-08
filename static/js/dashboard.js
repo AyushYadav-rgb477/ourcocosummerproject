@@ -824,6 +824,9 @@ function displayTeamMembers(teamMembers) {
                         <a href="profile.html?user=${member.id}" class="view-profile-btn">
                             <i class="fas fa-eye"></i> View Profile
                         </a>
+                        <button class="message-btn" onclick="openTeamChat(${member.id})">
+                            <i class="fas fa-comments"></i> Message
+                        </button>
                     </div>
                 </div>
             `).join('')}
@@ -843,3 +846,121 @@ function displayEmptyTeam() {
         </div>
     `;
 }
+
+// Team Chat Functions
+let currentChatMember = null;
+
+async function openTeamChat(memberId) {
+    try {
+        const response = await fetch(`/api/user/${memberId}`);
+        if (response.ok) {
+            const data = await response.json();
+            currentChatMember = data.user;
+            
+            document.getElementById('chat-member-name').textContent = data.user.full_name;
+            document.getElementById('chat-member-username').textContent = `@${data.user.username}`;
+            
+            // Load chat messages
+            await loadChatMessages(memberId);
+            
+            document.getElementById('team-chat-modal').classList.add('show');
+        }
+    } catch (error) {
+        console.error('Error opening team chat:', error);
+    }
+}
+
+function closeTeamChat() {
+    document.getElementById('team-chat-modal').classList.remove('show');
+    currentChatMember = null;
+}
+
+async function loadChatMessages(memberId) {
+    try {
+        const response = await fetch(`/api/team/chat/${memberId}`);
+        if (response.ok) {
+            const data = await response.json();
+            displayChatMessages(data.messages || []);
+        } else {
+            displayChatMessages([]);
+        }
+    } catch (error) {
+        console.error('Error loading chat messages:', error);
+        displayChatMessages([]);
+    }
+}
+
+function displayChatMessages(messages) {
+    const container = document.getElementById('chat-messages');
+    if (messages.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; color: #999; padding: 2rem;">
+                <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <p>Start a conversation with your team member!</p>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = messages.map(message => `
+        <div class="chat-message ${message.is_own ? 'own' : ''}">
+            <div class="message-sender">${escapeHtml(message.sender_name)}</div>
+            <div class="message-text">${escapeHtml(message.content)}</div>
+            <div class="message-time">${formatDate(message.created_at)}</div>
+        </div>
+    `).join('');
+    
+    // Scroll to bottom
+    container.scrollTop = container.scrollHeight;
+}
+
+async function sendTeamMessage() {
+    if (!currentChatMember) return;
+    
+    const input = document.getElementById('chat-message-input');
+    const message = input.value.trim();
+    
+    if (!message) return;
+    
+    const sendBtn = document.querySelector('.send-message-btn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    try {
+        const response = await fetch('/api/team/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                recipient_id: currentChatMember.id,
+                content: message
+            })
+        });
+        
+        if (response.ok) {
+            input.value = '';
+            await loadChatMessages(currentChatMember.id);
+        } else {
+            const data = await response.json();
+            console.error('Error sending message:', data.error);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+    }
+}
+
+// Enable Enter key to send message
+document.addEventListener('DOMContentLoaded', function() {
+    const chatInput = document.getElementById('chat-message-input');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendTeamMessage();
+            }
+        });
+    }
+});

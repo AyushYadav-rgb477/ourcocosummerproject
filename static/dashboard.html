@@ -269,6 +269,34 @@
   <!-- Success/Error Messages -->
   <div id="message-container" class="message-container"></div>
 
+  <!-- Team Chat Modal -->
+  <div class="team-chat-modal" id="team-chat-modal">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <h3 id="chat-member-name">Team Chat</h3>
+            <p id="chat-member-username" style="margin: 0; opacity: 0.9; font-size: 0.9rem;"></p>
+          </div>
+          <button class="close-modal" onclick="closeTeamChat()">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <!-- Messages will be loaded here -->
+      </div>
+      <div class="chat-input">
+        <div class="chat-input-group">
+          <input type="text" id="chat-message-input" placeholder="Type your message...">
+          <button class="send-message-btn" onclick="sendTeamMessage()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/dashboard.js"></script>
 </body>
 </html>

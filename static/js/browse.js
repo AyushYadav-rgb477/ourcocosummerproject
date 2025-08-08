@@ -373,10 +373,24 @@ function displayComments(comments) {
     }
     
     commentsList.innerHTML = comments.map(comment => `
-        <div class="comment-item">
+        <div class="comment-item" data-comment-id="${comment.id}">
             <div class="comment-author">${escapeHtml(comment.author?.full_name || 'Unknown')}</div>
             <div class="comment-content">${escapeHtml(comment.content)}</div>
             <div class="comment-date">${formatDate(comment.created_at)}</div>
+            <div class="comment-actions">
+                <button class="reaction-btn" onclick="toggleCommentReaction(${comment.id}, 'like')">
+                    <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${comment.likes || 0}</span>
+                </button>
+                <button class="reaction-btn" onclick="toggleCommentReaction(${comment.id}, 'heart')">
+                    <i class="fas fa-heart"></i> <span class="reaction-count">${comment.hearts || 0}</span>
+                </button>
+                <button class="comment-reply-btn" onclick="showCommentReply(${comment.id})">
+                    <i class="fas fa-reply"></i> Reply
+                </button>
+            </div>
+            <div class="comment-replies" id="comment-replies-${comment.id}">
+                <!-- Comment replies will be loaded here -->
+            </div>
         </div>
     `).join('');
 }
@@ -635,20 +649,138 @@ function escapeHtml(text) {
 }
 
 function showMessage(message, type = 'info') {
-    const container = document.getElementById('message-container') || createMessageContainer();
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
-    
-    container.appendChild(messageDiv);
-    
-    // Remove message after 5 seconds
-    setTimeout(() => {
-        if (messageDiv.parentNode) {
-            messageDiv.parentNode.removeChild(messageDiv);
+    // Remove popup messages - just log to console instead
+    console.log(`${type}: ${message}`);
+}
+
+// Comment reaction and reply functions
+async function toggleCommentReaction(commentId, reactionType) {
+    if (!currentUser) {
+        alert('Please login to react');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/comment/${commentId}/reaction`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                reaction_type: reactionType
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement) {
+                const reactionBtn = commentElement.querySelector(`[onclick*="${reactionType}"]`);
+                const countSpan = reactionBtn.querySelector('.reaction-count');
+                
+                countSpan.textContent = data.count;
+                
+                if (data.user_reacted) {
+                    reactionBtn.classList.add('active');
+                } else {
+                    reactionBtn.classList.remove('active');
+                }
+            }
+        } else {
+            console.error('Error updating reaction:', data.error);
         }
-    }, 5000);
+    } catch (error) {
+        console.error('Error toggling reaction:', error);
+    }
+}
+
+function showCommentReply(commentId) {
+    if (!currentUser) {
+        alert('Please login to reply');
+        return;
+    }
+
+    const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
+    if (!repliesContainer) return;
+
+    if (repliesContainer.querySelector('.comment-reply-form')) {
+        return;
+    }
+
+    const replyForm = `
+        <div class="comment-reply-form">
+            <textarea class="comment-reply-input" placeholder="Write your reply..." rows="2"></textarea>
+            <div class="comment-reply-actions">
+                <button class="btn-secondary" onclick="cancelCommentReply(${commentId})">Cancel</button>
+                <button class="btn-primary" onclick="submitCommentReply(${commentId})">
+                    <i class="fas fa-paper-plane"></i> Reply
+                </button>
+            </div>
+        </div>
+    `;
+
+    repliesContainer.insertAdjacentHTML('beforeend', replyForm);
+    repliesContainer.querySelector('.comment-reply-input').focus();
+}
+
+function cancelCommentReply(commentId) {
+    const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
+    const replyForm = repliesContainer.querySelector('.comment-reply-form');
+    if (replyForm) {
+        replyForm.remove();
+    }
+}
+
+async function submitCommentReply(commentId) {
+    const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
+    const replyInput = repliesContainer.querySelector('.comment-reply-input');
+    const content = replyInput.value.trim();
+
+    if (!content) {
+        alert('Please enter a reply');
+        return;
+    }
+
+    const submitBtn = repliesContainer.querySelector('.btn-primary');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Replying...';
+
+    try {
+        const response = await fetch(`/api/comment/${commentId}/reply`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            cancelCommentReply(commentId);
+            
+            const newReplyHTML = `
+                <div class="comment-reply">
+                    <div class="comment-author">${escapeHtml(currentUser.full_name)}</div>
+                    <div class="comment-content">${escapeHtml(content)}</div>
+                    <div class="comment-date">Just now</div>
+                </div>
+            `;
+            
+            repliesContainer.insertAdjacentHTML('beforeend', newReplyHTML);
+        } else {
+            alert(data.error || 'Error posting reply');
+        }
+    } catch (error) {
+        console.error('Error submitting reply:', error);
+        alert('Error posting reply');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Reply';
+    }
 }
 
 function createMessageContainer() {

@@ -604,6 +604,102 @@ body {
   font-size: 0.8rem;
 }
 
+/* Comment Actions and Reactions */
+.comment-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  align-items: center;
+}
+
+.comment-actions .reaction-btn,
+.comment-actions .comment-reply-btn {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 0.3rem 0.6rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.comment-actions .reaction-btn:hover,
+.comment-actions .comment-reply-btn:hover {
+  background: #f0f0f0;
+  border-color: #6a11cb;
+  color: #6a11cb;
+}
+
+.comment-actions .reaction-btn.active {
+  background: #6a11cb;
+  border-color: #6a11cb;
+  color: white;
+}
+
+.comment-replies {
+  margin-left: 1.5rem;
+  margin-top: 0.75rem;
+  padding-left: 1rem;
+  border-left: 2px solid #eee;
+}
+
+.comment-reply-form {
+  margin-top: 0.75rem;
+  padding: 1rem;
+  background: #f1f3f4;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.comment-reply-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.comment-reply-input:focus {
+  outline: none;
+  border-color: #6a11cb;
+  box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.1);
+}
+
+.comment-reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.comment-reply {
+  background: #f1f3f4;
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid #6a11cb;
+}
+
+.comment-reply .comment-author {
+  font-size: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.comment-reply .comment-content {
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.comment-reply .comment-date {
+  font-size: 0.75rem;
+}
+
 /* Form Elements in Modals */
 .modal input,
 .modal textarea {

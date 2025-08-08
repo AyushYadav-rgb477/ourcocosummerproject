@@ -240,15 +240,20 @@
   font-size: 1.1rem;
 }
 
-/* Modal Styles for Discussion */
+/* Modal Styles for Discussion - Centered */
 .modal.show {
-  display: block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .modal-content.discussion-view {
   max-width: 800px;
   max-height: 90vh;
   overflow-y: auto;
+  margin: 0;
+  position: relative;
+  transform: none;
 }
 
 .discussion-content {
@@ -423,6 +428,128 @@
 
 .tags-group input {
   margin-bottom: 0.5rem;
+}
+
+/* Reply Actions and Reactions */
+.reply-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+
+.reaction-btn {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 0.3rem 0.6rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.reaction-btn:hover {
+  background: #f0f0f0;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.reaction-btn.active {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+}
+
+.reply-to-reply-btn {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  padding: 0.3rem 0.6rem;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+}
+
+.reply-to-reply-btn:hover {
+  background: #f0f0f0;
+  border-color: #28a745;
+  color: #28a745;
+}
+
+.nested-replies {
+  margin-left: 2rem;
+  margin-top: 1rem;
+  padding-left: 1rem;
+  border-left: 2px solid #eee;
+}
+
+.reaction-count {
+  font-weight: 500;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Nested Reply Forms */
+.nested-reply-form {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+}
+
+.nested-reply-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.nested-reply-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.nested-reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.nested-reply {
+  background: #f8f9fa;
+  padding: 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  border-left: 3px solid #667eea;
+}
+
+.nested-reply .reply-author {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.nested-reply .reply-content {
+  color: #6c757d;
+  line-height: 1.4;
+  margin-bottom: 0.25rem;
+}
+
+.nested-reply .reply-date {
+  font-size: 0.8rem;
+  color: #adb5bd;
 }
 
 /* Responsive Design */

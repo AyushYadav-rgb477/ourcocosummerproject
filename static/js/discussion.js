@@ -380,10 +380,24 @@ function displayReplies(replies) {
     }
     
     repliesContainer.innerHTML = replies.map(reply => `
-        <div class="reply-item">
+        <div class="reply-item" data-reply-id="${reply.id}">
             <div class="reply-author">${escapeHtml(reply.author.full_name)}</div>
             <div class="reply-content">${escapeHtml(reply.content)}</div>
             <div class="reply-date">${formatDate(reply.created_at)}</div>
+            <div class="reply-actions">
+                <button class="reaction-btn" onclick="toggleReplyReaction(${reply.id}, 'like')">
+                    <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${reply.likes || 0}</span>
+                </button>
+                <button class="reaction-btn" onclick="toggleReplyReaction(${reply.id}, 'heart')">
+                    <i class="fas fa-heart"></i> <span class="reaction-count">${reply.hearts || 0}</span>
+                </button>
+                <button class="reply-to-reply-btn" onclick="showReplyToReply(${reply.id})">
+                    <i class="fas fa-reply"></i> Reply
+                </button>
+            </div>
+            <div class="nested-replies" id="nested-replies-${reply.id}">
+                <!-- Nested replies will be loaded here -->
+            </div>
         </div>
     `).join('');
 }
@@ -523,6 +537,139 @@ function hideReplyForm() {
     if (replyForm) {
         replyForm.style.display = 'none';
         document.getElementById('reply-content').value = '';
+    }
+}
+
+// Reply reaction functions
+async function toggleReplyReaction(replyId, reactionType) {
+    if (!currentUser) {
+        alert('Please login to react');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/api/reply/${replyId}/reaction`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                reaction_type: reactionType
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+            if (replyElement) {
+                const reactionBtn = replyElement.querySelector(`[onclick*="${reactionType}"]`);
+                const countSpan = reactionBtn.querySelector('.reaction-count');
+                
+                countSpan.textContent = data.count;
+                
+                if (data.user_reacted) {
+                    reactionBtn.classList.add('active');
+                } else {
+                    reactionBtn.classList.remove('active');
+                }
+            }
+        } else {
+            console.error('Error updating reaction:', data.error);
+        }
+    } catch (error) {
+        console.error('Error toggling reaction:', error);
+    }
+}
+
+function showReplyToReply(replyId) {
+    if (!currentUser) {
+        alert('Please login to reply');
+        return;
+    }
+
+    const nestedRepliesContainer = document.getElementById(`nested-replies-${replyId}`);
+    if (!nestedRepliesContainer) return;
+
+    // Check if reply form already exists
+    if (nestedRepliesContainer.querySelector('.nested-reply-form')) {
+        return;
+    }
+
+    const replyForm = `
+        <div class="nested-reply-form">
+            <textarea class="nested-reply-input" placeholder="Write your reply..." rows="2"></textarea>
+            <div class="nested-reply-actions">
+                <button class="btn-secondary" onclick="cancelNestedReply(${replyId})">Cancel</button>
+                <button class="btn-primary" onclick="submitNestedReply(${replyId})">
+                    <i class="fas fa-paper-plane"></i> Reply
+                </button>
+            </div>
+        </div>
+    `;
+
+    nestedRepliesContainer.insertAdjacentHTML('beforeend', replyForm);
+    nestedRepliesContainer.querySelector('.nested-reply-input').focus();
+}
+
+function cancelNestedReply(replyId) {
+    const nestedRepliesContainer = document.getElementById(`nested-replies-${replyId}`);
+    const replyForm = nestedRepliesContainer.querySelector('.nested-reply-form');
+    if (replyForm) {
+        replyForm.remove();
+    }
+}
+
+async function submitNestedReply(parentReplyId) {
+    const nestedRepliesContainer = document.getElementById(`nested-replies-${parentReplyId}`);
+    const replyInput = nestedRepliesContainer.querySelector('.nested-reply-input');
+    const content = replyInput.value.trim();
+
+    if (!content) {
+        alert('Please enter a reply');
+        return;
+    }
+
+    const submitBtn = nestedRepliesContainer.querySelector('.btn-primary');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Replying...';
+
+    try {
+        const response = await fetch(`/api/reply/${parentReplyId}/reply`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Remove the reply form
+            cancelNestedReply(parentReplyId);
+            
+            // Add the new nested reply
+            const newReplyHTML = `
+                <div class="nested-reply">
+                    <div class="reply-author">${escapeHtml(currentUser.full_name)}</div>
+                    <div class="reply-content">${escapeHtml(content)}</div>
+                    <div class="reply-date">Just now</div>
+                </div>
+            `;
+            
+            nestedRepliesContainer.insertAdjacentHTML('beforeend', newReplyHTML);
+        } else {
+            alert(data.error || 'Error posting reply');
+        }
+    } catch (error) {
+        console.error('Error submitting nested reply:', error);
+        alert('Error posting reply');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Reply';
     }
 }
 
