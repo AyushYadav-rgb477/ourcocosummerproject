@@ -22,6 +22,9 @@
 /* Profile Header */
 .profile-header {
   margin-bottom: 3rem;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .profile-banner {
@@ -31,18 +34,23 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(10px);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   margin-bottom: 2rem;
-  flex-wrap: wrap;
   gap: 2rem;
+  width: 100%;
+  max-width: 800px;
 }
 
 .profile-info {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 2rem;
-  flex: 1;
+  text-align: center;
+  gap: 1.5rem;
+  width: 100%;
 }
 
 .profile-avatar {
@@ -98,6 +106,7 @@
 .profile-skills {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
@@ -121,11 +130,17 @@
   background-clip: text;
 }
 
+.profile-details {
+  text-align: center;
+  width: 100%;
+}
+
 .profile-details p {
   margin: 0.5rem 0;
   color: #666;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
 }
 
@@ -136,14 +151,25 @@
 
 .profile-actions {
   display: flex;
+  justify-content: center;
   gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 /* Profile Stats */
+.stats-overview {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+}
+
 .profile-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
+  max-width: 1000px;
+  width: 100%;
 }
 
 .stat-card {
@@ -186,6 +212,9 @@
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .tab-buttons {
