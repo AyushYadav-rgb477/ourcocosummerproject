@@ -131,11 +131,18 @@ function viewProject(projectId) {
 // Load platform statistics
 async function loadStats() {
     try {
-        const response = await fetch('/api/projects?per_page=1000'); // Get all projects for stats
+        const response = await fetch('/api/homepage/stats'); // Get homepage stats including donations
         
         if (response.ok) {
             const data = await response.json();
-            updateStats(data);
+            updateStatsElements(data.totalProjects, data.totalUsers, data.totalFunding);
+        } else {
+            // Fallback to projects API if homepage stats not available
+            const projectsResponse = await fetch('/api/projects?per_page=1000');
+            if (projectsResponse.ok) {
+                const projectsData = await projectsResponse.json();
+                updateStats(projectsData);
+            }
         }
     } catch (error) {
         console.error('Error loading stats:', error);

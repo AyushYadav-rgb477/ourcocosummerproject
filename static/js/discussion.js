@@ -146,7 +146,6 @@ async function loadDiscussions() {
         
     } catch (error) {
         console.error('Error loading discussions:', error);
-        showMessage('Error loading discussions', 'error');
     } finally {
         isLoading = false;
         if (loadingEl) loadingEl.style.display = 'none';
@@ -179,7 +178,7 @@ function displayDiscussions(discussions, clearExisting = false) {
                         <span>${discussion.likes}</span>
                     </span>
                     <span class="stat">
-                        <i class="fas fa-clock"></i>
+                        <i class="fas fa-calendar"></i>
                         <span>${formatDate(discussion.created_at)}</span>
                     </span>
                 </div>
@@ -240,7 +239,7 @@ function setupModals() {
 
 function openStartDiscussionModal() {
     if (!currentUser) {
-        showMessage('Please login to start a discussion', 'error');
+        window.location.href = '/login.html';
         return;
     }
     
@@ -255,12 +254,12 @@ async function handleCreateDiscussion() {
     const tags = document.getElementById('discussion-tags').value;
     
     if (!title.trim() || !content.trim()) {
-        showMessage('Title and content are required', 'error');
+        alert('Title and content are required');
         return;
     }
     
     if (!category) {
-        showMessage('Please select a category', 'error');
+        alert('Please select a category');
         return;
     }
     
@@ -285,7 +284,6 @@ async function handleCreateDiscussion() {
         const data = await response.json();
         
         if (response.ok) {
-            showMessage('Discussion created successfully!', 'success');
             closeModals();
             
             // Clear form
@@ -297,12 +295,12 @@ async function handleCreateDiscussion() {
             // Reload discussions
             resetAndLoadDiscussions();
         } else {
-            showMessage(data.error || 'Error creating discussion', 'error');
+            alert(data.error || 'Error creating discussion');
         }
         
     } catch (error) {
         console.error('Error creating discussion:', error);
-        showMessage('Error creating discussion', 'error');
+        alert('Error creating discussion');
     } finally {
         createBtn.disabled = false;
         createBtn.innerHTML = '<i class="fas fa-plus"></i> Create Discussion';
@@ -323,12 +321,11 @@ async function openDiscussionModal(discussionId) {
             const modal = document.getElementById('view-discussion-modal');
             modal.classList.add('show');
         } else {
-            showMessage('Error loading discussion details', 'error');
+            console.error('Error loading discussion details');
         }
         
     } catch (error) {
         console.error('Error loading discussion:', error);
-        showMessage('Error loading discussion details', 'error');
     }
 }
 
@@ -426,7 +423,7 @@ function setupDiscussionActions() {
 
 async function handleLikeDiscussion() {
     if (!currentUser) {
-        showMessage('Please login to like discussions', 'error');
+        window.location.href = '/login.html';
         return;
     }
     
@@ -606,17 +603,16 @@ function escapeHtml(text) {
 }
 
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 1) {
-        return 'Yesterday';
-    } else if (diffDays < 7) {
-        return `${diffDays} days ago`;
-    } else {
-        return date.toLocaleDateString();
+    try {
+        const date = new Date(dateString);
+        // Always return only the date part, no time
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch (error) {
+        return 'Invalid date';
     }
 }
 

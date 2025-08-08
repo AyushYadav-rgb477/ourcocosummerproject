@@ -99,6 +99,9 @@ async function loadSectionData(section) {
         case 'collaborations':
             loadCollaborations();
             break;
+        case 'team':
+            loadTeam();
+            break;
         case 'notifications':
             loadNotifications();
             break;
@@ -279,7 +282,7 @@ async function handleProjectSubmission(e) {
         const data = await response.json();
         
         if (response.ok) {
-            showMessage('Project created successfully!', 'success');
+            console.log('Project created successfully!');
             
             // Reset form
             e.target.reset();
@@ -481,27 +484,16 @@ async function handleLogout() {
 
 // Utility functions - Real-time date formatting
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffMinutes < 1) {
-        return 'Just now';
-    } else if (diffMinutes < 60) {
-        return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
-    } else if (diffHours < 24) {
-        return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-    } else if (diffDays < 7) {
-        return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-    } else {
+    try {
+        const date = new Date(dateString);
+        // Always return only the date part, no time
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
         });
+    } catch (error) {
+        return 'Invalid date';
     }
 }
 
@@ -787,4 +779,67 @@ function updateAllTimestamps() {
             element.textContent = formatNotificationTime(timestamp);
         }
     });
+}
+
+// Load team members
+async function loadTeam() {
+    try {
+        const response = await fetch('/api/user/team');
+        if (response.ok) {
+            const data = await response.json();
+            displayTeamMembers(data.team_members || []);
+        } else {
+            console.error('Error loading team members');
+            displayEmptyTeam();
+        }
+    } catch (error) {
+        console.error('Error loading team members:', error);
+        displayEmptyTeam();
+    }
+}
+
+function displayTeamMembers(teamMembers) {
+    const container = document.getElementById('team-container');
+    if (!container) return;
+
+    if (teamMembers.length === 0) {
+        displayEmptyTeam();
+        return;
+    }
+
+    container.innerHTML = `
+        <div class="team-grid">
+            ${teamMembers.map(member => `
+                <div class="team-member-card">
+                    <div class="member-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="member-info">
+                        <h3>${escapeHtml(member.full_name)}</h3>
+                        <p class="member-username">@${escapeHtml(member.username)}</p>
+                        <p class="member-college">${escapeHtml(member.college || 'No college specified')}</p>
+                        <p class="member-email">${escapeHtml(member.email)}</p>
+                    </div>
+                    <div class="member-actions">
+                        <a href="profile.html?user=${member.id}" class="view-profile-btn">
+                            <i class="fas fa-eye"></i> View Profile
+                        </a>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+function displayEmptyTeam() {
+    const container = document.getElementById('team-container');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <h3>No Team Members Yet</h3>
+            <p>Accept collaboration requests to form your team!</p>
+        </div>
+    `;
 }

@@ -594,14 +594,19 @@ def add_discussion_reply(discussion_id):
 @app.route('/api/discussions/stats', methods=['GET'])
 def get_discussion_stats():
     try:
-        total_discussions = Discussion.query.count()
-        active_members = User.query.count()
-        ideas_shared = Discussion.query.count() + Project.query.count()
+        # Ideas shared count = number of discussion posts (total discussions)
+        ideas_shared = Discussion.query.count()
+        
+        # Community members = unique users who have posted discussions
+        community_members = db.session.query(Discussion.author_id).distinct().count()
+        
+        # Active discussions = total number of replies across all discussions
+        active_discussions = DiscussionReply.query.count()
         
         return jsonify({
-            'totalDiscussions': total_discussions,
-            'activeMembers': active_members,
-            'ideasShared': ideas_shared
+            'totalDiscussions': active_discussions,  # Active discussions (replies count)
+            'activeMembers': community_members,       # Community members (unique posters)
+            'ideasShared': ideas_shared              # Ideas shared (total discussion posts)
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -962,5 +967,64 @@ def clear_all_notifications():
         # For now, just return success
         return jsonify({'message': 'All notifications cleared'}), 200
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Homepage stats API with accurate donation totals
+@app.route('/api/homepage/stats', methods=['GET'])
+def get_homepage_stats():
+    try:
+        total_projects = Project.query.count()
+        total_users = User.query.count()
+        # Total funding = sum of all actual donations made by users
+        total_funding = db.session.query(func.sum(Donation.amount)).scalar() or 0
+        
+        return jsonify({
+            'totalProjects': total_projects,
+            'totalUsers': total_users,
+            'totalFunding': total_funding
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Get user's team members (accepted collaborations)
+@app.route('/api/user/team', methods=['GET'])
+def get_user_team():
+    try:
+        if 'user_id' not in session:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        user_id = session['user_id']
+        
+        # Get accepted collaborations where user is either requester or project owner
+        accepted_collabs = db.session.query(Collaboration).join(Project).join(User, User.id == Project.owner_id).filter(
+            ((Collaboration.user_id == user_id) | (Project.owner_id == user_id)) &
+            (Collaboration.status == 'accepted')
+        ).all()
+        
+        team_members = set()
+        
+        for collab in accepted_collabs:
+            if collab.user_id == user_id:
+                # User is the collaborator, add project owner to team
+                owner = User.query.get(collab.project.owner_id)
+                if owner:
+                    team_members.add(owner)
+            else:
+                # User is the project owner, add collaborator to team
+                collaborator = User.query.get(collab.user_id)
+                if collaborator:
+                    team_members.add(collaborator)
+        
+        team_data = [{
+            'id': member.id,
+            'username': member.username,
+            'full_name': member.full_name,
+            'email': member.email,
+            'college': member.college
+        } for member in team_members]
+        
+        return jsonify({'team_members': team_data}), 200
+    
     except Exception as e:
         return jsonify({'error': str(e)}), 500

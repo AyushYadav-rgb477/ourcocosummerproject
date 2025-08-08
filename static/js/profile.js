@@ -413,43 +413,22 @@ function escapeHtml(text) {
 }
 
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = Math.abs(now - date);
-    const diffMinutes = Math.floor(diffTime / (1000 * 60));
-    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffMinutes < 1) {
-        return 'Just now';
-    } else if (diffMinutes < 60) {
-        return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
-    } else if (diffHours < 24) {
-        return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
-    } else if (diffDays === 1) {
-        return 'Yesterday';
-    } else if (diffDays < 7) {
-        return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
-    } else {
+    try {
+        const date = new Date(dateString);
+        // Always return only the date part, no time
         return date.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric'
         });
+    } catch (error) {
+        return 'Invalid date';
     }
 }
 
 function showMessage(message, type) {
-    // Create and show toast message
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.textContent = message;
-    
-    document.body.appendChild(toast);
-    
-    setTimeout(() => {
-        toast.remove();
-    }, 3000);
+    // Remove popup messages - just log to console instead
+    console.log(`${type}: ${message}`);
 }
 
 // Handle logout
