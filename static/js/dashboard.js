@@ -701,10 +701,7 @@ async function markNotificationAsRead(notificationId) {
                 unreadCount = Math.max(0, unreadCount - 1);
                 updateNotificationCount();
                 displayFilteredNotifications();
-                showMessage('Notification marked as read', 'success');
             }
-        } else {
-            showMessage('Error marking notification as read', 'error');
         }
     } catch (error) {
         console.error('Error marking notification as read:', error);
@@ -945,51 +942,6 @@ async function sendTeamMessage() {
     if (!message) return;
     
     const sendBtn = document.querySelector('.send-message-btn');
-    sendBtn.disabled = true;
-    
-    try {
-        const response = await fetch(`/api/team/chat/${currentChatMember.id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                content: message
-            })
-        });
-        
-        if (response.ok) {
-            input.value = '';
-            await loadChatMessages(currentChatMember.id);
-        } else {
-            const data = await response.json();
-            showMessage(data.error || 'Failed to send message', 'error');
-        }
-    } catch (error) {
-        console.error('Error sending message:', error);
-        showMessage('Error sending message', 'error');
-    } finally {
-        sendBtn.disabled = false;
-    }
-}
-
-// Add Enter key support for chat input
-function setupChatInputEvents() {
-    const chatInput = document.getElementById('chat-message-input');
-    if (chatInput) {
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendTeamMessage();
-            }
-        });
-    }
-}
-
-// Call this when initializing the dashboard
-document.addEventListener('DOMContentLoaded', function() {
-    setupChatInputEvents();
-});
     sendBtn.disabled = true;
     sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     
