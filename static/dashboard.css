@@ -109,12 +109,16 @@ body {
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   animation: pulse 2s infinite;
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% { transform: translateY(-50%) scale(1); }
+  50% { transform: translateY(-50%) scale(1.1); }
+  100% { transform: translateY(-50%) scale(1); }
 }
 
 .notification-count:empty,
@@ -122,21 +126,12 @@ body {
   display: none !important;
 }
 
-.notification-count {
-  display: none;
-}
-
+/* Show notification badge when count is greater than 0 */
 .notification-count:not(:empty):not([data-count="0"]) {
-  display: inline-block;
+  display: inline-block !important;
 }
 
-/* Hide notification badge when count is 0 or empty */
-.nav-item .notification-count[data-count="0"],
-.nav-item .notification-count:empty {
-  display: none !important;
-}
-
-/* Sidebar spacing improvements */
+/* Sidebar improvements */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
@@ -146,7 +141,6 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 1.2rem 2rem;
   color: #666;
   text-decoration: none;
@@ -157,6 +151,17 @@ body {
   border-radius: 12px;
   font-weight: 500;
   overflow: hidden;
+  cursor: pointer;
+}
+
+.nav-item-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+.nav-item .notification-count {
+  margin-left: auto;
 }
 
 .nav-item i {

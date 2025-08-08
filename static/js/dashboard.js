@@ -74,13 +74,19 @@ function switchSection(section) {
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
     });
-    document.querySelector(`[data-section="${section}"]`).classList.add('active');
+    const navItem = document.querySelector(`[data-section="${section}"]`);
+    if (navItem) {
+        navItem.classList.add('active');
+    }
     
     // Show/hide content sections
-    document.querySelectorAll('.content-section').forEach(section => {
-        section.classList.remove('active');
+    document.querySelectorAll('.content-section').forEach(sectionEl => {
+        sectionEl.classList.remove('active');
     });
-    document.getElementById(section).classList.add('active');
+    const contentSection = document.getElementById(section);
+    if (contentSection) {
+        contentSection.classList.add('active');
+    }
     
     currentSection = section;
     
@@ -110,6 +116,17 @@ async function loadSectionData(section) {
 
 async function loadDashboardData() {
     await loadDashboardStats();
+    // Load notification count for sidebar
+    try {
+        const response = await fetch('/api/notifications/count');
+        if (response.ok) {
+            const data = await response.json();
+            unreadCount = data.unread_count || 0;
+            updateNotificationCount();
+        }
+    } catch (error) {
+        console.log('Error loading notification count:', error);
+    }
 }
 
 async function loadDashboardStats() {
@@ -560,6 +577,7 @@ async function loadNotifications() {
             const data = await response.json();
             notifications = data.notifications || [];
             unreadCount = data.unread_count || 0;
+            console.log('Loaded notifications:', notifications.length, 'unread:', unreadCount);
             updateNotificationCount();
             displayFilteredNotifications();
         }
@@ -572,8 +590,9 @@ async function loadNotifications() {
 function updateNotificationCount() {
     const countEl = document.getElementById('notification-count');
     if (countEl) {
+        console.log('Updating notification count:', unreadCount);
         if (unreadCount > 0) {
-            countEl.textContent = unreadCount;
+            countEl.textContent = unreadCount > 99 ? '99+' : unreadCount;
             countEl.setAttribute('data-count', unreadCount);
             countEl.style.display = 'inline-block';
         } else {

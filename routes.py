@@ -910,16 +910,41 @@ def get_user_collaborations():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        # Get collaborations for projects owned by the user
-        user_projects = Project.query.filter_by(user_id=user_id).all()
-        project_ids = [project.id for project in user_projects]
+        # Get collaborations for projects owned by the user with user and project details
+        collaborations = db.session.query(
+            Collaboration,
+            Project.title.label('project_title'),
+            User.full_name.label('requester_name'),
+            User.username.label('requester_username'),
+            User.email.label('requester_email')
+        ).join(
+            Project, Collaboration.project_id == Project.id
+        ).join(
+            User, Collaboration.user_id == User.id
+        ).filter(
+            Project.user_id == user_id
+        ).order_by(desc(Collaboration.created_at)).all()
         
-        collaborations = Collaboration.query.filter(
-            Collaboration.project_id.in_(project_ids)
-        ).all()
+        collab_list = []
+        for collab, project_title, requester_name, requester_username, requester_email in collaborations:
+            collab_dict = {
+                'id': collab.id,
+                'message': collab.message,
+                'status': collab.status,
+                'created_at': collab.created_at.isoformat(),
+                'project': {
+                    'title': project_title
+                },
+                'requester': {
+                    'full_name': requester_name,
+                    'username': requester_username,
+                    'email': requester_email
+                }
+            }
+            collab_list.append(collab_dict)
         
         return jsonify({
-            'collaborations': [collab.to_dict() for collab in collaborations]
+            'collaborations': collab_list
         }), 200
         
     except Exception as e:
@@ -983,13 +1008,108 @@ def get_notifications():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        # For now, return empty notifications since we haven't implemented the notification system yet
-        # In a real app, you would query a notifications table
         notifications = []
         
+        # Get user's projects
+        user_projects = Project.query.filter_by(user_id=user_id).all()
+        project_ids = [p.id for p in user_projects]
+        
+        if project_ids:
+            # Recent comments on user's projects
+            recent_comments = db.session.query(
+                Comment, Project.title, User.full_name
+            ).join(
+                Project, Comment.project_id == Project.id
+            ).join(
+                User, Comment.user_id == User.id
+            ).filter(
+                Comment.project_id.in_(project_ids),
+                Comment.user_id != user_id
+            ).order_by(desc(Comment.created_at)).limit(10).all()
+            
+            for comment, project_title, commenter_name in recent_comments:
+                notifications.append({
+                    'id': f'comment_{comment.id}',
+                    'type': 'comment',
+                    'title': 'New Comment',
+                    'message': f'{commenter_name} commented on your project "{project_title}"',
+                    'created_at': comment.created_at.isoformat(),
+                    'is_read': False
+                })
+            
+            # Recent votes on user's projects
+            recent_votes = db.session.query(
+                Vote, Project.title, User.full_name
+            ).join(
+                Project, Vote.project_id == Project.id
+            ).join(
+                User, Vote.user_id == User.id
+            ).filter(
+                Vote.project_id.in_(project_ids),
+                Vote.user_id != user_id,
+                Vote.is_upvote == True
+            ).order_by(desc(Vote.created_at)).limit(10).all()
+            
+            for vote, project_title, voter_name in recent_votes:
+                notifications.append({
+                    'id': f'vote_{vote.id}',
+                    'type': 'like',
+                    'title': 'Project Liked',
+                    'message': f'{voter_name} liked your project "{project_title}"',
+                    'created_at': vote.created_at.isoformat(),
+                    'is_read': False
+                })
+            
+            # Recent donations to user's projects
+            recent_donations = db.session.query(
+                Donation, Project.title, User.full_name
+            ).join(
+                Project, Donation.project_id == Project.id
+            ).join(
+                User, Donation.user_id == User.id
+            ).filter(
+                Donation.project_id.in_(project_ids),
+                Donation.user_id != user_id
+            ).order_by(desc(Donation.created_at)).limit(10).all()
+            
+            for donation, project_title, donor_name in recent_donations:
+                notifications.append({
+                    'id': f'donation_{donation.id}',
+                    'type': 'project',
+                    'title': 'New Donation',
+                    'message': f'{donor_name} donated ${donation.amount:.2f} to your project "{project_title}"',
+                    'created_at': donation.created_at.isoformat(),
+                    'is_read': False
+                })
+        
+        # Recent collaboration requests
+        recent_collabs = db.session.query(
+            Collaboration, Project.title, User.full_name
+        ).join(
+            Project, Collaboration.project_id == Project.id
+        ).join(
+            User, Collaboration.user_id == User.id
+        ).filter(
+            Project.user_id == user_id,
+            Collaboration.status == 'pending'
+        ).order_by(desc(Collaboration.created_at)).limit(10).all()
+        
+        for collab, project_title, requester_name in recent_collabs:
+            notifications.append({
+                'id': f'collaboration_{collab.id}',
+                'type': 'collaboration',
+                'title': 'Collaboration Request',
+                'message': f'{requester_name} wants to collaborate on your project "{project_title}"',
+                'created_at': collab.created_at.isoformat(),
+                'is_read': False
+            })
+        
+        # Sort notifications by date (newest first)
+        notifications.sort(key=lambda x: x['created_at'], reverse=True)
+        
         return jsonify({
-            'notifications': notifications,
-            'unread_count': 0
+            'notifications': notifications[:20],  # Return latest 20 notifications
+            'unread_count': len(notifications)
         }), 200
         
     except Exception as e:
@@ -1002,8 +1122,40 @@ def get_notification_count():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        # For now, return 0 notifications
-        return jsonify({'unread_count': 0}), 200
+        # Count recent activity as unread notifications
+        count = 0
+        
+        # Get user's projects
+        user_projects = Project.query.filter_by(user_id=user_id).all()
+        project_ids = [p.id for p in user_projects]
+        
+        if project_ids:
+            # Count recent comments
+            count += Comment.query.filter(
+                Comment.project_id.in_(project_ids),
+                Comment.user_id != user_id
+            ).count()
+            
+            # Count recent votes
+            count += Vote.query.filter(
+                Vote.project_id.in_(project_ids),
+                Vote.user_id != user_id,
+                Vote.is_upvote == True
+            ).count()
+            
+            # Count recent donations
+            count += Donation.query.filter(
+                Donation.project_id.in_(project_ids),
+                Donation.user_id != user_id
+            ).count()
+        
+        # Count pending collaboration requests
+        count += Collaboration.query.join(Project).filter(
+            Project.user_id == user_id,
+            Collaboration.status == 'pending'
+        ).count()
+        
+        return jsonify({'unread_count': min(count, 99)}), 200  # Cap at 99
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
