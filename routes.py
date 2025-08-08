@@ -1,7 +1,7 @@
 import os
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation
+from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike
 from sqlalchemy import desc, func
 
 # Serve static HTML files
@@ -406,13 +406,342 @@ def get_dashboard_stats():
         user_projects = Project.query.filter_by(user_id=user_id).all()
         total_funding = sum(project.current_funding for project in user_projects)
         total_votes = sum(project.get_vote_count() for project in user_projects)
+        total_collaborations = Collaboration.query.filter_by(user_id=user_id).count()
         
         return jsonify({
             'total_projects': len(user_projects),
             'total_funding': total_funding,
             'total_votes': total_votes,
+            'total_collaborations': total_collaborations,
             'projects': [project.to_dict() for project in user_projects]
         }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Discussion APIs
+@app.route('/api/discussions', methods=['GET'])
+def get_discussions():
+    try:
+        # Get query parameters
+        sort_by = request.args.get('sort', 'recent')  # recent, popular
+        category = request.args.get('category', '')
+        search = request.args.get('search', '')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 10))
+        
+        # Build query
+        query = Discussion.query
+        
+        if category:
+            query = query.filter(Discussion.category == category)
+        
+        if search:
+            query = query.filter(Discussion.title.contains(search) | Discussion.content.contains(search))
+        
+        # Apply sorting
+        if sort_by == 'popular':
+            # Sort by like count (subquery)
+            like_counts = db.session.query(
+                DiscussionLike.discussion_id,
+                func.count(DiscussionLike.id).label('like_count')
+            ).group_by(DiscussionLike.discussion_id).subquery()
+            
+            query = query.outerjoin(like_counts, Discussion.id == like_counts.c.discussion_id)\
+                         .order_by(desc(like_counts.c.like_count))
+        else:  # recent
+            query = query.order_by(desc(Discussion.created_at))
+        
+        # Paginate
+        paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+        discussions = [discussion.to_dict() for discussion in paginated.items]
+        
+        return jsonify({
+            'discussions': discussions,
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'current_page': page
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions', methods=['POST'])
+def create_discussion():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['title', 'content', 'category']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field} is required'}), 400
+        
+        discussion = Discussion()
+        discussion.title = data['title']
+        discussion.content = data['content']
+        discussion.category = data['category']
+        discussion.tags = ','.join(data.get('tags', []))
+        discussion.user_id = user_id
+        
+        db.session.add(discussion)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Discussion created successfully',
+            'discussion': discussion.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/<int:discussion_id>', methods=['GET'])
+def get_discussion(discussion_id):
+    try:
+        user_id = session.get('user_id')
+        discussion = Discussion.query.get_or_404(discussion_id)
+        return jsonify({'discussion': discussion.to_dict(user_id)}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/<int:discussion_id>/like', methods=['POST'])
+def like_discussion(discussion_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        discussion = Discussion.query.get_or_404(discussion_id)
+        
+        # Check if user already liked
+        existing_like = DiscussionLike.query.filter_by(user_id=user_id, discussion_id=discussion_id).first()
+        
+        if existing_like:
+            # Unlike
+            db.session.delete(existing_like)
+            is_liked = False
+            action = 'removed'
+        else:
+            # Like
+            like = DiscussionLike()
+            like.user_id = user_id
+            like.discussion_id = discussion_id
+            db.session.add(like)
+            is_liked = True
+            action = 'added'
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Like {action} successfully',
+            'like_count': discussion.get_like_count(),
+            'is_liked': is_liked
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/<int:discussion_id>/replies', methods=['GET'])
+def get_discussion_replies(discussion_id):
+    try:
+        replies = DiscussionReply.query.filter_by(discussion_id=discussion_id)\
+                                     .order_by(desc(DiscussionReply.created_at)).all()
+        return jsonify({
+            'replies': [reply.to_dict() for reply in replies]
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/<int:discussion_id>/replies', methods=['POST'])
+def add_discussion_reply(discussion_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        if not data.get('content'):
+            return jsonify({'error': 'Content is required'}), 400
+        
+        reply = DiscussionReply()
+        reply.content = data['content']
+        reply.user_id = user_id
+        reply.discussion_id = discussion_id
+        
+        db.session.add(reply)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Reply added successfully',
+            'reply': reply.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/stats', methods=['GET'])
+def get_discussion_stats():
+    try:
+        total_discussions = Discussion.query.count()
+        active_members = User.query.count()
+        ideas_shared = Discussion.query.count() + Project.query.count()
+        
+        return jsonify({
+            'totalDiscussions': total_discussions,
+            'activeMembers': active_members,
+            'ideasShared': ideas_shared
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Collaboration management for dashboard
+@app.route('/api/collaborations', methods=['GET'])
+def get_user_collaborations():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Get collaborations for projects owned by the user
+        user_projects = Project.query.filter_by(user_id=user_id).all()
+        project_ids = [project.id for project in user_projects]
+        
+        collaborations = Collaboration.query.filter(
+            Collaboration.project_id.in_(project_ids)
+        ).all()
+        
+        return jsonify({
+            'collaborations': [collab.to_dict() for collab in collaborations]
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/collaborations/<int:collab_id>/accept', methods=['POST'])
+def accept_collaboration(collab_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        collaboration = Collaboration.query.get_or_404(collab_id)
+        
+        # Check if user owns the project
+        if collaboration.project.user_id != user_id:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        collaboration.status = 'accepted'
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Collaboration request accepted',
+            'collaboration': collaboration.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/collaborations/<int:collab_id>/reject', methods=['POST'])
+def reject_collaboration(collab_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        collaboration = Collaboration.query.get_or_404(collab_id)
+        
+        # Check if user owns the project
+        if collaboration.project.user_id != user_id:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        collaboration.status = 'rejected'
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Collaboration request rejected',
+            'collaboration': collaboration.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# Notification APIs for dashboard
+@app.route('/api/notifications', methods=['GET'])
+def get_notifications():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # For now, return empty notifications since we haven't implemented the notification system yet
+        # In a real app, you would query a notifications table
+        notifications = []
+        
+        return jsonify({
+            'notifications': notifications,
+            'unread_count': 0
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notifications/count', methods=['GET'])
+def get_notification_count():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # For now, return 0 notifications
+        return jsonify({'unread_count': 0}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notifications/<int:notification_id>/read', methods=['POST'])
+def mark_notification_read(notification_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # For now, just return success
+        return jsonify({'message': 'Notification marked as read'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notifications/mark-all-read', methods=['POST'])
+def mark_all_notifications_read():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # For now, just return success
+        return jsonify({'message': 'All notifications marked as read'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/notifications/clear-all', methods=['DELETE'])
+def clear_all_notifications():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # For now, just return success
+        return jsonify({'message': 'All notifications cleared'}), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

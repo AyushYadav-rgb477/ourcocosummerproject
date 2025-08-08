@@ -19,6 +19,9 @@ class User(db.Model):
     votes = db.relationship('Vote', backref='user', lazy=True, cascade='all, delete-orphan')
     collaborations = db.relationship('Collaboration', backref='collaborator', lazy=True, cascade='all, delete-orphan')
     donations = db.relationship('Donation', backref='donor', lazy=True, cascade='all, delete-orphan')
+    discussions = db.relationship('Discussion', backref='author', lazy=True, cascade='all, delete-orphan')
+    discussion_replies = db.relationship('DiscussionReply', backref='author', lazy=True, cascade='all, delete-orphan')
+    discussion_likes = db.relationship('DiscussionLike', backref='user', lazy=True, cascade='all, delete-orphan')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -164,3 +167,80 @@ class Donation(db.Model):
             'created_at': self.created_at.isoformat(),
             'donor': self.donor.to_dict() if self.donor else None
         }
+
+class Discussion(db.Model):
+    __tablename__ = 'discussions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    category = db.Column(db.String(100), nullable=False)
+    tags = db.Column(db.Text, nullable=True)  # Store as comma-separated string
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Relationships
+    replies = db.relationship('DiscussionReply', backref='discussion', lazy=True, cascade='all, delete-orphan')
+    likes = db.relationship('DiscussionLike', backref='discussion', lazy=True, cascade='all, delete-orphan')
+    
+    def get_like_count(self):
+        return DiscussionLike.query.filter_by(discussion_id=self.id).count()
+    
+    def get_reply_count(self):
+        return DiscussionReply.query.filter_by(discussion_id=self.id).count()
+    
+    def is_liked_by_user(self, user_id):
+        return DiscussionLike.query.filter_by(discussion_id=self.id, user_id=user_id).first() is not None
+    
+    def to_dict(self, current_user_id=None):
+        tags_list = [tag.strip() for tag in self.tags.split(',')] if self.tags else []
+        return {
+            'id': self.id,
+            'title': self.title,
+            'content': self.content,
+            'category': self.category,
+            'tags': tags_list,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+            'author': self.author.to_dict() if self.author else None,
+            'like_count': self.get_like_count(),
+            'reply_count': self.get_reply_count(),
+            'is_liked': self.is_liked_by_user(current_user_id) if current_user_id else False,
+            'likes': self.get_like_count(),
+            'replies': self.get_reply_count()
+        }
+
+class DiscussionReply(db.Model):
+    __tablename__ = 'discussion_replies'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussions.id'), nullable=False)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'content': self.content,
+            'created_at': self.created_at.isoformat(),
+            'author': self.author.to_dict() if self.author else None
+        }
+
+class DiscussionLike(db.Model):
+    __tablename__ = 'discussion_likes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    discussion_id = db.Column(db.Integer, db.ForeignKey('discussions.id'), nullable=False)
+    
+    # Ensure one like per user per discussion
+    __table_args__ = (db.UniqueConstraint('user_id', 'discussion_id', name='unique_user_discussion_like'),)

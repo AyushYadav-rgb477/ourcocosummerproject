@@ -125,7 +125,52 @@ function updateDashboardStats(data) {
     document.getElementById('total-projects-count').textContent = data.total_projects;
     document.getElementById('total-funding-amount').textContent = `$${data.total_funding.toFixed(2)}`;
     document.getElementById('total-votes-count').textContent = data.total_votes;
-    document.getElementById('total-collabs-count').textContent = '0'; // Will be updated when collaborations are loaded
+    document.getElementById('total-collabs-count').textContent = data.total_collaborations || 0;
+    
+    // Update trend data with real statistics
+    updateTrendData(data);
+}
+
+function updateTrendData(data) {
+    // Calculate trends based on recent activity (last 7 days)
+    const projectsTrend = document.getElementById('projects-trend');
+    const fundingTrend = document.getElementById('funding-trend');
+    const votesTrend = document.getElementById('votes-trend');
+    const collabsTrend = document.getElementById('collabs-trend');
+    
+    // For now, show growth indicators if there's data
+    if (data.total_projects > 0) {
+        projectsTrend.textContent = `${data.total_projects} total`;
+        projectsTrend.className = 'stat-trend positive';
+    } else {
+        projectsTrend.textContent = 'Create your first project';
+        projectsTrend.className = 'stat-trend neutral';
+    }
+    
+    if (data.total_funding > 0) {
+        fundingTrend.textContent = `$${data.total_funding.toFixed(2)} raised`;
+        fundingTrend.className = 'stat-trend positive';
+    } else {
+        fundingTrend.textContent = 'No funding yet';
+        fundingTrend.className = 'stat-trend neutral';
+    }
+    
+    if (data.total_votes > 0) {
+        votesTrend.textContent = `${data.total_votes} total votes`;
+        votesTrend.className = 'stat-trend positive';
+    } else {
+        votesTrend.textContent = 'No votes yet';
+        votesTrend.className = 'stat-trend neutral';
+    }
+    
+    const collabCount = data.total_collaborations || 0;
+    if (collabCount > 0) {
+        collabsTrend.textContent = `${collabCount} active`;
+        collabsTrend.className = 'stat-trend positive';
+    } else {
+        collabsTrend.textContent = 'No collaborations yet';
+        collabsTrend.className = 'stat-trend neutral';
+    }
 }
 
 function displayRecentProjects(projects) {
