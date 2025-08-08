@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup profile image functionality
     setupProfileImage();
     
+    // Setup search functionality
+    setupSearchFunction();
+    
     // Start real-time updates
     startRealTimeUpdates();
 });
@@ -382,6 +385,207 @@ function viewProject(projectId) {
     // Navigate to project details or open in new tab
     console.log('Viewing project:', projectId);
     // You can implement project viewing logic here
+}
+
+// Load collaborations for the collaboration tab
+function loadUserCollaborations() {
+    const collaborationsList = document.getElementById('user-collaborations-list');
+    if (!collaborationsList) return;
+    
+    // Sample collaboration data
+    const collaborations = [
+        {
+            id: 1,
+            project_title: "EcoTrack App",
+            role: "Frontend Developer",
+            status: "Active",
+            owner: "Sarah Johnson",
+            created_date: "2024-02-15"
+        },
+        {
+            id: 2,
+            project_title: "Smart Campus System",
+            role: "Backend Developer", 
+            status: "Completed",
+            owner: "Mike Chen",
+            created_date: "2024-01-20"
+        },
+        {
+            id: 3,
+            project_title: "Study Buddy Platform",
+            role: "UI/UX Designer",
+            status: "Active",
+            owner: "Lisa Williams",
+            created_date: "2024-03-01"
+        }
+    ];
+    
+    if (collaborations.length === 0) {
+        collaborationsList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-handshake"></i>
+                <h3>No Collaborations Yet</h3>
+                <p>Start collaborating on projects to see them here!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    collaborationsList.innerHTML = `
+        <div class="collaborations-grid">
+            ${collaborations.map(collab => `
+                <div class="collaboration-card">
+                    <div class="collaboration-header">
+                        <h3>${escapeHtml(collab.project_title)}</h3>
+                        <span class="status-badge ${collab.status.toLowerCase()}">${collab.status}</span>
+                    </div>
+                    <div class="collaboration-details">
+                        <p><strong>Role:</strong> ${escapeHtml(collab.role)}</p>
+                        <p><strong>Project Owner:</strong> ${escapeHtml(collab.owner)}</p>
+                        <p><strong>Started:</strong> ${new Date(collab.created_date).toLocaleDateString()}</p>
+                    </div>
+                    <div class="collaboration-actions">
+                        <button class="action-btn btn-view" onclick="viewProject(${collab.id})">View Project</button>
+                        <button class="action-btn btn-github">Contact Owner</button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Load donations for the donation tab
+function loadUserDonations() {
+    const donationsList = document.getElementById('user-donations-list');
+    if (!donationsList) return;
+    
+    // Sample donation data
+    const donations = [
+        {
+            id: 1,
+            project_title: "Clean Water Initiative",
+            amount: 50.00,
+            date: "2024-03-10",
+            status: "Completed"
+        },
+        {
+            id: 2,
+            project_title: "Student Learning App",
+            amount: 25.00,
+            date: "2024-03-05",
+            status: "Completed"
+        },
+        {
+            id: 3,
+            project_title: "Community Garden Project",
+            amount: 75.00,
+            date: "2024-02-28",
+            status: "Completed"
+        }
+    ];
+    
+    if (donations.length === 0) {
+        donationsList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-donate"></i>
+                <h3>No Donations Yet</h3>
+                <p>Support projects you believe in to see your donation history here!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    donationsList.innerHTML = `
+        <div class="donations-grid">
+            ${donations.map(donation => `
+                <div class="donation-card">
+                    <div class="donation-header">
+                        <h3>${escapeHtml(donation.project_title)}</h3>
+                        <span class="amount">$${donation.amount.toFixed(2)}</span>
+                    </div>
+                    <div class="donation-details">
+                        <p><strong>Date:</strong> ${new Date(donation.date).toLocaleDateString()}</p>
+                        <p><strong>Status:</strong> ${donation.status}</p>
+                    </div>
+                    <div class="donation-actions">
+                        <button class="action-btn btn-view" onclick="viewProject(${donation.id})">View Project</button>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+}
+
+// Load activity history for the history tab
+function loadUserActivity() {
+    const activityFeed = document.getElementById('user-activity-feed');
+    if (!activityFeed) return;
+    
+    // Sample activity data
+    const activities = [
+        {
+            id: 1,
+            type: "project_created",
+            description: "Created a new project 'AI Study Assistant'",
+            date: "2024-03-15",
+            icon: "fa-rocket"
+        },
+        {
+            id: 2,
+            type: "collaboration",
+            description: "Joined collaboration on 'EcoTrack App'",
+            date: "2024-03-10",
+            icon: "fa-handshake"
+        },
+        {
+            id: 3,
+            type: "donation",
+            description: "Donated $50 to 'Clean Water Initiative'",
+            date: "2024-03-10",
+            icon: "fa-donate"
+        },
+        {
+            id: 4,
+            type: "vote",
+            description: "Voted for 'Smart Campus System'",
+            date: "2024-03-08",
+            icon: "fa-thumbs-up"
+        },
+        {
+            id: 5,
+            type: "comment",
+            description: "Commented on 'Student Learning App'",
+            date: "2024-03-05",
+            icon: "fa-comment"
+        }
+    ];
+    
+    if (activities.length === 0) {
+        activityFeed.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-history"></i>
+                <h3>No Activity Yet</h3>
+                <p>Your activity history will appear here as you use the platform!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    activityFeed.innerHTML = `
+        <div class="activity-timeline">
+            ${activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-icon">
+                        <i class="fas ${activity.icon}"></i>
+                    </div>
+                    <div class="activity-content">
+                        <p>${escapeHtml(activity.description)}</p>
+                        <span class="activity-date">${new Date(activity.date).toLocaleDateString()}</span>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
 async function loadUserCollaborations() {
@@ -890,4 +1094,161 @@ function updateAllTimestamps() {
             element.textContent = formatDate(timestamp);
         }
     });
+}
+
+// Search functionality
+function setupSearchFunction() {
+    const searchBtn = document.querySelector('.search-btn');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', handleSearch);
+    }
+    
+    // Also allow Enter key to trigger search
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.ctrlKey) {
+            handleSearch();
+        }
+    });
+}
+
+function handleSearch() {
+    const searchQuery = prompt('Enter search term:');
+    if (!searchQuery || searchQuery.trim() === '') return;
+    
+    const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
+    performSearch(searchQuery.trim(), activeTab);
+}
+
+function performSearch(query, tabType) {
+    const searchTerm = query.toLowerCase();
+    
+    switch(tabType) {
+        case 'projects':
+            searchProjects(searchTerm);
+            break;
+        case 'collaboration':
+            searchCollaborations(searchTerm);
+            break;
+        case 'donation':
+            searchDonations(searchTerm);
+            break;
+        case 'history':
+            searchActivity(searchTerm);
+            break;
+    }
+}
+
+function searchProjects(searchTerm) {
+    const projectCards = document.querySelectorAll('.project-card');
+    let visibleCount = 0;
+    
+    projectCards.forEach(card => {
+        const title = card.querySelector('.project-title').textContent.toLowerCase();
+        const description = card.querySelector('.project-description').textContent.toLowerCase();
+        const techLabel = card.querySelector('.tech-label');
+        const tech = techLabel ? techLabel.textContent.toLowerCase() : '';
+        
+        if (title.includes(searchTerm) || description.includes(searchTerm) || tech.includes(searchTerm)) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    showSearchResults(visibleCount, searchTerm);
+}
+
+function searchCollaborations(searchTerm) {
+    const collaborationCards = document.querySelectorAll('.collaboration-card');
+    let visibleCount = 0;
+    
+    collaborationCards.forEach(card => {
+        const title = card.querySelector('h3').textContent.toLowerCase();
+        const role = card.textContent.toLowerCase();
+        
+        if (title.includes(searchTerm) || role.includes(searchTerm)) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    showSearchResults(visibleCount, searchTerm);
+}
+
+function searchDonations(searchTerm) {
+    const donationCards = document.querySelectorAll('.donation-card');
+    let visibleCount = 0;
+    
+    donationCards.forEach(card => {
+        const title = card.querySelector('h3').textContent.toLowerCase();
+        
+        if (title.includes(searchTerm)) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    showSearchResults(visibleCount, searchTerm);
+}
+
+function searchActivity(searchTerm) {
+    const activityItems = document.querySelectorAll('.activity-item');
+    let visibleCount = 0;
+    
+    activityItems.forEach(item => {
+        const description = item.querySelector('p').textContent.toLowerCase();
+        
+        if (description.includes(searchTerm)) {
+            item.style.display = 'flex';
+            visibleCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    showSearchResults(visibleCount, searchTerm);
+}
+
+function showSearchResults(count, searchTerm) {
+    // Show search results notification
+    const existingNotification = document.querySelector('.search-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = 'search-notification';
+    notification.innerHTML = `
+        <span>Found ${count} results for "${searchTerm}"</span>
+        <button onclick="clearSearch()" class="clear-search-btn">Clear</button>
+    `;
+    
+    const contentHeader = document.querySelector('.content-header');
+    contentHeader.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+function clearSearch() {
+    // Show all items again
+    const allCards = document.querySelectorAll('.project-card, .collaboration-card, .donation-card, .activity-item');
+    allCards.forEach(card => {
+        card.style.display = '';
+    });
+    
+    // Remove notification
+    const notification = document.querySelector('.search-notification');
+    if (notification) {
+        notification.remove();
+    }
 }
