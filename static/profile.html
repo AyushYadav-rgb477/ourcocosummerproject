@@ -40,8 +40,12 @@
       <section class="profile-header">
         <div class="profile-banner">
           <div class="profile-info">
-            <div class="profile-avatar">
-              <i class="fas fa-user-circle"></i>
+            <div class="profile-avatar" id="profile-avatar-container">
+              <img id="profile-image" src="" alt="Profile" style="display: none;">
+              <i class="fas fa-user-circle" id="default-avatar"></i>
+              <div class="profile-image-overlay" id="profile-image-overlay" style="display: none;">
+                <i class="fas fa-camera"></i>
+              </div>
             </div>
             <div class="profile-details">
               <h1 id="profile-name">Loading...</h1>
@@ -49,6 +53,8 @@
               <p id="profile-college"><i class="fas fa-graduation-cap"></i> College</p>
               <p id="profile-email"><i class="fas fa-envelope"></i> email@example.com</p>
               <p id="profile-joined"><i class="fas fa-calendar"></i> Joined: Date</p>
+              <p id="profile-bio" class="profile-bio"></p>
+              <div id="profile-skills" class="profile-skills"></div>
             </div>
           </div>
           <div class="profile-actions">
@@ -155,19 +161,38 @@
       </div>
       
       <div class="modal-body">
+        <div class="form-group profile-image-upload">
+          <label>Profile Picture</label>
+          <div class="image-upload-container">
+            <div class="image-preview" id="edit-image-preview">
+              <img id="edit-preview-img" src="" alt="Preview" style="display: none;">
+              <i class="fas fa-user-circle" id="edit-default-preview"></i>
+            </div>
+            <div class="image-upload-controls">
+              <input type="file" id="profile-image-input" accept="image/*" style="display: none;">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('profile-image-input').click()">
+                <i class="fas fa-camera"></i> Choose Image
+              </button>
+              <button type="button" class="btn-secondary" id="remove-image-btn" style="display: none;">
+                <i class="fas fa-trash"></i> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+        
         <div class="form-group">
           <label for="edit-full-name">Full Name</label>
-          <input type="text" id="edit-full-name" placeholder="Enter your full name">
+          <input type="text" id="edit-full-name" placeholder="Enter your full name" required>
         </div>
         
         <div class="form-group">
           <label for="edit-email">Email</label>
-          <input type="email" id="edit-email" placeholder="Enter your email">
+          <input type="email" id="edit-email" placeholder="Enter your email" required>
         </div>
         
         <div class="form-group">
           <label for="edit-college">College/University</label>
-          <input type="text" id="edit-college" placeholder="Enter your college">
+          <input type="text" id="edit-college" placeholder="Enter your college" required>
         </div>
         
         <div class="form-group">

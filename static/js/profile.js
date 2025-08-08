@@ -1,10 +1,22 @@
 // Profile page JavaScript functionality
 
 let currentUser = null;
+let viewingUserId = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Check authentication
-    checkAuthStatus();
+    // Check if viewing another user's profile
+    const urlParams = new URLSearchParams(window.location.search);
+    viewingUserId = urlParams.get('user_id');
+    
+    if (viewingUserId) {
+        // Load other user's profile
+        loadOtherUserProfile(viewingUserId);
+    } else {
+        // Check authentication for own profile
+        checkAuthStatus();
+        // Load own profile data
+        loadProfileData();
+    }
     
     // Setup tabs
     setupTabs();
@@ -12,8 +24,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Setup modals
     setupModals();
     
-    // Load profile data
-    loadProfileData();
+    // Setup profile image functionality
+    setupProfileImage();
     
     // Start real-time updates
     startRealTimeUpdates();
@@ -36,14 +48,82 @@ async function checkAuthStatus() {
     }
 }
 
-function updateProfileInfo() {
-    if (!currentUser) return;
+async function loadOtherUserProfile(userId) {
+    try {
+        const response = await fetch(`/api/users/${userId}/profile`);
+        if (response.ok) {
+            const data = await response.json();
+            currentUser = data.profile;
+            updateProfileInfo();
+            updateProfileStats(data.profile);
+            displayUserProjects(data.profile.projects || []);
+            
+            // Hide edit button for other users' profiles
+            const editBtn = document.getElementById('edit-profile-btn');
+            if (editBtn) editBtn.style.display = 'none';
+            
+            // Hide profile image overlay for other users
+            const overlay = document.getElementById('profile-image-overlay');
+            if (overlay) overlay.style.display = 'none';
+            
+        } else {
+            window.location.href = '/profile.html';
+        }
+    } catch (error) {
+        console.error('Error loading user profile:', error);
+        window.location.href = '/profile.html';
+    }
+}
+
+function updateProfileInfo(profileData = null) {
+    const user = profileData || currentUser;
+    if (!user) return;
     
-    document.getElementById('profile-name').textContent = currentUser.full_name;
-    document.getElementById('profile-username').textContent = `@${currentUser.username}`;
-    document.getElementById('profile-college').innerHTML = `<i class="fas fa-graduation-cap"></i> ${currentUser.college}`;
-    document.getElementById('profile-email').innerHTML = `<i class="fas fa-envelope"></i> ${currentUser.email}`;
-    document.getElementById('profile-joined').innerHTML = `<i class="fas fa-calendar"></i> Joined: ${formatDate(currentUser.created_at)}`;
+    document.getElementById('profile-name').textContent = user.full_name;
+    document.getElementById('profile-username').textContent = `@${user.username}`;
+    document.getElementById('profile-college').innerHTML = `<i class="fas fa-graduation-cap"></i> ${user.college}`;
+    document.getElementById('profile-email').innerHTML = `<i class="fas fa-envelope"></i> ${user.email}`;
+    document.getElementById('profile-joined').innerHTML = `<i class="fas fa-calendar"></i> Joined: ${formatDate(user.created_at)}`;
+    
+    // Update bio
+    const bioElement = document.getElementById('profile-bio');
+    if (user.bio) {
+        bioElement.textContent = user.bio;
+        bioElement.style.display = 'block';
+    } else {
+        bioElement.style.display = 'none';
+    }
+    
+    // Update skills
+    const skillsElement = document.getElementById('profile-skills');
+    if (user.skills) {
+        const skillsArray = user.skills.split(',').map(skill => skill.trim()).filter(skill => skill);
+        skillsElement.innerHTML = skillsArray.map(skill => 
+            `<span class="skill-tag">${escapeHtml(skill)}</span>`
+        ).join('');
+        skillsElement.style.display = 'flex';
+    } else {
+        skillsElement.style.display = 'none';
+    }
+    
+    // Update profile image
+    const profileImage = document.getElementById('profile-image');
+    const defaultAvatar = document.getElementById('default-avatar');
+    if (user.profile_image) {
+        profileImage.src = user.profile_image;
+        profileImage.style.display = 'block';
+        defaultAvatar.style.display = 'none';
+    } else {
+        profileImage.style.display = 'none';
+        defaultAvatar.style.display = 'flex';
+    }
+}
+
+function updateProfileStats(stats) {
+    document.getElementById('user-projects').textContent = stats.total_projects || 0;
+    document.getElementById('user-collaborations').textContent = stats.total_collaborations || 0;
+    document.getElementById('user-funding').textContent = `$${(stats.total_funding || 0).toFixed(2)}`;
+    document.getElementById('user-votes').textContent = stats.total_votes || 0;
 }
 
 async function loadProfileData() {
@@ -331,13 +411,107 @@ function setupModals() {
     });
 }
 
+function setupProfileImage() {
+    const profileAvatar = document.getElementById('profile-avatar-container');
+    const imageInput = document.getElementById('profile-image-input');
+    const removeImageBtn = document.getElementById('remove-image-btn');
+    
+    if (profileAvatar && !viewingUserId) {
+        profileAvatar.addEventListener('click', () => {
+            if (imageInput) imageInput.click();
+        });
+    }
+    
+    if (imageInput) {
+        imageInput.addEventListener('change', handleImageSelect);
+    }
+    
+    if (removeImageBtn) {
+        removeImageBtn.addEventListener('click', handleImageRemove);
+    }
+}
+
+function handleImageSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        alert('Please select an image file.');
+        return;
+    }
+    
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+        alert('Image size should be less than 2MB.');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const base64Image = e.target.result;
+        
+        // Update preview in modal
+        const previewImg = document.getElementById('edit-preview-img');
+        const defaultPreview = document.getElementById('edit-default-preview');
+        const removeBtn = document.getElementById('remove-image-btn');
+        
+        if (previewImg && defaultPreview && removeBtn) {
+            previewImg.src = base64Image;
+            previewImg.style.display = 'block';
+            defaultPreview.style.display = 'none';
+            removeBtn.style.display = 'inline-flex';
+        }
+        
+        // Store the base64 image for saving
+        document.getElementById('edit-image-preview').dataset.imageData = base64Image;
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleImageRemove() {
+    const previewImg = document.getElementById('edit-preview-img');
+    const defaultPreview = document.getElementById('edit-default-preview');
+    const removeBtn = document.getElementById('remove-image-btn');
+    const imageInput = document.getElementById('profile-image-input');
+    
+    if (previewImg && defaultPreview && removeBtn && imageInput) {
+        previewImg.style.display = 'none';
+        previewImg.src = '';
+        defaultPreview.style.display = 'flex';
+        removeBtn.style.display = 'none';
+        imageInput.value = '';
+        
+        // Mark for removal
+        document.getElementById('edit-image-preview').dataset.imageData = 'REMOVE';
+    }
+}
+
 function openEditProfileModal() {
     if (!currentUser) return;
     
     // Pre-fill form with current user data
-    document.getElementById('edit-full-name').value = currentUser.full_name;
-    document.getElementById('edit-email').value = currentUser.email;
-    document.getElementById('edit-college').value = currentUser.college;
+    document.getElementById('edit-full-name').value = currentUser.full_name || '';
+    document.getElementById('edit-email').value = currentUser.email || '';
+    document.getElementById('edit-college').value = currentUser.college || '';
+    document.getElementById('edit-bio').value = currentUser.bio || '';
+    document.getElementById('edit-skills').value = currentUser.skills || '';
+    
+    // Set up image preview
+    const previewImg = document.getElementById('edit-preview-img');
+    const defaultPreview = document.getElementById('edit-default-preview');
+    const removeBtn = document.getElementById('remove-image-btn');
+    
+    if (currentUser.profile_image) {
+        previewImg.src = currentUser.profile_image;
+        previewImg.style.display = 'block';
+        defaultPreview.style.display = 'none';
+        removeBtn.style.display = 'inline-flex';
+    } else {
+        previewImg.style.display = 'none';
+        defaultPreview.style.display = 'flex';
+        removeBtn.style.display = 'none';
+    }
     
     const modal = document.getElementById('edit-profile-modal');
     modal.classList.add('show');
@@ -360,18 +534,33 @@ async function handleSaveProfile() {
     saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
     
     try {
+        // Get image data if any
+        const imagePreview = document.getElementById('edit-image-preview');
+        const imageData = imagePreview ? imagePreview.dataset.imageData : null;
+        
+        const requestBody = {
+            full_name: fullName,
+            email: email,
+            college: college,
+            bio: bio,
+            skills: skills
+        };
+        
+        // Include image data if available
+        if (imageData) {
+            if (imageData === 'REMOVE') {
+                requestBody.profile_image = null;
+            } else {
+                requestBody.profile_image = imageData;
+            }
+        }
+        
         const response = await fetch('/api/profile', {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                full_name: fullName,
-                email: email,
-                college: college,
-                bio: bio,
-                skills: skills
-            })
+            body: JSON.stringify(requestBody)
         });
         
         if (response.ok) {
@@ -397,6 +586,28 @@ async function handleSaveProfile() {
 function closeModals() {
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => modal.classList.remove('show'));
+}
+
+// Function to handle clicking on user names in comments and collaborations
+function handleUserNameClick(userId, username) {
+    if (userId && userId !== currentUser?.id) {
+        window.location.href = `/profile.html?user_id=${userId}`;
+    }
+}
+
+// Make user names clickable in generated content
+function makeUserNamesClickable(container) {
+    const userElements = container.querySelectorAll('[data-user-id]');
+    userElements.forEach(element => {
+        const userId = element.dataset.userId;
+        const username = element.textContent;
+        if (userId && userId !== currentUser?.id) {
+            element.style.cursor = 'pointer';
+            element.style.color = '#28a745';
+            element.style.textDecoration = 'underline';
+            element.addEventListener('click', () => handleUserNameClick(userId, username));
+        }
+    });
 }
 
 // Utility functions

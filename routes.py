@@ -636,6 +636,12 @@ def update_profile():
             user.email = data['email']
         if 'college' in data:
             user.college = data['college']
+        if 'bio' in data:
+            user.bio = data['bio']
+        if 'skills' in data:
+            user.skills = data['skills']
+        if 'profile_image' in data:
+            user.profile_image = data['profile_image']
         
         db.session.commit()
         
@@ -646,6 +652,65 @@ def update_profile():
         
     except Exception as e:
         db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/users/<int:user_id>/profile', methods=['GET'])
+def get_user_profile(user_id):
+    try:
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Get user's projects
+        user_projects = Project.query.filter_by(user_id=user_id).order_by(desc(Project.created_at)).all()
+        
+        # Get user stats
+        total_funding = sum(project.current_funding for project in user_projects)
+        total_votes = sum(project.get_vote_count() for project in user_projects)
+        total_collaborations = Collaboration.query.filter_by(user_id=user_id).count()
+        
+        profile_data = user.to_dict()
+        profile_data.update({
+            'total_projects': len(user_projects),
+            'total_funding': total_funding,
+            'total_votes': total_votes,
+            'total_collaborations': total_collaborations,
+            'projects': [project.to_dict() for project in user_projects]
+        })
+        
+        return jsonify({'profile': profile_data}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/users', methods=['GET'])
+def get_users():
+    try:
+        search = request.args.get('search', '')
+        page = int(request.args.get('page', 1))
+        per_page = int(request.args.get('per_page', 20))
+        
+        query = User.query
+        
+        if search:
+            query = query.filter(
+                User.full_name.contains(search) |
+                User.username.contains(search) |
+                User.college.contains(search)
+            )
+        
+        # Paginate results
+        paginated = query.paginate(page=page, per_page=per_page, error_out=False)
+        users = [user.to_dict() for user in paginated.items]
+        
+        return jsonify({
+            'users': users,
+            'total': paginated.total,
+            'pages': paginated.pages,
+            'current_page': page
+        }), 200
+        
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/dashboard/user-collaborations', methods=['GET'])

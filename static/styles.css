@@ -40,7 +40,8 @@ body {
 
 .logo i {
   margin-right: 8px;
-  color: white;
+  color: #28a745;
+  text-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
 }
 
 .nav-links a {

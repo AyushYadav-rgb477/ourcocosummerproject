@@ -11,6 +11,9 @@ class User(db.Model):
     full_name = db.Column(db.String(200), nullable=False)
     college = db.Column(db.String(200), nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
+    bio = db.Column(db.Text, nullable=True)
+    skills = db.Column(db.Text, nullable=True)
+    profile_image = db.Column(db.Text, nullable=True)  # Store base64 image or URL
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -36,6 +39,9 @@ class User(db.Model):
             'email': self.email,
             'full_name': self.full_name,
             'college': self.college,
+            'bio': self.bio,
+            'skills': self.skills,
+            'profile_image': self.profile_image,
             'created_at': self.created_at.isoformat()
         }
 

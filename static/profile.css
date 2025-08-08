@@ -4,12 +4,19 @@
   padding: 2rem 0;
   min-height: calc(100vh - 80px);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Profile Header */
@@ -42,13 +49,66 @@
   width: 120px;
   height: 120px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #28a745, #20c997);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 4rem;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.profile-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.profile-avatar:hover .profile-image-overlay {
+  opacity: 1;
+}
+
+.profile-bio {
+  margin: 1rem 0 0.5rem 0;
+  color: #555;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.profile-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.skill-tag {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .profile-details h1 {
@@ -634,10 +694,62 @@
   font-size: 1rem;
   cursor: pointer;
   transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 120px;
+  text-align: center;
+  font-weight: 500;
 }
 
 .btn-secondary:hover {
   background: #5a6268;
+}
+
+/* Profile Image Upload Styles */
+.profile-image-upload {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.image-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.image-preview {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 3rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.image-upload-controls {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.image-upload-controls .btn-secondary {
+  min-width: 140px;
 }
 
 .btn-primary {
@@ -693,5 +805,143 @@
   to {
     transform: translateX(0);
     opacity: 1;
+  }
+}
+
+/* Responsive Design for Center Alignment */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+    max-width: 100%;
+  }
+  
+  .profile-header {
+    text-align: center;
+    padding: 1.5rem;
+  }
+  
+  .profile-banner {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .profile-info {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .profile-details {
+    text-align: center;
+  }
+  
+  .profile-details h1 {
+    margin-bottom: 0.5rem;
+  }
+  
+  .profile-details p {
+    margin: 0.25rem 0;
+  }
+  
+  .profile-skills {
+    justify-content: center;
+  }
+  
+  .profile-actions {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+  }
+  
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    font-size: 3rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  
+  .modal-content {
+    margin: 5% auto;
+    width: 90%;
+    max-width: 500px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .modal-footer button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-main {
+    padding: 1rem 0;
+  }
+  
+  .profile-header {
+    padding: 1rem;
+  }
+  
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 2.5rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+  }
+  
+  .modal-content {
+    margin: 2% auto;
+    width: 95%;
+  }
+  
+  .image-upload-controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .image-upload-controls .btn-secondary {
+    width: 200px;
+    min-width: auto;
+  }
+}
+
+@media (min-width: 769px) {
+  .profile-header,
+  .profile-tabs,
+  .stats-overview,
+  .tab-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+  
+  .profile-banner {
+    justify-content: center;
+  }
+  
+  .stats-grid {
+    justify-content: center;
+    max-width: 800px;
+    margin: 0 auto;
   }
 }
