@@ -389,56 +389,30 @@
   margin: 0;
 }
 
-.tab-navigation {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+/* Content Sections */
+.content-section {
+  margin-bottom: 3rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-.tab-buttons {
-  display: flex;
-  gap: 0;
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 4px;
+.content-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
-.tab-btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  background: transparent;
-  color: #6b7280;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  white-space: nowrap;
+.section-header {
+  margin-bottom: 1.5rem;
 }
 
-.tab-btn:hover {
-  background: #e5e7eb;
-  color: #374151;
-}
-
-.tab-btn.active {
-  background: white;
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
   color: #1f2937;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.tab-btn.underlined {
+  margin: 0;
+  padding-bottom: 0.5rem;
   border-bottom: 2px solid #3b82f6;
-  border-radius: 6px 6px 0 0;
-}
-
-/* Tab Content */
-.tab-content {
-  display: none;
-}
-
-.tab-content.active {
-  display: block;
+  display: inline-block;
 }
 
 /* Projects Grid */

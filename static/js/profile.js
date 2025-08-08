@@ -18,9 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
         loadProfileData();
     }
     
-    // Setup tabs
-    setupTabs();
-    
     // Setup modals
     setupModals();
     
@@ -29,6 +26,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup search functionality
     setupSearchFunction();
+    
+    // Load all sections
+    loadAllSections();
     
     // Start real-time updates
     startRealTimeUpdates();
@@ -228,7 +228,7 @@ async function loadUserStats() {
 
 async function loadUserProjects() {
     const projectsGrid = document.getElementById('user-projects-grid');
-    const emptyState = document.querySelector('#projects-tab .empty-state');
+    const emptyState = document.querySelector('#projects-section .empty-state');
     if (!projectsGrid || !emptyState) return;
     
     try {
@@ -607,7 +607,7 @@ function loadUserActivity() {
 
 async function loadUserCollaborations() {
     const collaborationsList = document.getElementById('user-collaborations-list');
-    const emptyState = document.querySelector('#collaboration-tab .empty-state');
+    const emptyState = document.querySelector('#collaboration-section .empty-state');
     if (!collaborationsList || !emptyState) return;
     
     try {
@@ -670,7 +670,7 @@ function displayUserCollaborations(collaborations) {
 
 async function loadUserDonations() {
     const donationsList = document.getElementById('user-donations-list');
-    const emptyState = document.querySelector('#donation-tab .empty-state');
+    const emptyState = document.querySelector('#donation-section .empty-state');
     if (!donationsList || !emptyState) return;
     
     try {
@@ -733,7 +733,7 @@ function displayUserDonations(donations) {
 
 async function loadUserActivity() {
     const activityFeed = document.getElementById('user-activity-feed');
-    const emptyState = document.querySelector('#history-tab .empty-state');
+    const emptyState = document.querySelector('#history-section .empty-state');
     if (!activityFeed || !emptyState) return;
     
     try {
@@ -1215,9 +1215,6 @@ function setupSearchFunction() {
             }
         });
     }
-    
-    // Set initial placeholder
-    updateSearchPlaceholder();
 }
 
 function handleSearch() {
@@ -1230,12 +1227,10 @@ function handleSearch() {
 
 function performSearch() {
     const searchInput = document.getElementById('search-input');
-    const activeTab = document.querySelector('.tab-btn.active');
     
-    if (!searchInput || !activeTab) return;
+    if (!searchInput) return;
     
     const searchTerm = searchInput.value.trim();
-    const tabName = activeTab.dataset.tab;
     
     if (!searchTerm) {
         alert('Please enter a search term');
@@ -1243,43 +1238,62 @@ function performSearch() {
     }
     
     // Show search notification
-    showSearchNotification(searchTerm, tabName);
+    showSearchNotification(searchTerm, 'all');
     
-    // Perform search based on active tab
-    switch(tabName) {
-        case 'projects':
-            searchProjects(searchTerm.toLowerCase());
-            break;
-        case 'collaboration':
-            searchCollaborations(searchTerm.toLowerCase());
-            break;
-        case 'donation':
-            searchDonations(searchTerm.toLowerCase());
-            break;
-        case 'history':
-            searchActivity(searchTerm.toLowerCase());
-            break;
-    }
+    // Perform search across all sections
+    searchAllSections(searchTerm.toLowerCase());
     
     // Clear the search input
     searchInput.value = '';
 }
 
-function updateSearchPlaceholder() {
-    const searchInput = document.getElementById('search-input');
-    const activeTab = document.querySelector('.tab-btn.active');
+function loadAllSections() {
+    // Load all sections at once since we no longer have tabs
+    loadUserProjects();
+    loadUserCollaborations();
+    loadUserDonations();
+    loadUserActivity();
+}
+
+function searchAllSections(searchTerm) {
+    // Search across all sections
+    searchProjects(searchTerm);
+    searchCollaborations(searchTerm);
+    searchDonations(searchTerm);
+    searchActivity(searchTerm);
+}
+
+function showSearchNotification(searchTerm, section) {
+    // Remove existing notifications
+    const existingNotification = document.querySelector('.search-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
     
-    if (!searchInput || !activeTab) return;
+    // Create new notification
+    const notification = document.createElement('div');
+    notification.className = 'search-notification';
+    notification.innerHTML = `
+        <span>Searching for "${searchTerm}" across all sections</span>
+        <button class="clear-search-btn" onclick="clearSearch()">Clear</button>
+    `;
     
-    const tabName = activeTab.dataset.tab;
-    const placeholders = {
-        'projects': 'Search projects...',
-        'collaboration': 'Search collaborations...',
-        'donation': 'Search donations...',
-        'history': 'Search activity...'
-    };
+    // Insert after search section
+    const searchSection = document.querySelector('.search-section');
+    if (searchSection) {
+        searchSection.parentNode.insertBefore(notification, searchSection.nextSibling);
+    }
+}
+
+function clearSearch() {
+    // Remove search notification
+    const notification = document.querySelector('.search-notification');
+    if (notification) {
+        notification.remove();
+    }
     
-    searchInput.placeholder = placeholders[tabName] || 'Search...';
+    // Reload all sections to show all content
+    loadAllSections();
 }
 
 function searchProjects(searchTerm) {

@@ -92,30 +92,20 @@
       
       <!-- Right Content Area -->
       <div class="profile-content">
-        <!-- Tab Header -->
-        <div class="content-header">
-          <h2>Projects</h2>
-          <div class="tab-navigation">
-            <div class="tab-buttons">
-              <button class="tab-btn active" data-tab="projects">Projects</button>
-              <button class="tab-btn" data-tab="collaboration">Collaboration</button>
-              <button class="tab-btn" data-tab="donation">Donation</button>
-              <button class="tab-btn underlined" data-tab="history">History</button>
-            </div>
-          </div>
-        </div>
-        
         <!-- Search Section -->
         <div class="search-section">
           <div class="search-input-wrapper">
             <i class="fas fa-search"></i>
-            <input type="text" id="search-input" placeholder="Search in current tab..." />
+            <input type="text" id="search-input" placeholder="Search all content..." />
             <button class="search-btn" onclick="performSearch()">Search</button>
           </div>
         </div>
         
-        <!-- Tab Contents -->
-        <div class="tab-content active" id="projects-tab">
+        <!-- Projects Section -->
+        <div class="content-section" id="projects-section">
+          <div class="section-header">
+            <h2>Projects</h2>
+          </div>
           <div class="empty-state">
             <div class="empty-state-icon">
               <i class="fas fa-project-diagram"></i>
@@ -132,7 +122,11 @@
           </div>
         </div>
         
-        <div class="tab-content" id="collaboration-tab">
+        <!-- Collaboration Section -->
+        <div class="content-section" id="collaboration-section">
+          <div class="section-header">
+            <h2>Collaboration</h2>
+          </div>
           <div class="empty-state">
             <div class="empty-state-icon">
               <i class="fas fa-handshake"></i>
@@ -149,7 +143,11 @@
           </div>
         </div>
         
-        <div class="tab-content" id="donation-tab">
+        <!-- Donation Section -->
+        <div class="content-section" id="donation-section">
+          <div class="section-header">
+            <h2>Donation</h2>
+          </div>
           <div class="empty-state">
             <div class="empty-state-icon">
               <i class="fas fa-donate"></i>
@@ -166,7 +164,11 @@
           </div>
         </div>
         
-        <div class="tab-content" id="history-tab">
+        <!-- History Section -->
+        <div class="content-section" id="history-section">
+          <div class="section-header">
+            <h2>History</h2>
+          </div>
           <div class="empty-state">
             <div class="empty-state-icon">
               <i class="fas fa-history"></i>
