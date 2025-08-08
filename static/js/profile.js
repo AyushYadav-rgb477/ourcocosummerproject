@@ -96,14 +96,6 @@ function updateProfileInfo(profileData = null) {
     // Update contact item links with actual data when available
     updateContactItems(user);
     
-    // Update bio in about section
-    const bioElement = document.getElementById('profile-bio');
-    if (user.bio) {
-        bioElement.textContent = user.bio;
-    } else {
-        bioElement.textContent = 'Veniam aliquip et amet, enim consectetur aliqua officia elit. Et sunt exercitat occaecat nostrud sunt est proident consectetur veniam magna quis. In nostrud amet est pariore sunt amet quis aliquip adipisicing.';
-    }
-    
     // Update profile image
     const profileImage = document.getElementById('profile-image');
     const defaultAvatar = document.getElementById('default-avatar');
@@ -118,11 +110,19 @@ function updateProfileInfo(profileData = null) {
 }
 
 function updateContactItems(user) {
+    // Update bio in about section
+    const bioElement = document.getElementById('profile-bio');
+    if (user.bio && user.bio.trim() !== '') {
+        bioElement.textContent = user.bio;
+    } else {
+        bioElement.textContent = 'Student developer passionate about creating innovative solutions.';
+    }
+    
     // Update LinkedIn
-    const linkedinItem = document.querySelector('.contact-item:nth-child(1) span');
+    const linkedinItem = document.querySelector('.contact-item:nth-child(1)');
     if (linkedinItem && user.linkedin) {
-        linkedinItem.textContent = 'LinkedIn';
-        linkedinItem.parentElement.onclick = () => window.open(user.linkedin.startsWith('http') ? user.linkedin : `https://linkedin.com/in/${user.linkedin}`, '_blank');
+        linkedinItem.style.cursor = 'pointer';
+        linkedinItem.onclick = () => window.open(user.linkedin.startsWith('http') ? user.linkedin : `https://linkedin.com/in/${user.linkedin}`, '_blank');
     }
     
     // Update Phone
@@ -138,17 +138,17 @@ function updateContactItems(user) {
     }
     
     // Update GitHub
-    const githubItem = document.querySelector('.contact-item:nth-child(4) span');
+    const githubItem = document.querySelector('.contact-item:nth-child(4)');
     if (githubItem && user.github) {
-        githubItem.textContent = 'GitHub';
-        githubItem.parentElement.onclick = () => window.open(user.github.startsWith('http') ? user.github : `https://github.com/${user.github}`, '_blank');
+        githubItem.style.cursor = 'pointer';
+        githubItem.onclick = () => window.open(user.github.startsWith('http') ? user.github : `https://github.com/${user.github}`, '_blank');
     }
     
     // Update Twitter
-    const twitterItem = document.querySelector('.contact-item:nth-child(5) span');
+    const twitterItem = document.querySelector('.contact-item:nth-child(5)');
     if (twitterItem && user.twitter) {
-        twitterItem.textContent = 'Twitter';
-        twitterItem.parentElement.onclick = () => window.open(user.twitter.startsWith('http') ? user.twitter : `https://twitter.com/${user.twitter.replace('@', '')}`, '_blank');
+        twitterItem.style.cursor = 'pointer';
+        twitterItem.onclick = () => window.open(user.twitter.startsWith('http') ? user.twitter : `https://twitter.com/${user.twitter.replace('@', '')}`, '_blank');
     }
 }
 
@@ -753,25 +753,58 @@ function setupTabs() {
                 targetContent.classList.add('active');
             }
             
-            // Update content header title
+            // Update content header title based on tab
             const contentHeader = document.querySelector('.content-header h2');
             if (contentHeader) {
-                contentHeader.textContent = this.textContent;
+                switch(targetTab) {
+                    case 'projects':
+                        contentHeader.textContent = 'Projects';
+                        break;
+                    case 'collaboration':
+                        contentHeader.textContent = 'Collaboration';
+                        break;
+                    case 'donation':
+                        contentHeader.textContent = 'Donation';
+                        break;
+                    case 'history':
+                        contentHeader.textContent = 'History';
+                        break;
+                    default:
+                        contentHeader.textContent = this.textContent;
+                }
             }
             
-            // Load data for the selected tab
+            // Clear any existing search notifications
+            const existingNotification = document.querySelector('.search-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // Load data for the selected tab - only load if content is empty
             switch(targetTab) {
                 case 'projects':
-                    loadUserProjects();
+                    const projectsGrid = document.getElementById('user-projects-grid');
+                    if (!projectsGrid || projectsGrid.children.length === 0) {
+                        loadUserProjects();
+                    }
                     break;
                 case 'collaboration':
-                    loadUserCollaborations();
+                    const collaborationsList = document.getElementById('user-collaborations-list');
+                    if (!collaborationsList || collaborationsList.children.length === 0) {
+                        loadUserCollaborations();
+                    }
                     break;
                 case 'donation':
-                    loadUserDonations();
+                    const donationsList = document.getElementById('user-donations-list');
+                    if (!donationsList || donationsList.children.length === 0) {
+                        loadUserDonations();
+                    }
                     break;
                 case 'history':
-                    loadUserActivity();
+                    const activityFeed = document.getElementById('user-activity-feed');
+                    if (!activityFeed || activityFeed.children.length === 0) {
+                        loadUserActivity();
+                    }
                     break;
             }
         });
