@@ -83,7 +83,7 @@ async function loadUserStats() {
 
 async function loadUserProjects() {
     try {
-        const response = await fetch('/api/dashboard/projects');
+        const response = await fetch('/api/dashboard/stats');
         if (response.ok) {
             const data = await response.json();
             displayUserProjects(data.projects || []);
@@ -140,7 +140,7 @@ function displayUserProjects(projects) {
 
 async function loadUserCollaborations() {
     try {
-        const response = await fetch('/api/dashboard/collaborations');
+        const response = await fetch('/api/dashboard/user-collaborations');
         if (response.ok) {
             const data = await response.json();
             displayUserCollaborations(data.collaborations || []);
@@ -176,7 +176,8 @@ function displayUserCollaborations(collaborations) {
                 <span class="collaboration-status ${collab.status}">${collab.status}</span>
             </div>
             <div class="list-item-content">
-                ${collab.message ? `<p>${escapeHtml(collab.message)}</p>` : ''}
+                <p><strong>Project Owner:</strong> ${escapeHtml(collab.owner_name)}</p>
+                ${collab.message ? `<p><strong>Message:</strong> ${escapeHtml(collab.message)}</p>` : ''}
                 <span class="list-item-date">${formatDate(collab.created_at)}</span>
             </div>
         </div>
@@ -185,7 +186,7 @@ function displayUserCollaborations(collaborations) {
 
 async function loadUserDonations() {
     try {
-        const response = await fetch('/api/dashboard/donations');
+        const response = await fetch('/api/dashboard/user-donations');
         if (response.ok) {
             const data = await response.json();
             displayUserDonations(data.donations || []);
@@ -221,7 +222,8 @@ function displayUserDonations(donations) {
                 <span class="donation-amount">$${donation.amount.toFixed(2)}</span>
             </div>
             <div class="list-item-content">
-                ${donation.message ? `<p>${escapeHtml(donation.message)}</p>` : ''}
+                <p><strong>Project Owner:</strong> ${escapeHtml(donation.owner_name)}</p>
+                ${donation.message ? `<p><strong>Message:</strong> ${escapeHtml(donation.message)}</p>` : ''}
                 <span class="list-item-date">${formatDate(donation.created_at)}</span>
             </div>
         </div>
@@ -230,26 +232,13 @@ function displayUserDonations(donations) {
 
 async function loadUserActivity() {
     try {
-        // Mock activity data for now
-        const mockActivity = [
-            {
-                type: 'project_created',
-                text: 'Created new project "Smart Campus Navigation"',
-                time: new Date().toISOString()
-            },
-            {
-                type: 'collaboration',
-                text: 'Started collaborating on "Green Energy Initiative"',
-                time: new Date(Date.now() - 86400000).toISOString()
-            },
-            {
-                type: 'donation',
-                text: 'Donated $25 to "Education App for Rural Areas"',
-                time: new Date(Date.now() - 172800000).toISOString()
-            }
-        ];
-        
-        displayUserActivity(mockActivity);
+        const response = await fetch('/api/dashboard/user-activity');
+        if (response.ok) {
+            const data = await response.json();
+            displayUserActivity(data.activities || []);
+        } else {
+            displayUserActivity([]);
+        }
     } catch (error) {
         console.error('Error loading activity:', error);
         displayUserActivity([]);

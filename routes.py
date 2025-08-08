@@ -601,6 +601,220 @@ def get_discussion_stats():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Profile API endpoints
+@app.route('/api/profile', methods=['PUT'])
+def update_profile():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json()
+        
+        # Update user fields
+        if 'full_name' in data:
+            user.full_name = data['full_name']
+        if 'email' in data:
+            # Check if email is already taken by another user
+            existing_user = User.query.filter_by(email=data['email']).first()
+            if existing_user and existing_user.id != user_id:
+                return jsonify({'error': 'Email already taken'}), 400
+            user.email = data['email']
+        if 'college' in data:
+            user.college = data['college']
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Profile updated successfully',
+            'user': user.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dashboard/user-collaborations', methods=['GET'])
+def get_user_collaborations_sent():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Get collaborations requested by the user
+        collaborations = db.session.query(
+            Collaboration,
+            Project.title.label('project_title'),
+            User.full_name.label('owner_name')
+        ).join(
+            Project, Collaboration.project_id == Project.id
+        ).join(
+            User, Project.user_id == User.id
+        ).filter(
+            Collaboration.user_id == user_id
+        ).all()
+        
+        collab_list = []
+        for collab, project_title, owner_name in collaborations:
+            collab_dict = {
+                'id': collab.id,
+                'message': collab.message,
+                'status': collab.status,
+                'created_at': collab.created_at.isoformat(),
+                'project_title': project_title,
+                'owner_name': owner_name
+            }
+            collab_list.append(collab_dict)
+        
+        return jsonify({
+            'collaborations': collab_list
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dashboard/user-donations', methods=['GET'])
+def get_user_donations():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Get donations made by the user
+        donations = db.session.query(
+            Donation,
+            Project.title.label('project_title'),
+            User.full_name.label('owner_name')
+        ).join(
+            Project, Donation.project_id == Project.id
+        ).join(
+            User, Project.user_id == User.id
+        ).filter(
+            Donation.user_id == user_id
+        ).order_by(desc(Donation.created_at)).all()
+        
+        donations_list = []
+        for donation, project_title, owner_name in donations:
+            donation_dict = {
+                'id': donation.id,
+                'amount': donation.amount,
+                'message': donation.message,
+                'created_at': donation.created_at.isoformat(),
+                'project_title': project_title,
+                'owner_name': owner_name
+            }
+            donations_list.append(donation_dict)
+        
+        return jsonify({
+            'donations': donations_list
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/dashboard/user-activity', methods=['GET'])
+def get_user_activity():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        activities = []
+        
+        # Recent projects created
+        recent_projects = Project.query.filter_by(user_id=user_id)\
+            .order_by(desc(Project.created_at)).limit(5).all()
+        
+        for project in recent_projects:
+            activities.append({
+                'type': 'project_created',
+                'text': f'Created new project "{project.title}"',
+                'time': project.created_at.isoformat(),
+                'project_id': project.id
+            })
+        
+        # Recent collaborations
+        recent_collabs = db.session.query(
+            Collaboration, Project.title
+        ).join(
+            Project, Collaboration.project_id == Project.id
+        ).filter(
+            Collaboration.user_id == user_id
+        ).order_by(desc(Collaboration.created_at)).limit(5).all()
+        
+        for collab, project_title in recent_collabs:
+            activities.append({
+                'type': 'collaboration',
+                'text': f'Requested collaboration on "{project_title}"',
+                'time': collab.created_at.isoformat(),
+                'status': collab.status
+            })
+        
+        # Recent donations
+        recent_donations = db.session.query(
+            Donation, Project.title
+        ).join(
+            Project, Donation.project_id == Project.id
+        ).filter(
+            Donation.user_id == user_id
+        ).order_by(desc(Donation.created_at)).limit(5).all()
+        
+        for donation, project_title in recent_donations:
+            activities.append({
+                'type': 'donation',
+                'text': f'Donated ${donation.amount:.2f} to "{project_title}"',
+                'time': donation.created_at.isoformat(),
+                'amount': donation.amount
+            })
+        
+        # Recent votes
+        recent_votes = db.session.query(
+            Vote, Project.title
+        ).join(
+            Project, Vote.project_id == Project.id
+        ).filter(
+            Vote.user_id == user_id,
+            Vote.is_upvote == True
+        ).order_by(desc(Vote.created_at)).limit(5).all()
+        
+        for vote, project_title in recent_votes:
+            activities.append({
+                'type': 'vote',
+                'text': f'Voted for "{project_title}"',
+                'time': vote.created_at.isoformat()
+            })
+        
+        # Recent comments
+        recent_comments = db.session.query(
+            Comment, Project.title
+        ).join(
+            Project, Comment.project_id == Project.id
+        ).filter(
+            Comment.user_id == user_id
+        ).order_by(desc(Comment.created_at)).limit(5).all()
+        
+        for comment, project_title in recent_comments:
+            activities.append({
+                'type': 'comment',
+                'text': f'Commented on "{project_title}"',
+                'time': comment.created_at.isoformat()
+            })
+        
+        # Sort all activities by time (newest first)
+        activities.sort(key=lambda x: x['time'], reverse=True)
+        
+        # Return only the 10 most recent activities
+        return jsonify({
+            'activities': activities[:10]
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # Collaboration management for dashboard
 @app.route('/api/collaborations', methods=['GET'])
 def get_user_collaborations():
