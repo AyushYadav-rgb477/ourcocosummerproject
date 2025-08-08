@@ -96,9 +96,6 @@
         <div class="content-header">
           <h2>Projects</h2>
           <div class="tab-navigation">
-            <button class="search-btn">
-              <i class="fas fa-search"></i>
-            </button>
             <div class="tab-buttons">
               <button class="tab-btn active" data-tab="projects">Projects</button>
               <button class="tab-btn" data-tab="collaboration">Collaboration</button>
@@ -108,27 +105,80 @@
           </div>
         </div>
         
+        <!-- Search Section -->
+        <div class="search-section">
+          <div class="search-input-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" id="search-input" placeholder="Search in current tab..." />
+            <button class="search-btn" onclick="performSearch()">Search</button>
+          </div>
+        </div>
+        
         <!-- Tab Contents -->
         <div class="tab-content active" id="projects-tab">
-          <div class="projects-grid" id="user-projects-grid">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i class="fas fa-project-diagram"></i>
+            </div>
+            <h3>No Projects Yet</h3>
+            <p>Create your first project to get started!</p>
+            <button class="btn-primary" onclick="showCreateProjectModal()">
+              <i class="fas fa-plus"></i>
+              Create Project
+            </button>
+          </div>
+          <div class="projects-grid" id="user-projects-grid" style="display: none;">
             <!-- Projects will be loaded here -->
           </div>
         </div>
         
         <div class="tab-content" id="collaboration-tab">
-          <div class="collaborations-list" id="user-collaborations-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i class="fas fa-handshake"></i>
+            </div>
+            <h3>No Collaborations Yet</h3>
+            <p>Start collaborating with other students on their projects!</p>
+            <button class="btn-primary" onclick="window.location.href='/browse.html'">
+              <i class="fas fa-search"></i>
+              Browse Projects
+            </button>
+          </div>
+          <div class="collaborations-grid" id="user-collaborations-list" style="display: none;">
             <!-- Collaborations will be loaded here -->
           </div>
         </div>
         
         <div class="tab-content" id="donation-tab">
-          <div class="donations-list" id="user-donations-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i class="fas fa-donate"></i>
+            </div>
+            <h3>No Donations Yet</h3>
+            <p>Support amazing projects from fellow students!</p>
+            <button class="btn-primary" onclick="window.location.href='/browse.html'">
+              <i class="fas fa-heart"></i>
+              Support Projects
+            </button>
+          </div>
+          <div class="donations-grid" id="user-donations-list" style="display: none;">
             <!-- Donations will be loaded here -->
           </div>
         </div>
         
         <div class="tab-content" id="history-tab">
-          <div class="activity-feed" id="user-activity-feed">
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i class="fas fa-history"></i>
+            </div>
+            <h3>No Activity Yet</h3>
+            <p>Your activity history will appear here as you use the platform!</p>
+            <button class="btn-primary" onclick="window.location.href='/browse.html'">
+              <i class="fas fa-rocket"></i>
+              Get Started
+            </button>
+          </div>
+          <div class="activity-timeline" id="user-activity-feed" style="display: none;">
             <!-- Activity will be loaded here -->
           </div>
         </div>

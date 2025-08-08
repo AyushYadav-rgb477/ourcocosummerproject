@@ -227,15 +227,32 @@ async function loadUserStats() {
 }
 
 async function loadUserProjects() {
+    const projectsGrid = document.getElementById('user-projects-grid');
+    const emptyState = document.querySelector('#projects-tab .empty-state');
+    if (!projectsGrid || !emptyState) return;
+    
     try {
         const response = await fetch('/api/dashboard/stats');
         if (response.ok) {
             const data = await response.json();
-            displayUserProjects(data.projects || []);
+            const projects = data.projects || [];
+            
+            if (projects.length > 0) {
+                emptyState.style.display = 'none';
+                projectsGrid.style.display = 'grid';
+                displayUserProjects(projects);
+            } else {
+                emptyState.style.display = 'flex';
+                projectsGrid.style.display = 'none';
+            }
+        } else {
+            emptyState.style.display = 'flex';
+            projectsGrid.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading user projects:', error);
-        displayUserProjects([]);
+        emptyState.style.display = 'flex';
+        projectsGrid.style.display = 'none';
     }
 }
 
@@ -589,15 +606,32 @@ function loadUserActivity() {
 }
 
 async function loadUserCollaborations() {
+    const collaborationsList = document.getElementById('user-collaborations-list');
+    const emptyState = document.querySelector('#collaboration-tab .empty-state');
+    if (!collaborationsList || !emptyState) return;
+    
     try {
         const response = await fetch('/api/dashboard/user-collaborations');
         if (response.ok) {
             const data = await response.json();
-            displayUserCollaborations(data.collaborations || []);
+            const collaborations = data.collaborations || [];
+            
+            if (collaborations.length > 0) {
+                emptyState.style.display = 'none';
+                collaborationsList.style.display = 'grid';
+                displayUserCollaborations(collaborations);
+            } else {
+                emptyState.style.display = 'flex';
+                collaborationsList.style.display = 'none';
+            }
+        } else {
+            emptyState.style.display = 'flex';
+            collaborationsList.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading collaborations:', error);
-        displayUserCollaborations([]);
+        emptyState.style.display = 'flex';
+        collaborationsList.style.display = 'none';
     }
 }
 
@@ -635,15 +669,32 @@ function displayUserCollaborations(collaborations) {
 }
 
 async function loadUserDonations() {
+    const donationsList = document.getElementById('user-donations-list');
+    const emptyState = document.querySelector('#donation-tab .empty-state');
+    if (!donationsList || !emptyState) return;
+    
     try {
         const response = await fetch('/api/dashboard/user-donations');
         if (response.ok) {
             const data = await response.json();
-            displayUserDonations(data.donations || []);
+            const donations = data.donations || [];
+            
+            if (donations.length > 0) {
+                emptyState.style.display = 'none';
+                donationsList.style.display = 'grid';
+                displayUserDonations(donations);
+            } else {
+                emptyState.style.display = 'flex';
+                donationsList.style.display = 'none';
+            }
+        } else {
+            emptyState.style.display = 'flex';
+            donationsList.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading donations:', error);
-        displayUserDonations([]);
+        emptyState.style.display = 'flex';
+        donationsList.style.display = 'none';
     }
 }
 
@@ -681,17 +732,32 @@ function displayUserDonations(donations) {
 }
 
 async function loadUserActivity() {
+    const activityFeed = document.getElementById('user-activity-feed');
+    const emptyState = document.querySelector('#history-tab .empty-state');
+    if (!activityFeed || !emptyState) return;
+    
     try {
         const response = await fetch('/api/dashboard/user-activity');
         if (response.ok) {
             const data = await response.json();
-            displayUserActivity(data.activities || []);
+            const activities = data.activities || [];
+            
+            if (activities.length > 0) {
+                emptyState.style.display = 'none';
+                activityFeed.style.display = 'flex';
+                displayUserActivity(activities);
+            } else {
+                emptyState.style.display = 'flex';
+                activityFeed.style.display = 'none';
+            }
         } else {
-            displayUserActivity([]);
+            emptyState.style.display = 'flex';
+            activityFeed.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading activity:', error);
-        displayUserActivity([]);
+        emptyState.style.display = 'flex';
+        activityFeed.style.display = 'none';
     }
 }
 
@@ -779,6 +845,9 @@ function setupTabs() {
             if (existingNotification) {
                 existingNotification.remove();
             }
+            
+            // Update search placeholder for the new tab
+            updateSearchPlaceholder();
             
             // Load data for the selected tab - only load if content is empty
             switch(targetTab) {
@@ -1132,16 +1201,23 @@ function updateAllTimestamps() {
 // Search functionality
 function setupSearchFunction() {
     const searchBtn = document.querySelector('.search-btn');
+    const searchInput = document.getElementById('search-input');
+    
     if (searchBtn) {
-        searchBtn.addEventListener('click', handleSearch);
+        searchBtn.addEventListener('click', performSearch);
     }
     
-    // Also allow Enter key to trigger search
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter' && e.ctrlKey) {
-            handleSearch();
-        }
-    });
+    if (searchInput) {
+        // Allow Enter key to trigger search
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    }
+    
+    // Set initial placeholder
+    updateSearchPlaceholder();
 }
 
 function handleSearch() {
@@ -1152,23 +1228,58 @@ function handleSearch() {
     performSearch(searchQuery.trim(), activeTab);
 }
 
-function performSearch(query, tabType) {
-    const searchTerm = query.toLowerCase();
+function performSearch() {
+    const searchInput = document.getElementById('search-input');
+    const activeTab = document.querySelector('.tab-btn.active');
     
-    switch(tabType) {
+    if (!searchInput || !activeTab) return;
+    
+    const searchTerm = searchInput.value.trim();
+    const tabName = activeTab.dataset.tab;
+    
+    if (!searchTerm) {
+        alert('Please enter a search term');
+        return;
+    }
+    
+    // Show search notification
+    showSearchNotification(searchTerm, tabName);
+    
+    // Perform search based on active tab
+    switch(tabName) {
         case 'projects':
-            searchProjects(searchTerm);
+            searchProjects(searchTerm.toLowerCase());
             break;
         case 'collaboration':
-            searchCollaborations(searchTerm);
+            searchCollaborations(searchTerm.toLowerCase());
             break;
         case 'donation':
-            searchDonations(searchTerm);
+            searchDonations(searchTerm.toLowerCase());
             break;
         case 'history':
-            searchActivity(searchTerm);
+            searchActivity(searchTerm.toLowerCase());
             break;
     }
+    
+    // Clear the search input
+    searchInput.value = '';
+}
+
+function updateSearchPlaceholder() {
+    const searchInput = document.getElementById('search-input');
+    const activeTab = document.querySelector('.tab-btn.active');
+    
+    if (!searchInput || !activeTab) return;
+    
+    const tabName = activeTab.dataset.tab;
+    const placeholders = {
+        'projects': 'Search projects...',
+        'collaboration': 'Search collaborations...',
+        'donation': 'Search donations...',
+        'history': 'Search activity...'
+    };
+    
+    searchInput.placeholder = placeholders[tabName] || 'Search...';
 }
 
 function searchProjects(searchTerm) {
