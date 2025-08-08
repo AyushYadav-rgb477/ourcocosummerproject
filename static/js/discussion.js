@@ -129,39 +129,18 @@ async function loadDiscussions() {
             params.append('search', currentFilters.search);
         }
         
-        // Mock API call - replace with actual API endpoint
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate loading
+        const response = await fetch(`/api/discussions?${params}`);
         
-        // Mock data for now
-        const mockDiscussions = [
-            {
-                id: 1,
-                title: "Best practices for sustainable tech projects",
-                content: "I'm looking for advice on how to make technology projects more environmentally friendly...",
-                author: { full_name: "Alex Johnson", username: "alexj" },
-                category: "tech",
-                replies: 12,
-                likes: 8,
-                created_at: new Date().toISOString(),
-                tags: ["sustainability", "technology", "environment"]
-            },
-            {
-                id: 2,
-                title: "Funding opportunities for healthcare innovations",
-                content: "Does anyone know about specific funding programs for healthcare-related student projects?",
-                author: { full_name: "Sarah Chen", username: "sarahc" },
-                category: "healthcare",
-                replies: 6,
-                likes: 15,
-                created_at: new Date().toISOString(),
-                tags: ["funding", "healthcare", "innovation"]
+        if (response.ok) {
+            const data = await response.json();
+            displayDiscussions(data.discussions, currentPage === 1);
+            
+            // Show no results if no discussions
+            if (data.discussions.length === 0 && currentPage === 1) {
+                if (noDiscussionsEl) noDiscussionsEl.style.display = 'block';
             }
-        ];
-        
-        displayDiscussions(mockDiscussions, currentPage === 1);
-        
-        // Show no results if no discussions
-        if (mockDiscussions.length === 0 && currentPage === 1) {
+        } else {
+            console.error('Failed to load discussions');
             if (noDiscussionsEl) noDiscussionsEl.style.display = 'block';
         }
         
@@ -218,19 +197,19 @@ function displayDiscussions(discussions, clearExisting = false) {
 
 async function loadCommunityStats() {
     try {
-        // Mock stats data
-        const stats = {
-            totalDiscussions: 142,
-            activeMembers: 89,
-            ideasShared: 67
-        };
-        
-        document.getElementById('total-discussions').textContent = stats.totalDiscussions;
-        document.getElementById('active-members').textContent = stats.activeMembers;
-        document.getElementById('ideas-shared').textContent = stats.ideasShared;
-        
+        const response = await fetch('/api/discussions/stats');
+        if (response.ok) {
+            const stats = await response.json();
+            document.getElementById('total-discussions').textContent = stats.totalDiscussions || 0;
+            document.getElementById('active-members').textContent = stats.activeMembers || 0;
+            document.getElementById('ideas-shared').textContent = stats.ideasShared || 0;
+        }
     } catch (error) {
         console.error('Error loading community stats:', error);
+        // Set default values on error
+        document.getElementById('total-discussions').textContent = '0';
+        document.getElementById('active-members').textContent = '0';
+        document.getElementById('ideas-shared').textContent = '0';
     }
 }
 
@@ -280,25 +259,46 @@ async function handleCreateDiscussion() {
         return;
     }
     
+    if (!category) {
+        showMessage('Please select a category', 'error');
+        return;
+    }
+    
     const createBtn = document.getElementById('create-discussion-btn');
     createBtn.disabled = true;
     createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
     
     try {
-        // Mock API call - replace with actual API endpoint
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const response = await fetch('/api/discussions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title.trim(),
+                category,
+                content: content.trim(),
+                tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+            })
+        });
         
-        showMessage('Discussion created successfully!', 'success');
-        closeModals();
+        const data = await response.json();
         
-        // Clear form
-        document.getElementById('discussion-title').value = '';
-        document.getElementById('discussion-category-modal').value = '';
-        document.getElementById('discussion-content').value = '';
-        document.getElementById('discussion-tags').value = '';
-        
-        // Reload discussions
-        resetAndLoadDiscussions();
+        if (response.ok) {
+            showMessage('Discussion created successfully!', 'success');
+            closeModals();
+            
+            // Clear form
+            document.getElementById('discussion-title').value = '';
+            document.getElementById('discussion-category-modal').value = '';
+            document.getElementById('discussion-content').value = '';
+            document.getElementById('discussion-tags').value = '';
+            
+            // Reload discussions
+            resetAndLoadDiscussions();
+        } else {
+            showMessage(data.error || 'Error creating discussion', 'error');
+        }
         
     } catch (error) {
         console.error('Error creating discussion:', error);
@@ -311,25 +311,20 @@ async function handleCreateDiscussion() {
 
 async function openDiscussionModal(discussionId) {
     try {
-        // Mock API call - replace with actual API endpoint
-        const mockDiscussion = {
-            id: discussionId,
-            title: "Best practices for sustainable tech projects",
-            content: "I'm looking for advice on how to make technology projects more environmentally friendly. What are some strategies you've used in your projects?",
-            author: { full_name: "Alex Johnson", username: "alexj" },
-            category: "tech",
-            replies: 12,
-            likes: 8,
-            created_at: new Date().toISOString(),
-            tags: ["sustainability", "technology", "environment"]
-        };
+        const response = await fetch(`/api/discussions/${discussionId}`);
         
-        currentDiscussion = mockDiscussion;
-        displayDiscussionModal(mockDiscussion);
-        loadDiscussionReplies(discussionId);
-        
-        const modal = document.getElementById('view-discussion-modal');
-        modal.classList.add('show');
+        if (response.ok) {
+            const data = await response.json();
+            currentDiscussion = data.discussion;
+            displayDiscussionModal(data.discussion);
+            loadDiscussionReplies(discussionId);
+            setupDiscussionActions();
+            
+            const modal = document.getElementById('view-discussion-modal');
+            modal.classList.add('show');
+        } else {
+            showMessage('Error loading discussion details', 'error');
+        }
         
     } catch (error) {
         console.error('Error loading discussion:', error);
@@ -340,33 +335,41 @@ async function openDiscussionModal(discussionId) {
 function displayDiscussionModal(discussion) {
     document.getElementById('view-discussion-title').textContent = discussion.title;
     document.getElementById('view-discussion-author').textContent = discussion.author.full_name;
-    document.getElementById('view-discussion-replies').textContent = discussion.replies;
-    document.getElementById('view-discussion-likes').textContent = discussion.likes;
+    document.getElementById('view-discussion-replies').textContent = discussion.reply_count || 0;
+    document.getElementById('view-discussion-likes').textContent = discussion.like_count || 0;
+    document.getElementById('like-count').textContent = discussion.like_count || 0;
     document.getElementById('view-discussion-date').textContent = formatDate(discussion.created_at);
     document.getElementById('view-discussion-content').textContent = discussion.content;
     
     // Display tags
     const tagsContainer = document.getElementById('view-discussion-tags');
-    tagsContainer.innerHTML = discussion.tags.map(tag => 
-        `<span class="tag">${escapeHtml(tag)}</span>`
-    ).join('');
+    if (discussion.tags && discussion.tags.length > 0) {
+        tagsContainer.innerHTML = discussion.tags.map(tag => 
+            `<span class="tag">${escapeHtml(tag)}</span>`
+        ).join('');
+    } else {
+        tagsContainer.innerHTML = '';
+    }
+    
+    // Update like button state
+    const likeBtn = document.getElementById('like-discussion-btn');
+    if (discussion.is_liked) {
+        likeBtn.classList.add('liked');
+    } else {
+        likeBtn.classList.remove('liked');
+    }
 }
 
 async function loadDiscussionReplies(discussionId) {
     try {
-        // Mock replies data
-        const mockReplies = [
-            {
-                id: 1,
-                content: "Great question! I've found that using renewable energy sources for development environments helps a lot.",
-                author: { full_name: "Maria Garcia" },
-                created_at: new Date().toISOString()
-            }
-        ];
-        
-        displayReplies(mockReplies);
+        const response = await fetch(`/api/discussions/${discussionId}/replies`);
+        if (response.ok) {
+            const data = await response.json();
+            displayReplies(data.replies);
+        }
     } catch (error) {
         console.error('Error loading replies:', error);
+        displayReplies([]);
     }
 }
 
@@ -388,9 +391,194 @@ function displayReplies(replies) {
     `).join('');
 }
 
+function setupDiscussionActions() {
+    const likeBtn = document.getElementById('like-discussion-btn');
+    const replyBtn = document.getElementById('reply-discussion-btn');
+    const shareBtn = document.getElementById('share-discussion-btn');
+    
+    if (likeBtn) {
+        likeBtn.removeEventListener('click', handleLikeDiscussion);
+        likeBtn.addEventListener('click', handleLikeDiscussion);
+    }
+    
+    if (replyBtn) {
+        replyBtn.removeEventListener('click', showReplyForm);
+        replyBtn.addEventListener('click', showReplyForm);
+    }
+    
+    if (shareBtn) {
+        shareBtn.removeEventListener('click', handleShareDiscussion);
+        shareBtn.addEventListener('click', handleShareDiscussion);
+    }
+    
+    // Setup reply form submission
+    const submitReplyBtn = document.getElementById('submit-reply');
+    if (submitReplyBtn) {
+        submitReplyBtn.removeEventListener('click', handleSubmitReply);
+        submitReplyBtn.addEventListener('click', handleSubmitReply);
+    }
+    
+    const cancelReplyBtn = document.getElementById('cancel-reply');
+    if (cancelReplyBtn) {
+        cancelReplyBtn.addEventListener('click', hideReplyForm);
+    }
+}
+
+async function handleLikeDiscussion() {
+    if (!currentUser) {
+        showMessage('Please login to like discussions', 'error');
+        return;
+    }
+    
+    if (!currentDiscussion) return;
+    
+    const likeBtn = document.getElementById('like-discussion-btn');
+    const likeCountEl = document.getElementById('like-count');
+    const originalText = likeBtn.innerHTML;
+    
+    likeBtn.disabled = true;
+    likeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ...';
+    
+    try {
+        const response = await fetch(`/api/discussions/${currentDiscussion.id}/like`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            likeCountEl.textContent = data.like_count;
+            document.getElementById('view-discussion-likes').textContent = data.like_count;
+            
+            if (data.is_liked) {
+                likeBtn.classList.add('liked');
+                showMessage('Discussion liked!', 'success');
+            } else {
+                likeBtn.classList.remove('liked');
+                showMessage('Like removed', 'info');
+            }
+            
+            currentDiscussion.like_count = data.like_count;
+            currentDiscussion.is_liked = data.is_liked;
+        } else {
+            showMessage(data.error || 'Error updating like', 'error');
+        }
+    } catch (error) {
+        console.error('Like error:', error);
+        showMessage('Error updating like', 'error');
+    } finally {
+        likeBtn.disabled = false;
+        likeBtn.innerHTML = `<i class="fas fa-thumbs-up"></i> <span id="like-count">${currentDiscussion.like_count || 0}</span> Like`;
+    }
+}
+
+function handleShareDiscussion() {
+    if (!currentDiscussion) return;
+    
+    const shareUrl = `${window.location.origin}/discussion.html?id=${currentDiscussion.id}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: currentDiscussion.title,
+            text: currentDiscussion.content.substring(0, 100) + '...',
+            url: shareUrl
+        }).then(() => {
+            showMessage('Discussion shared successfully!', 'success');
+        }).catch(error => {
+            console.log('Error sharing:', error);
+            fallbackShare(shareUrl);
+        });
+    } else {
+        fallbackShare(shareUrl);
+    }
+}
+
+function fallbackShare(shareUrl) {
+    navigator.clipboard.writeText(shareUrl).then(() => {
+        showMessage('Discussion link copied to clipboard!', 'success');
+    }).catch(() => {
+        // Create a temporary input element to copy the URL
+        const tempInput = document.createElement('input');
+        tempInput.value = shareUrl;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempInput);
+        showMessage('Discussion link copied to clipboard!', 'success');
+    });
+}
+
+function showReplyForm() {
+    if (!currentUser) {
+        showMessage('Please login to reply', 'error');
+        return;
+    }
+    
+    const replyForm = document.getElementById('add-reply-form');
+    if (replyForm) {
+        replyForm.style.display = 'block';
+        document.getElementById('reply-content').focus();
+    }
+}
+
+function hideReplyForm() {
+    const replyForm = document.getElementById('add-reply-form');
+    if (replyForm) {
+        replyForm.style.display = 'none';
+        document.getElementById('reply-content').value = '';
+    }
+}
+
+async function handleSubmitReply() {
+    const content = document.getElementById('reply-content').value.trim();
+    
+    if (!content) {
+        showMessage('Please enter a reply', 'error');
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submit-reply');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+    
+    try {
+        const response = await fetch(`/api/discussions/${currentDiscussion.id}/replies`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ content })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Reply posted successfully!', 'success');
+            hideReplyForm();
+            loadDiscussionReplies(currentDiscussion.id);
+            
+            // Update reply count
+            const newReplyCount = (currentDiscussion.reply_count || 0) + 1;
+            document.getElementById('view-discussion-replies').textContent = newReplyCount;
+            currentDiscussion.reply_count = newReplyCount;
+        } else {
+            showMessage(data.error || 'Error posting reply', 'error');
+        }
+    } catch (error) {
+        console.error('Reply error:', error);
+        showMessage('Error posting reply', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Reply';
+    }
+}
+
 function closeModals() {
     const modals = document.querySelectorAll('.modal');
     modals.forEach(modal => modal.classList.remove('show'));
+    
+    // Hide reply form when closing modal
+    hideReplyForm();
 }
 
 // Utility functions

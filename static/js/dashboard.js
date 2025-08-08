@@ -2,6 +2,9 @@
 
 let currentUser = null;
 let currentSection = 'overview';
+let notifications = [];
+let unreadCount = 0;
+let currentNotificationFilter = 'all';
 
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication
@@ -15,6 +18,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup logout
     setupLogout();
+    
+    // Setup notifications
+    setupNotifications();
+    
+    // Start notification polling
+    startNotificationPolling();
 });
 
 async function checkAuthAndLoadDashboard() {
@@ -86,6 +95,9 @@ async function loadSectionData(section) {
             break;
         case 'collaborations':
             loadCollaborations();
+            break;
+        case 'notifications':
+            loadNotifications();
             break;
     }
 }
@@ -277,7 +289,65 @@ async function loadCollaborations() {
     const container = document.getElementById('collaboration-requests');
     if (!container) return;
     
-    // For now, show empty state as collaboration management would require additional backend endpoints
+    try {
+        const response = await fetch('/api/collaborations');
+        if (response.ok) {
+            const data = await response.json();
+            displayCollaborations(data.collaborations || []);
+        } else {
+            displayEmptyCollaborations();
+        }
+    } catch (error) {
+        console.error('Error loading collaborations:', error);
+        displayEmptyCollaborations();
+    }
+}
+
+function displayCollaborations(collaborations) {
+    const container = document.getElementById('collaboration-requests');
+    if (!container) return;
+    
+    if (collaborations.length === 0) {
+        displayEmptyCollaborations();
+        return;
+    }
+    
+    container.innerHTML = collaborations.map(collab => `
+        <div class="collaboration-item">
+            <div class="collaboration-header">
+                <div class="collaboration-user">
+                    <i class="fas fa-user"></i>
+                    <span>${escapeHtml(collab.requester?.full_name || 'Unknown User')}</span>
+                </div>
+                <span class="collaboration-status ${collab.status}">${collab.status}</span>
+            </div>
+            <div class="collaboration-project">
+                <strong>Project:</strong> ${escapeHtml(collab.project?.title || 'Unknown Project')}
+            </div>
+            <div class="collaboration-message">
+                "${escapeHtml(collab.message || 'No message provided')}"
+            </div>
+            <div class="collaboration-date">
+                Requested ${formatDate(collab.created_at)}
+            </div>
+            ${collab.status === 'pending' ? `
+                <div class="collaboration-actions">
+                    <button class="action-btn accept" onclick="handleCollaborationResponse(${collab.id}, 'accept')">
+                        <i class="fas fa-check"></i> Accept
+                    </button>
+                    <button class="action-btn reject" onclick="handleCollaborationResponse(${collab.id}, 'reject')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function displayEmptyCollaborations() {
+    const container = document.getElementById('collaboration-requests');
+    if (!container) return;
+    
     container.innerHTML = `
         <div class="empty-state">
             <i class="fas fa-handshake"></i>
@@ -285,6 +355,26 @@ async function loadCollaborations() {
             <p>Collaboration requests will appear here when other users want to work with you.</p>
         </div>
     `;
+}
+
+async function handleCollaborationResponse(collabId, action) {
+    try {
+        const response = await fetch(`/api/collaborations/${collabId}/${action}`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage(`Collaboration request ${action}ed successfully!`, 'success');
+            loadCollaborations(); // Reload collaborations
+        } else {
+            showMessage(data.error || `Error ${action}ing collaboration request`, 'error');
+        }
+    } catch (error) {
+        console.error(`Error ${action}ing collaboration:`, error);
+        showMessage(`Error ${action}ing collaboration request`, 'error');
+    }
 }
 
 function setupLogout() {
@@ -351,4 +441,226 @@ function createMessageContainer() {
     container.className = 'message-container';
     document.body.appendChild(container);
     return container;
+}
+
+// Notification System
+function setupNotifications() {
+    // Setup notification filter buttons
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentNotificationFilter = this.getAttribute('data-filter');
+            displayFilteredNotifications();
+        });
+    });
+    
+    // Setup notification action buttons
+    const markAllReadBtn = document.getElementById('mark-all-read');
+    if (markAllReadBtn) {
+        markAllReadBtn.addEventListener('click', markAllNotificationsAsRead);
+    }
+    
+    const clearAllBtn = document.getElementById('clear-notifications');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', clearAllNotifications);
+    }
+}
+
+async function loadNotifications() {
+    try {
+        const response = await fetch('/api/notifications');
+        if (response.ok) {
+            const data = await response.json();
+            notifications = data.notifications || [];
+            unreadCount = data.unread_count || 0;
+            updateNotificationCount();
+            displayFilteredNotifications();
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        displayEmptyNotifications('Error loading notifications');
+    }
+}
+
+function updateNotificationCount() {
+    const countEl = document.getElementById('notification-count');
+    if (countEl) {
+        countEl.textContent = unreadCount;
+        countEl.setAttribute('data-count', unreadCount);
+    }
+}
+
+function displayFilteredNotifications() {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
+    
+    let filteredNotifications = notifications;
+    
+    if (currentNotificationFilter !== 'all') {
+        filteredNotifications = notifications.filter(n => n.type === currentNotificationFilter);
+    }
+    
+    if (filteredNotifications.length === 0) {
+        displayEmptyNotifications('No notifications found');
+        return;
+    }
+    
+    container.innerHTML = filteredNotifications.map(notification => `
+        <div class="notification-item ${notification.is_read ? '' : 'unread'}" data-id="${notification.id}">
+            <div class="notification-icon ${notification.type}">
+                ${getNotificationIcon(notification.type)}
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">${escapeHtml(notification.title)}</div>
+                <div class="notification-message">${escapeHtml(notification.message)}</div>
+                <div class="notification-time">${formatNotificationTime(notification.created_at)}</div>
+                ${!notification.is_read ? `
+                    <div class="notification-actions">
+                        <button class="notification-action" onclick="markNotificationAsRead(${notification.id})">
+                            <i class="fas fa-check"></i> Mark as Read
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function displayEmptyNotifications(message = 'No notifications yet') {
+    const container = document.getElementById('notifications-list');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="empty-state">
+            <i class="fas fa-bell"></i>
+            <h3>${message}</h3>
+            <p>You'll see notifications about your projects, collaborations, and interactions here.</p>
+        </div>
+    `;
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        'like': '<i class="fas fa-thumbs-up"></i>',
+        'likes': '<i class="fas fa-thumbs-up"></i>',
+        'comment': '<i class="fas fa-comment"></i>',
+        'comments': '<i class="fas fa-comment"></i>',
+        'collaboration': '<i class="fas fa-handshake"></i>',
+        'collaborations': '<i class="fas fa-handshake"></i>',
+        'project': '<i class="fas fa-rocket"></i>',
+        'projects': '<i class="fas fa-rocket"></i>'
+    };
+    return icons[type] || '<i class="fas fa-bell"></i>';
+}
+
+function formatNotificationTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffMinutes < 1) {
+        return 'Just now';
+    } else if (diffMinutes < 60) {
+        return `${diffMinutes} minute${diffMinutes === 1 ? '' : 's'} ago`;
+    } else if (diffHours < 24) {
+        return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    } else if (diffDays < 7) {
+        return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    } else {
+        return date.toLocaleDateString();
+    }
+}
+
+async function markNotificationAsRead(notificationId) {
+    try {
+        const response = await fetch(`/api/notifications/${notificationId}/read`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            // Update the notification in the local array
+            const notification = notifications.find(n => n.id === notificationId);
+            if (notification && !notification.is_read) {
+                notification.is_read = true;
+                unreadCount = Math.max(0, unreadCount - 1);
+                updateNotificationCount();
+                displayFilteredNotifications();
+            }
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+        showMessage('Error updating notification', 'error');
+    }
+}
+
+async function markAllNotificationsAsRead() {
+    try {
+        const response = await fetch('/api/notifications/mark-all-read', {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            notifications.forEach(n => n.is_read = true);
+            unreadCount = 0;
+            updateNotificationCount();
+            displayFilteredNotifications();
+            showMessage('All notifications marked as read', 'success');
+        }
+    } catch (error) {
+        console.error('Error marking all notifications as read:', error);
+        showMessage('Error updating notifications', 'error');
+    }
+}
+
+async function clearAllNotifications() {
+    if (!confirm('Are you sure you want to clear all notifications? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/notifications/clear-all', {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            notifications = [];
+            unreadCount = 0;
+            updateNotificationCount();
+            displayEmptyNotifications();
+            showMessage('All notifications cleared', 'success');
+        }
+    } catch (error) {
+        console.error('Error clearing notifications:', error);
+        showMessage('Error clearing notifications', 'error');
+    }
+}
+
+function startNotificationPolling() {
+    // Poll for new notifications every 30 seconds
+    setInterval(async () => {
+        try {
+            const response = await fetch('/api/notifications/count');
+            if (response.ok) {
+                const data = await response.json();
+                const newUnreadCount = data.unread_count || 0;
+                
+                if (newUnreadCount > unreadCount) {
+                    // New notifications arrived
+                    if (currentSection === 'notifications') {
+                        loadNotifications();
+                    } else {
+                        unreadCount = newUnreadCount;
+                        updateNotificationCount();
+                    }
+                }
+            }
+        } catch (error) {
+            console.log('Notification polling error:', error);
+        }
+    }, 30000);
 }

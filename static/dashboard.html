@@ -44,6 +44,10 @@
         <a href="#collaborations" class="nav-item" data-section="collaborations">
           <i class="fas fa-handshake"></i> Collaborations
         </a>
+        <a href="#notifications" class="nav-item" data-section="notifications">
+          <i class="fas fa-bell"></i> Notifications
+          <span class="notification-count" id="notification-count">0</span>
+        </a>
       </nav>
     </aside>
 
@@ -58,44 +62,70 @@
         </div>
 
         <div class="stats-grid">
-          <div class="stat-card">
+          <div class="stat-card projects-card">
             <div class="stat-icon">
               <i class="fas fa-project-diagram"></i>
             </div>
             <div class="stat-info">
               <h3 id="total-projects-count">0</h3>
               <p>Total Projects</p>
+              <span class="stat-trend">+2 this week</span>
             </div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card funding-card">
             <div class="stat-icon">
               <i class="fas fa-dollar-sign"></i>
             </div>
             <div class="stat-info">
               <h3 id="total-funding-amount">$0</h3>
               <p>Total Funding</p>
+              <span class="stat-trend">+$150 this week</span>
             </div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card votes-card">
             <div class="stat-icon">
               <i class="fas fa-thumbs-up"></i>
             </div>
             <div class="stat-info">
               <h3 id="total-votes-count">0</h3>
               <p>Total Upvotes</p>
+              <span class="stat-trend">+8 this week</span>
             </div>
           </div>
 
-          <div class="stat-card">
+          <div class="stat-card collabs-card">
             <div class="stat-icon">
               <i class="fas fa-users"></i>
             </div>
             <div class="stat-info">
               <h3 id="total-collabs-count">0</h3>
               <p>Collaborations</p>
+              <span class="stat-trend">+1 this week</span>
             </div>
+          </div>
+        </div>
+
+        <div class="quick-actions">
+          <h3>Quick Actions</h3>
+          <div class="action-buttons">
+            <button class="quick-action-btn" onclick="switchSection('create-project')">
+              <i class="fas fa-plus"></i>
+              <span>Create Project</span>
+            </button>
+            <button class="quick-action-btn" onclick="window.location.href='browse.html'">
+              <i class="fas fa-search"></i>
+              <span>Browse Projects</span>
+            </button>
+            <button class="quick-action-btn" onclick="window.location.href='discussion.html'">
+              <i class="fas fa-comments"></i>
+              <span>Join Discussion</span>
+            </button>
+            <button class="quick-action-btn" onclick="switchSection('notifications')">
+              <i class="fas fa-bell"></i>
+              <span>View Notifications</span>
+            </button>
           </div>
         </div>
 
@@ -182,6 +212,36 @@
 
         <div class="collaborations-list" id="collaboration-requests">
           <!-- Collaboration requests will be loaded here -->
+        </div>
+      </section>
+
+      <!-- Notifications Section -->
+      <section id="notifications" class="content-section">
+        <div class="section-header">
+          <h2><i class="fas fa-bell"></i> Notifications</h2>
+          <p>Stay updated with your project activities and community interactions</p>
+          <div class="notification-controls">
+            <button class="btn-secondary" id="mark-all-read">
+              <i class="fas fa-check-double"></i> Mark All as Read
+            </button>
+            <button class="btn-secondary" id="clear-notifications">
+              <i class="fas fa-trash"></i> Clear All
+            </button>
+          </div>
+        </div>
+
+        <div class="notifications-container">
+          <div class="notification-filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="likes">Likes</button>
+            <button class="filter-btn" data-filter="comments">Comments</button>
+            <button class="filter-btn" data-filter="collaborations">Collaborations</button>
+            <button class="filter-btn" data-filter="projects">Projects</button>
+          </div>
+          
+          <div class="notifications-list" id="notifications-list">
+            <!-- Notifications will be loaded here -->
+          </div>
         </div>
       </section>
 

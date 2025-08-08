@@ -71,13 +71,13 @@
           <div class="filter-dropdown">
             <select id="discussion-category">
               <option value="">All Categories</option>
-              <option value="tech">Technology</option>
-              <option value="business">Business</option>
-              <option value="design">Design</option>
-              <option value="education">Education</option>
-              <option value="healthcare">Healthcare</option>
-              <option value="environment">Environment</option>
-              <option value="general">General</option>
+              <option value="idea">💡 Ideas & Innovations</option>
+              <option value="question">❓ Questions & Help</option>
+              <option value="discussion">💬 General Discussion</option>
+              <option value="collaboration">🤝 Collaboration Requests</option>
+              <option value="feedback">🔍 Feedback & Reviews</option>
+              <option value="announcement">📢 Announcements</option>
+              <option value="resource">📚 Resources & Tips</option>
             </select>
           </div>
           
@@ -137,13 +137,13 @@
           <label for="discussion-category-modal">Category</label>
           <select id="discussion-category-modal">
             <option value="">Select Category</option>
-            <option value="tech">Technology</option>
-            <option value="business">Business</option>
-            <option value="design">Design</option>
-            <option value="education">Education</option>
-            <option value="healthcare">Healthcare</option>
-            <option value="environment">Environment</option>
-            <option value="general">General</option>
+            <option value="idea">💡 Ideas & Innovations</option>
+            <option value="question">❓ Questions & Help</option>
+            <option value="discussion">💬 General Discussion</option>
+            <option value="collaboration">🤝 Collaboration Requests</option>
+            <option value="feedback">🔍 Feedback & Reviews</option>
+            <option value="announcement">📢 Announcements</option>
+            <option value="resource">📚 Resources & Tips</option>
           </select>
         </div>
         
@@ -208,10 +208,13 @@
         
         <div class="discussion-actions">
           <button class="btn-like" id="like-discussion-btn">
-            <i class="fas fa-thumbs-up"></i> Like
+            <i class="fas fa-thumbs-up"></i> <span id="like-count">0</span> Like
           </button>
           <button class="btn-reply" id="reply-discussion-btn">
             <i class="fas fa-reply"></i> Reply
+          </button>
+          <button class="btn-share" id="share-discussion-btn">
+            <i class="fas fa-share-alt"></i> Share
           </button>
         </div>
         

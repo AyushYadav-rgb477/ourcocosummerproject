@@ -231,6 +231,27 @@ function setupModals() {
     setupActionButtons();
 }
 
+function setupDescriptionExpand() {
+    const expandBtn = document.getElementById('description-expand-btn');
+    const descriptionEl = document.getElementById('modal-description');
+    
+    if (expandBtn && descriptionEl) {
+        expandBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            if (descriptionEl.classList.contains('collapsed')) {
+                descriptionEl.classList.remove('collapsed');
+                descriptionEl.classList.add('expanded');
+                expandBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Read Less';
+            } else {
+                descriptionEl.classList.remove('expanded');
+                descriptionEl.classList.add('collapsed');
+                expandBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
+            }
+        });
+    }
+}
+
 function setupActionButtons() {
     const voteBtn = document.getElementById('vote-btn');
     const collabBtn = document.getElementById('collab-btn');
@@ -295,14 +316,25 @@ function displayProjectModal(project) {
     document.getElementById('modal-title').textContent = project.title;
     document.getElementById('modal-category').textContent = project.category;
     document.getElementById('modal-date').textContent = formatDate(project.created_at);
-    document.getElementById('modal-owner').innerHTML = `
-        <i class="fas fa-user"></i> 
-        <span>${escapeHtml(project.owner?.full_name || 'Unknown')}</span>
-    `;
+    document.getElementById('modal-owner').querySelector('span').textContent = escapeHtml(project.owner?.full_name || 'Unknown');
     document.getElementById('modal-votes').textContent = project.vote_count;
     document.getElementById('modal-funding').textContent = `$${project.current_funding.toFixed(2)}`;
     document.getElementById('modal-collabs').textContent = project.collaboration_count;
-    document.getElementById('modal-description').textContent = project.description;
+    document.getElementById('modal-goal').textContent = `$${project.funding_goal ? project.funding_goal.toFixed(2) : '0.00'}`;
+    
+    // Set description and reset expand state
+    const descriptionEl = document.getElementById('modal-description');
+    const expandBtn = document.getElementById('description-expand-btn');
+    descriptionEl.innerHTML = `
+        <button class="description-expand-btn" id="description-expand-btn">
+            <i class="fas fa-chevron-down"></i> Read More
+        </button>
+        ${escapeHtml(project.description)}
+    `;
+    descriptionEl.className = 'project-description collapsed';
+    
+    // Setup expand/collapse functionality
+    setupDescriptionExpand();
     
     // Update action buttons based on ownership
     const isOwner = currentUser && currentUser.id === project.owner?.id;

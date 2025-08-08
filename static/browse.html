@@ -111,31 +111,47 @@
       <div class="modal-body">
         <div class="project-details">
           <div class="project-meta">
-            <span class="project-category" id="modal-category">Category</span>
-            <span class="project-date" id="modal-date">Date</span>
-          </div>
-          
-          <div class="project-owner" id="modal-owner">
-            <i class="fas fa-user"></i> 
-            <span>Owner Name</span>
+            <div class="meta-item">
+              <i class="fas fa-tag"></i>
+              <span id="modal-category">Category</span>
+            </div>
+            <div class="meta-item">
+              <i class="fas fa-calendar"></i>
+              <span id="modal-date">Date</span>
+            </div>
+            <div class="meta-item" id="modal-owner">
+              <i class="fas fa-user"></i>
+              <span>Owner Name</span>
+            </div>
           </div>
           
           <div class="project-stats">
             <div class="stat">
               <i class="fas fa-thumbs-up"></i>
-              <span id="modal-votes">0</span> votes
+              <span class="stat-value" id="modal-votes">0</span>
+              <span class="stat-label">votes</span>
             </div>
             <div class="stat">
               <i class="fas fa-dollar-sign"></i>
-              <span id="modal-funding">$0</span> raised
+              <span class="stat-value" id="modal-funding">$0</span>
+              <span class="stat-label">raised</span>
             </div>
             <div class="stat">
               <i class="fas fa-users"></i>
-              <span id="modal-collabs">0</span> collaborators
+              <span class="stat-value" id="modal-collabs">0</span>
+              <span class="stat-label">collaborators</span>
+            </div>
+            <div class="stat">
+              <i class="fas fa-target"></i>
+              <span class="stat-value" id="modal-goal">$0</span>
+              <span class="stat-label">goal</span>
             </div>
           </div>
           
-          <div class="project-description" id="modal-description">
+          <div class="project-description collapsed" id="modal-description">
+            <button class="description-expand-btn" id="description-expand-btn">
+              <i class="fas fa-chevron-down"></i> Read More
+            </button>
             Project description will appear here...
           </div>
         </div>

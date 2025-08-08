@@ -1,7 +1,16 @@
 /* Dashboard Specific Styles */
 body {
-  background: #f5f7fa;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+  background-size: 400% 400%;
+  animation: gradientShift 15s ease infinite;
   color: #333;
+  min-height: 100vh;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .dashboard-container {
@@ -11,10 +20,12 @@ body {
 
 /* Sidebar */
 .sidebar {
-  width: 250px;
-  background: white;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  width: 280px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  box-shadow: 4px 0 30px rgba(0, 0, 0, 0.1);
   padding: 2rem 0;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .sidebar-nav {
@@ -25,11 +36,14 @@ body {
 .nav-item {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 1rem 2rem;
   color: #666;
   text-decoration: none;
   transition: all 0.3s ease;
-  border-left: 3px solid transparent;
+  border-left: 4px solid transparent;
+  margin: 0.25rem 0;
+  position: relative;
 }
 
 .nav-item:hover {
@@ -38,9 +52,34 @@ body {
 }
 
 .nav-item.active {
-  background: linear-gradient(to right, rgba(106, 17, 203, 0.1), rgba(37, 117, 252, 0.1));
+  background: linear-gradient(135deg, rgba(106, 17, 203, 0.15), rgba(37, 117, 252, 0.15));
   color: #6a11cb;
   border-left-color: #6a11cb;
+  box-shadow: inset 0 0 20px rgba(106, 17, 203, 0.1);
+}
+
+.notification-count {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  min-width: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.notification-count:empty,
+.notification-count[data-count="0"] {
+  display: none;
 }
 
 .nav-item i {
@@ -54,6 +93,8 @@ body {
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
 }
 
 .content-section {
@@ -94,17 +135,65 @@ body {
 }
 
 .stat-card {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
-  transition: transform 0.3s ease;
+  transition: all 0.4s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.stat-card.projects-card::before {
+  background: linear-gradient(90deg, #4facfe, #00f2fe);
+}
+
+.stat-card.funding-card::before {
+  background: linear-gradient(90deg, #43e97b, #38f9d7);
+}
+
+.stat-card.votes-card::before {
+  background: linear-gradient(90deg, #fa709a, #fee140);
+}
+
+.stat-card.collabs-card::before {
+  background: linear-gradient(90deg, #a8edea, #fed6e3);
 }
 
 .stat-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-trend {
+  font-size: 0.8rem;
+  color: #28a745;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+
+.stat-trend::before {
+  content: '↗';
+  margin-right: 0.25rem;
 }
 
 .stat-icon {
@@ -137,11 +226,13 @@ body {
 
 /* Project Form */
 .project-form-container {
-  background: white;
-  padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 2.5rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   max-width: 800px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .project-form {
@@ -192,19 +283,20 @@ body {
 }
 
 .submit-btn {
-  background: linear-gradient(to right, #6a11cb, #2575fc);
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
   color: white;
   padding: 1rem 2rem;
   border: none;
-  border-radius: 8px;
+  border-radius: 15px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.4s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   align-self: flex-start;
+  box-shadow: 0 6px 20px rgba(106, 17, 203, 0.3);
 }
 
 .submit-btn i {
@@ -212,8 +304,9 @@ body {
 }
 
 .submit-btn:hover {
-  background: linear-gradient(to right, #5a01a7, #1b5dff);
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #5a01a7, #1b5dff);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(106, 17, 203, 0.4);
 }
 
 .submit-btn:disabled {
@@ -222,12 +315,61 @@ body {
   transform: none;
 }
 
+/* Quick Actions */
+.quick-actions {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.quick-actions h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.quick-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.quick-action-btn i {
+  font-size: 1.2rem;
+}
+
 /* Recent Activity */
 .recent-activity {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .recent-activity h3 {
@@ -279,6 +421,153 @@ body {
   color: #6a11cb;
 }
 
+/* Notifications Section */
+.notifications-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: hidden;
+}
+
+.notification-controls {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.notification-filters {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.filter-btn:hover {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border-color: transparent;
+}
+
+.notifications-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.notification-item:hover {
+  background: rgba(102, 126, 234, 0.05);
+}
+
+.notification-item.unread {
+  background: rgba(102, 126, 234, 0.02);
+  border-left: 4px solid #667eea;
+}
+
+.notification-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.notification-icon.like {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+  color: white;
+}
+
+.notification-icon.comment {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: white;
+}
+
+.notification-icon.collaboration {
+  background: linear-gradient(135deg, #45b7d1, #96c93d);
+  color: white;
+}
+
+.notification-icon.project {
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  color: white;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.notification-message {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.notification-time {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.notification-action {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid #ddd;
+  background: white;
+  color: #666;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.8rem;
+}
+
+.notification-action:hover {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+
 /* User Projects Grid */
 .projects-grid {
   display: grid;
@@ -287,15 +576,18 @@ body {
 }
 
 .user-project-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .user-project-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.15);
 }
 
 .project-header {
@@ -335,10 +627,18 @@ body {
 }
 
 .collaboration-item {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  padding: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.collaboration-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
 }
 
 .collaboration-header {
