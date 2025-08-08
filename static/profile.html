@@ -38,13 +38,6 @@
       
       <!-- Left Sidebar - Profile Section -->
       <aside class="profile-sidebar">
-        <div class="sidebar-header">
-          <h2>Profile</h2>
-          <button class="search-btn" id="search-profile-btn">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
-        
         <div class="profile-card">
           <div class="profile-avatar" id="profile-avatar-container">
             <img id="profile-image" src="" alt="Profile" style="display: none;">
@@ -55,48 +48,37 @@
           </div>
           
           <div class="profile-info">
-            <h3 id="profile-name">Loading...</h3>
-            <p id="profile-title" class="profile-title">Top Professional</p>
+            <h3 id="profile-name">Nave Name</h3>
+            <p id="profile-title" class="profile-title">Your Softation</p>
           </div>
           
           <div class="profile-contacts">
             <div class="contact-item">
-              <i class="fas fa-envelope"></i>
-              <span id="profile-email">email@example.com</span>
+              <i class="fab fa-linkedin"></i>
+              <span>LinkedIn</span>
             </div>
             <div class="contact-item">
               <i class="fas fa-phone"></i>
-              <span id="profile-phone">+1 234 567 890</span>
+              <span>Phone</span>
             </div>
             <div class="contact-item">
               <i class="fas fa-map-marker-alt"></i>
-              <span id="profile-location">Location</span>
+              <span>Location</span>
             </div>
             <div class="contact-item">
-              <i class="fas fa-graduation-cap"></i>
-              <span id="profile-college">College</span>
-            </div>
-          </div>
-          
-          <div class="profile-social">
-            <a href="#" class="social-link" id="twitter-link">
-              <i class="fab fa-twitter"></i>
-              Twitter
-            </a>
-            <a href="#" class="social-link" id="linkedin-link">
-              <i class="fab fa-linkedin"></i>
-              LinkedIn
-            </a>
-            <a href="#" class="social-link" id="github-link">
               <i class="fab fa-github"></i>
-              GitHub
-            </a>
+              <span>GitHub</span>
+            </div>
+            <div class="contact-item">
+              <i class="fab fa-twitter"></i>
+              <span>Twitter</span>
+            </div>
           </div>
           
           <div class="about-section">
             <h4>About Me</h4>
             <p id="profile-bio" class="about-text">
-              Loading bio...
+              Veniam aliquip et amet, enim consectetur aliqua officia elit. Et sunt exercitat occaecat nostrud sunt est proident consectetur veniam magna quis. In nostrud amet est pariore sunt amet quis aliquip adipisicing.
             </p>
             <div class="progress-indicator">
               <div class="progress-dot active"></div>
@@ -113,103 +95,49 @@
       
       <!-- Right Content Area -->
       <div class="profile-content">
-
+        <!-- Tab Header -->
         <div class="content-header">
           <h2>Projects</h2>
-        </div>
-        
-        <div class="projects-grid" id="user-projects-grid">
-          <!-- Projects will be loaded here -->
-        </div>
-        
-        <!-- Stats Overview -->
-        <div class="stats-overview">
-          <div class="stat-card">
-            <i class="fas fa-rocket"></i>
-            <h3 id="user-projects-count">0</h3>
-            <p>Projects Created</p>
-          </div>
-          <div class="stat-card">
-            <i class="fas fa-handshake"></i>
-            <h3 id="user-collaborations">0</h3>
-            <p>Collaborations</p>
-          </div>
-          <div class="stat-card">
-            <i class="fas fa-dollar-sign"></i>
-            <h3 id="user-funding">$0</h3>
-            <p>Total Funding</p>
-          </div>
-          <div class="stat-card">
-            <i class="fas fa-thumbs-up"></i>
-            <h3 id="user-votes">0</h3>
-            <p>Votes Received</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Profile Tabs (Hidden by default) -->
-    <section class="profile-tabs" style="display: none;">
-      <div class="tab-buttons">
-        <button class="tab-btn active" data-tab="projects">
-          <i class="fas fa-rocket"></i> My Projects
-        </button>
-        <button class="tab-btn" data-tab="collaborations">
-          <i class="fas fa-handshake"></i> Collaborations
-        </button>
-        <button class="tab-btn" data-tab="donations">
-          <i class="fas fa-donate"></i> Donations
-        </button>
-        <button class="tab-btn" data-tab="activity">
-          <i class="fas fa-history"></i> Activity
-        </button>
-      </div>
-        
-        <!-- Projects Tab -->
-        <div class="tab-content active" id="projects-tab">
-          <div class="tab-header">
-            <h3><i class="fas fa-rocket"></i> My Projects</h3>
-            <button class="btn-primary" onclick="window.location.href='dashboard.html'">
-              <i class="fas fa-plus"></i> Create New Project
+          <div class="tab-navigation">
+            <button class="search-btn">
+              <i class="fas fa-search"></i>
             </button>
+            <div class="tab-buttons">
+              <button class="tab-btn active" data-tab="projects">Projects</button>
+              <button class="tab-btn" data-tab="collaboration">Collaboration</button>
+              <button class="tab-btn" data-tab="donation">Donation</button>
+              <button class="tab-btn underlined" data-tab="history">History</button>
+            </div>
           </div>
+        </div>
+        
+        <!-- Tab Contents -->
+        <div class="tab-content active" id="projects-tab">
           <div class="projects-grid" id="user-projects-grid">
-            <!-- User projects will be loaded here -->
+            <!-- Projects will be loaded here -->
           </div>
         </div>
         
-        <!-- Collaborations Tab -->
-        <div class="tab-content" id="collaborations-tab">
-          <div class="tab-header">
-            <h3><i class="fas fa-handshake"></i> Collaborations</h3>
-          </div>
+        <div class="tab-content" id="collaboration-tab">
           <div class="collaborations-list" id="user-collaborations-list">
-            <!-- User collaborations will be loaded here -->
+            <!-- Collaborations will be loaded here -->
           </div>
         </div>
         
-        <!-- Donations Tab -->
-        <div class="tab-content" id="donations-tab">
-          <div class="tab-header">
-            <h3><i class="fas fa-donate"></i> Donation History</h3>
-          </div>
+        <div class="tab-content" id="donation-tab">
           <div class="donations-list" id="user-donations-list">
-            <!-- User donations will be loaded here -->
+            <!-- Donations will be loaded here -->
           </div>
         </div>
         
-        <!-- Activity Tab -->
-        <div class="tab-content" id="activity-tab">
-          <div class="tab-header">
-            <h3><i class="fas fa-history"></i> Recent Activity</h3>
-          </div>
+        <div class="tab-content" id="history-tab">
           <div class="activity-feed" id="user-activity-feed">
-            <!-- User activity will be loaded here -->
+            <!-- Activity will be loaded here -->
           </div>
         </div>
-      </section>
-      
+      </div>
     </div>
+
   </main>
 
   <!-- Edit Profile Modal -->

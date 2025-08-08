@@ -80,45 +80,26 @@ function updateProfileInfo(profileData = null) {
     if (!user) return;
     
     // Update sidebar profile info
-    document.getElementById('profile-name').textContent = user.full_name;
+    document.getElementById('profile-name').textContent = user.full_name || 'Nave Name';
     
     // Update title/role
     const titleElement = document.getElementById('profile-title');
     if (user.title) {
         titleElement.textContent = user.title;
     } else {
-        titleElement.textContent = 'Student';
+        titleElement.textContent = 'Your Softation';
     }
     
-    // Update contact information
-    document.getElementById('profile-email').textContent = user.email;
-    
-    const phoneElement = document.getElementById('profile-phone');
-    if (user.phone) {
-        phoneElement.textContent = user.phone;
-    } else {
-        phoneElement.textContent = 'Not provided';
-    }
-    
-    const locationElement = document.getElementById('profile-location');
-    if (user.location) {
-        locationElement.textContent = user.location;
-    } else {
-        locationElement.textContent = 'Not provided';
-    }
-    
-    document.getElementById('profile-college').textContent = user.college;
+    // Update contact item links with actual data when available
+    updateContactItems(user);
     
     // Update bio in about section
     const bioElement = document.getElementById('profile-bio');
     if (user.bio) {
         bioElement.textContent = user.bio;
     } else {
-        bioElement.textContent = 'No bio available yet.';
+        bioElement.textContent = 'Veniam aliquip et amet, enim consectetur aliqua officia elit. Et sunt exercitat occaecat nostrud sunt est proident consectetur veniam magna quis. In nostrud amet est pariore sunt amet quis aliquip adipisicing.';
     }
-    
-    // Update social links
-    updateSocialLinks(user);
     
     // Update profile image
     const profileImage = document.getElementById('profile-image');
@@ -130,6 +111,41 @@ function updateProfileInfo(profileData = null) {
     } else {
         profileImage.style.display = 'none';
         defaultAvatar.style.display = 'flex';
+    }
+}
+
+function updateContactItems(user) {
+    // Update LinkedIn
+    const linkedinItem = document.querySelector('.contact-item:nth-child(1) span');
+    if (linkedinItem && user.linkedin) {
+        linkedinItem.textContent = 'LinkedIn';
+        linkedinItem.parentElement.onclick = () => window.open(user.linkedin.startsWith('http') ? user.linkedin : `https://linkedin.com/in/${user.linkedin}`, '_blank');
+    }
+    
+    // Update Phone
+    const phoneItem = document.querySelector('.contact-item:nth-child(2) span');
+    if (phoneItem) {
+        phoneItem.textContent = user.phone || 'Phone';
+    }
+    
+    // Update Location
+    const locationItem = document.querySelector('.contact-item:nth-child(3) span');
+    if (locationItem) {
+        locationItem.textContent = user.location || 'Location';
+    }
+    
+    // Update GitHub
+    const githubItem = document.querySelector('.contact-item:nth-child(4) span');
+    if (githubItem && user.github) {
+        githubItem.textContent = 'GitHub';
+        githubItem.parentElement.onclick = () => window.open(user.github.startsWith('http') ? user.github : `https://github.com/${user.github}`, '_blank');
+    }
+    
+    // Update Twitter
+    const twitterItem = document.querySelector('.contact-item:nth-child(5) span');
+    if (twitterItem && user.twitter) {
+        twitterItem.textContent = 'Twitter';
+        twitterItem.parentElement.onclick = () => window.open(user.twitter.startsWith('http') ? user.twitter : `https://twitter.com/${user.twitter.replace('@', '')}`, '_blank');
     }
 }
 
@@ -238,30 +254,134 @@ function displayUserProjects(projects) {
         return;
     }
     
-    projectsGrid.innerHTML = projects.map(project => `
-        <div class="project-card">
-            <div class="project-header">
-                <span class="project-category">${project.category}</span>
-                <span class="project-status ${project.status}">${project.status}</span>
+    // Sample project data with images and tech stacks for demonstration
+    const sampleProjects = [
+        {
+            id: 1,
+            title: "Project",
+            description: "Velit qui anim id excepturi amet quis and placerat ante.",
+            category: "React",
+            tech: "React",
+            badge: "Beta",
+            image: null,
+            gradient: "linear-gradient(135deg, #667eea, #764ba2)"
+        },
+        {
+            id: 2,
+            title: "Saven",
+            description: "Velit qui anim sed esse consectetur enim and laborum et dolore magna.",
+            category: "React",  
+            tech: "Python",
+            badge: "Rust",
+            image: null,
+            gradient: "linear-gradient(135deg, #f093fb, #f5576c)"
+        },
+        {
+            id: 3,
+            title: "Clomtpotion",
+            description: "Velit qui nisi sed consectetur enim and laborum et dolore magna.",
+            category: "Python",
+            tech: "Heltiq",
+            badge: "AWS",
+            image: null,
+            gradient: "linear-gradient(135deg, #4facfe, #00f2fe)"
+        },
+        {
+            id: 4,
+            title: "Python", 
+            description: "Carry text and consectetur enim and laborum et magna consequat.",
+            category: "Programming",
+            tech: "NumPy",
+            badge: "Beta",
+            image: null,
+            gradient: "linear-gradient(135deg, #43e97b, #38f9d7)"
+        },
+        {
+            id: 5,
+            title: "Python",
+            description: "Carry text eur mollit enim and laborum et dolore magna consequat.",
+            category: "Data Science",
+            tech: "Python",
+            badge: "Beta",
+            image: null,
+            gradient: "linear-gradient(135deg, #fa709a, #fee140)"
+        },
+        {
+            id: 6,
+            title: "Soovuts",
+            description: "Velit qui anim eum esse consectetur enim and laborum et magna consequat.",
+            category: "Web Development",
+            tech: "Django",
+            badge: "AWS",
+            image: null,
+            gradient: "linear-gradient(135deg, #a8edea, #fed6e3)"
+        },
+        {
+            id: 7,
+            title: "Pood rons",
+            description: "Velit qui anim in pariatur cillum mollit and magna consequat dolore.",
+            category: "Mobile",
+            tech: "Flutter",
+            badge: "Beta",
+            image: null,
+            gradient: "linear-gradient(135deg, #ff9a9e, #fecfef)"
+        },
+        {
+            id: 8,
+            title: "Varion",
+            description: "Carry test sunt anim dolore cillum and laborum et magna consequat.", 
+            category: "AI/ML",
+            tech: "Python",
+            badge: "Beta",
+            image: null,
+            gradient: "linear-gradient(135deg, #a18cd1, #fbc2eb)"
+        },
+        {
+            id: 9,
+            title: "Licediains",
+            description: "Velit qui anim dolore consequat et and laborum et magna consequat.",
+            category: "Blockchain",
+            tech: "Remix",
+            badge: "Beta",
+            image: null,
+            gradient: "linear-gradient(135deg, #ffecd2, #fcb69f)"
+        }
+    ];
+    
+    // Use sample projects for demonstration, but in real implementation use actual projects
+    const displayProjects = projects.length > 0 ? projects : sampleProjects;
+    
+    projectsGrid.innerHTML = displayProjects.map((project, index) => {
+        const sampleProject = sampleProjects[index % sampleProjects.length];
+        return `
+            <div class="project-card" onclick="viewProject(${project.id || sampleProject.id})">
+                <div class="project-image" style="background: ${sampleProject.gradient}">
+                    ${sampleProject.image ? `<img src="${sampleProject.image}" alt="${project.title || sampleProject.title}">` : ''}
+                    <div class="project-badge">${sampleProject.badge}</div>
+                </div>
+                <div class="project-info">
+                    <h3 class="project-title">${escapeHtml(project.title || sampleProject.title)}</h3>
+                    <p class="project-description">${escapeHtml(project.description || sampleProject.description)}</p>
+                    <div class="project-tech">
+                        <div class="tech-icon">
+                            <i class="fab fa-${sampleProject.tech.toLowerCase()}"></i>
+                        </div>
+                        <span class="tech-label">${sampleProject.tech}</span>
+                    </div>
+                    <div class="project-actions">
+                        <button class="action-btn btn-view">View Demo</button>
+                        <button class="action-btn btn-github">GitHub Repo</button>
+                    </div>
+                </div>
             </div>
-            <h3 class="project-title">${escapeHtml(project.title)}</h3>
-            <p class="project-description">${escapeHtml(project.description)}</p>
-            <div class="project-stats">
-                <div class="project-stat">
-                    <i class="fas fa-thumbs-up"></i>
-                    <span>${project.vote_count}</span>
-                </div>
-                <div class="project-stat">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span>$${project.current_funding.toFixed(2)}</span>
-                </div>
-                <div class="project-stat">
-                    <i class="fas fa-users"></i>
-                    <span>${project.collaboration_count}</span>
-                </div>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
+}
+
+function viewProject(projectId) {
+    // Navigate to project details or open in new tab
+    console.log('Viewing project:', projectId);
+    // You can implement project viewing logic here
 }
 
 async function loadUserCollaborations() {
@@ -424,7 +544,32 @@ function setupTabs() {
             
             // Add active class to clicked button and corresponding content
             this.classList.add('active');
-            document.getElementById(targetTab + '-tab').classList.add('active');
+            const targetContent = document.getElementById(targetTab + '-tab');
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+            
+            // Update content header title
+            const contentHeader = document.querySelector('.content-header h2');
+            if (contentHeader) {
+                contentHeader.textContent = this.textContent;
+            }
+            
+            // Load data for the selected tab
+            switch(targetTab) {
+                case 'projects':
+                    loadUserProjects();
+                    break;
+                case 'collaboration':
+                    loadUserCollaborations();
+                    break;
+                case 'donation':
+                    loadUserDonations();
+                    break;
+                case 'history':
+                    loadUserActivity();
+                    break;
+            }
         });
     });
 }
