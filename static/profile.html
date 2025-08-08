@@ -34,40 +34,99 @@
 
   <!-- Main Content -->
   <main class="profile-main">
-    <div class="container">
+    <div class="profile-container">
       
-      <!-- Profile Header -->
-      <section class="profile-header">
-        <div class="profile-banner">
-          <div class="profile-info">
-            <div class="profile-avatar" id="profile-avatar-container">
-              <img id="profile-image" src="" alt="Profile" style="display: none;">
-              <i class="fas fa-user-circle" id="default-avatar"></i>
-              <div class="profile-image-overlay" id="profile-image-overlay" style="display: none;">
-                <i class="fas fa-camera"></i>
-              </div>
-            </div>
-            <div class="profile-details">
-              <h1 id="profile-name">Loading...</h1>
-              <p id="profile-username">@username</p>
-              <p id="profile-college"><i class="fas fa-graduation-cap"></i> College</p>
-              <p id="profile-email"><i class="fas fa-envelope"></i> email@example.com</p>
-              <p id="profile-joined"><i class="fas fa-calendar"></i> Joined: Date</p>
-              <p id="profile-bio" class="profile-bio"></p>
-              <div id="profile-skills" class="profile-skills"></div>
+      <!-- Left Sidebar - Profile Section -->
+      <aside class="profile-sidebar">
+        <div class="sidebar-header">
+          <h2>Profile</h2>
+          <button class="search-btn" id="search-profile-btn">
+            <i class="fas fa-search"></i>
+          </button>
+        </div>
+        
+        <div class="profile-card">
+          <div class="profile-avatar" id="profile-avatar-container">
+            <img id="profile-image" src="" alt="Profile" style="display: none;">
+            <i class="fas fa-user-circle" id="default-avatar"></i>
+            <div class="profile-image-overlay" id="profile-image-overlay" style="display: none;">
+              <i class="fas fa-camera"></i>
             </div>
           </div>
+          
+          <div class="profile-info">
+            <h3 id="profile-name">Loading...</h3>
+            <p id="profile-title" class="profile-title">Top Professional</p>
+          </div>
+          
+          <div class="profile-contacts">
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              <span id="profile-email">email@example.com</span>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-phone"></i>
+              <span id="profile-phone">+1 234 567 890</span>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-map-marker-alt"></i>
+              <span id="profile-location">Location</span>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-graduation-cap"></i>
+              <span id="profile-college">College</span>
+            </div>
+          </div>
+          
+          <div class="profile-social">
+            <a href="#" class="social-link" id="twitter-link">
+              <i class="fab fa-twitter"></i>
+              Twitter
+            </a>
+            <a href="#" class="social-link" id="linkedin-link">
+              <i class="fab fa-linkedin"></i>
+              LinkedIn
+            </a>
+            <a href="#" class="social-link" id="github-link">
+              <i class="fab fa-github"></i>
+              GitHub
+            </a>
+          </div>
+          
+          <div class="about-section">
+            <h4>About Me</h4>
+            <p id="profile-bio" class="about-text">
+              Loading bio...
+            </p>
+            <div class="progress-indicator">
+              <div class="progress-dot active"></div>
+            </div>
+          </div>
+          
           <div class="profile-actions">
             <button class="btn-primary" id="edit-profile-btn">
               <i class="fas fa-edit"></i> Edit Profile
             </button>
           </div>
         </div>
+      </aside>
+      
+      <!-- Right Content Area -->
+      <div class="profile-content">
+
+        <div class="content-header">
+          <h2>Projects</h2>
+        </div>
         
-        <div class="profile-stats">
+        <div class="projects-grid" id="user-projects-grid">
+          <!-- Projects will be loaded here -->
+        </div>
+        
+        <!-- Stats Overview -->
+        <div class="stats-overview">
           <div class="stat-card">
             <i class="fas fa-rocket"></i>
-            <h3 id="user-projects">0</h3>
+            <h3 id="user-projects-count">0</h3>
             <p>Projects Created</p>
           </div>
           <div class="stat-card">
@@ -86,24 +145,25 @@
             <p>Votes Received</p>
           </div>
         </div>
-      </section>
-
-      <!-- Profile Tabs -->
-      <section class="profile-tabs">
-        <div class="tab-buttons">
-          <button class="tab-btn active" data-tab="projects">
-            <i class="fas fa-rocket"></i> My Projects
-          </button>
-          <button class="tab-btn" data-tab="collaborations">
-            <i class="fas fa-handshake"></i> Collaborations
-          </button>
-          <button class="tab-btn" data-tab="donations">
-            <i class="fas fa-donate"></i> Donations
-          </button>
-          <button class="tab-btn" data-tab="activity">
-            <i class="fas fa-history"></i> Activity
-          </button>
-        </div>
+      </div>
+    </div>
+    
+    <!-- Profile Tabs (Hidden by default) -->
+    <section class="profile-tabs" style="display: none;">
+      <div class="tab-buttons">
+        <button class="tab-btn active" data-tab="projects">
+          <i class="fas fa-rocket"></i> My Projects
+        </button>
+        <button class="tab-btn" data-tab="collaborations">
+          <i class="fas fa-handshake"></i> Collaborations
+        </button>
+        <button class="tab-btn" data-tab="donations">
+          <i class="fas fa-donate"></i> Donations
+        </button>
+        <button class="tab-btn" data-tab="activity">
+          <i class="fas fa-history"></i> Activity
+        </button>
+      </div>
         
         <!-- Projects Tab -->
         <div class="tab-content active" id="projects-tab">
@@ -204,6 +264,36 @@
           <label for="edit-skills">Skills (optional)</label>
           <input type="text" id="edit-skills" placeholder="e.g., Web Development, Design, Marketing">
           <small>Separate skills with commas</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-phone">Phone Number (optional)</label>
+          <input type="tel" id="edit-phone" placeholder="Enter your phone number">
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-location">Location (optional)</label>
+          <input type="text" id="edit-location" placeholder="Enter your location">
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-title">Professional Title (optional)</label>
+          <input type="text" id="edit-title" placeholder="e.g., Software Developer, Designer">
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-twitter">Twitter (optional)</label>
+          <input type="text" id="edit-twitter" placeholder="@username or profile URL">
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-linkedin">LinkedIn (optional)</label>
+          <input type="text" id="edit-linkedin" placeholder="LinkedIn profile URL">
+        </div>
+        
+        <div class="form-group">
+          <label for="edit-github">GitHub (optional)</label>
+          <input type="text" id="edit-github" placeholder="GitHub username or profile URL">
         </div>
       </div>
       

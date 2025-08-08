@@ -79,32 +79,46 @@ function updateProfileInfo(profileData = null) {
     const user = profileData || currentUser;
     if (!user) return;
     
+    // Update sidebar profile info
     document.getElementById('profile-name').textContent = user.full_name;
-    document.getElementById('profile-username').textContent = `@${user.username}`;
-    document.getElementById('profile-college').innerHTML = `<i class="fas fa-graduation-cap"></i> ${user.college}`;
-    document.getElementById('profile-email').innerHTML = `<i class="fas fa-envelope"></i> ${user.email}`;
-    document.getElementById('profile-joined').innerHTML = `<i class="fas fa-calendar"></i> Joined: ${formatDate(user.created_at)}`;
     
-    // Update bio
+    // Update title/role
+    const titleElement = document.getElementById('profile-title');
+    if (user.title) {
+        titleElement.textContent = user.title;
+    } else {
+        titleElement.textContent = 'Student';
+    }
+    
+    // Update contact information
+    document.getElementById('profile-email').textContent = user.email;
+    
+    const phoneElement = document.getElementById('profile-phone');
+    if (user.phone) {
+        phoneElement.textContent = user.phone;
+    } else {
+        phoneElement.textContent = 'Not provided';
+    }
+    
+    const locationElement = document.getElementById('profile-location');
+    if (user.location) {
+        locationElement.textContent = user.location;
+    } else {
+        locationElement.textContent = 'Not provided';
+    }
+    
+    document.getElementById('profile-college').textContent = user.college;
+    
+    // Update bio in about section
     const bioElement = document.getElementById('profile-bio');
     if (user.bio) {
         bioElement.textContent = user.bio;
-        bioElement.style.display = 'block';
     } else {
-        bioElement.style.display = 'none';
+        bioElement.textContent = 'No bio available yet.';
     }
     
-    // Update skills
-    const skillsElement = document.getElementById('profile-skills');
-    if (user.skills) {
-        const skillsArray = user.skills.split(',').map(skill => skill.trim()).filter(skill => skill);
-        skillsElement.innerHTML = skillsArray.map(skill => 
-            `<span class="skill-tag">${escapeHtml(skill)}</span>`
-        ).join('');
-        skillsElement.style.display = 'flex';
-    } else {
-        skillsElement.style.display = 'none';
-    }
+    // Update social links
+    updateSocialLinks(user);
     
     // Update profile image
     const profileImage = document.getElementById('profile-image');
@@ -119,8 +133,37 @@ function updateProfileInfo(profileData = null) {
     }
 }
 
+function updateSocialLinks(user) {
+    // Update Twitter link
+    const twitterLink = document.getElementById('twitter-link');
+    if (user.twitter) {
+        twitterLink.href = user.twitter.startsWith('http') ? user.twitter : `https://twitter.com/${user.twitter.replace('@', '')}`;
+        twitterLink.style.display = 'flex';
+    } else {
+        twitterLink.style.display = 'none';
+    }
+    
+    // Update LinkedIn link
+    const linkedinLink = document.getElementById('linkedin-link');
+    if (user.linkedin) {
+        linkedinLink.href = user.linkedin.startsWith('http') ? user.linkedin : `https://linkedin.com/in/${user.linkedin}`;
+        linkedinLink.style.display = 'flex';
+    } else {
+        linkedinLink.style.display = 'none';
+    }
+    
+    // Update GitHub link
+    const githubLink = document.getElementById('github-link');
+    if (user.github) {
+        githubLink.href = user.github.startsWith('http') ? user.github : `https://github.com/${user.github}`;
+        githubLink.style.display = 'flex';
+    } else {
+        githubLink.style.display = 'none';
+    }
+}
+
 function updateProfileStats(stats) {
-    document.getElementById('user-projects').textContent = stats.total_projects || 0;
+    document.getElementById('user-projects-count').textContent = stats.total_projects || 0;
     document.getElementById('user-collaborations').textContent = stats.total_collaborations || 0;
     document.getElementById('user-funding').textContent = `$${(stats.total_funding || 0).toFixed(2)}`;
     document.getElementById('user-votes').textContent = stats.total_votes || 0;
@@ -496,6 +539,12 @@ function openEditProfileModal() {
     document.getElementById('edit-college').value = currentUser.college || '';
     document.getElementById('edit-bio').value = currentUser.bio || '';
     document.getElementById('edit-skills').value = currentUser.skills || '';
+    document.getElementById('edit-phone').value = currentUser.phone || '';
+    document.getElementById('edit-location').value = currentUser.location || '';
+    document.getElementById('edit-title').value = currentUser.title || '';
+    document.getElementById('edit-twitter').value = currentUser.twitter || '';
+    document.getElementById('edit-linkedin').value = currentUser.linkedin || '';
+    document.getElementById('edit-github').value = currentUser.github || '';
     
     // Set up image preview
     const previewImg = document.getElementById('edit-preview-img');
@@ -523,6 +572,12 @@ async function handleSaveProfile() {
     const college = document.getElementById('edit-college').value;
     const bio = document.getElementById('edit-bio').value;
     const skills = document.getElementById('edit-skills').value;
+    const phone = document.getElementById('edit-phone').value;
+    const location = document.getElementById('edit-location').value;
+    const title = document.getElementById('edit-title').value;
+    const twitter = document.getElementById('edit-twitter').value;
+    const linkedin = document.getElementById('edit-linkedin').value;
+    const github = document.getElementById('edit-github').value;
     
     if (!fullName.trim() || !email.trim() || !college.trim()) {
         showMessage('Please fill in all required fields', 'error');
@@ -543,7 +598,13 @@ async function handleSaveProfile() {
             email: email,
             college: college,
             bio: bio,
-            skills: skills
+            skills: skills,
+            phone: phone,
+            location: location,
+            title: title,
+            twitter: twitter,
+            linkedin: linkedin,
+            github: github
         };
         
         // Include image data if available

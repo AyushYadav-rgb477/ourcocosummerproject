@@ -642,6 +642,18 @@ def update_profile():
             user.skills = data['skills']
         if 'profile_image' in data:
             user.profile_image = data['profile_image']
+        if 'phone' in data:
+            user.phone = data['phone']
+        if 'location' in data:
+            user.location = data['location']
+        if 'title' in data:
+            user.title = data['title']
+        if 'twitter' in data:
+            user.twitter = data['twitter']
+        if 'linkedin' in data:
+            user.linkedin = data['linkedin']
+        if 'github' in data:
+            user.github = data['github']
         
         db.session.commit()
         

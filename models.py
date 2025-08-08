@@ -14,6 +14,12 @@ class User(db.Model):
     bio = db.Column(db.Text, nullable=True)
     skills = db.Column(db.Text, nullable=True)
     profile_image = db.Column(db.Text, nullable=True)  # Store base64 image or URL
+    phone = db.Column(db.String(20), nullable=True)
+    location = db.Column(db.String(200), nullable=True)
+    title = db.Column(db.String(200), nullable=True)
+    twitter = db.Column(db.String(255), nullable=True)
+    linkedin = db.Column(db.String(255), nullable=True)
+    github = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -42,6 +48,12 @@ class User(db.Model):
             'bio': self.bio,
             'skills': self.skills,
             'profile_image': self.profile_image,
+            'phone': self.phone,
+            'location': self.location,
+            'title': self.title,
+            'twitter': self.twitter,
+            'linkedin': self.linkedin,
+            'github': self.github,
             'created_at': self.created_at.isoformat()
         }
 

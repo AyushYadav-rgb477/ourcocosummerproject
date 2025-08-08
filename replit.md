@@ -31,7 +31,8 @@ Preferred communication style: Simple, everyday language.
 
 ### User Management System
 - **Authentication**: Username/password-based authentication with secure password hashing using Werkzeug
-- **User Model**: Stores user profile information including username, email, full name, and college affiliation
+- **User Model**: Comprehensive user profiles with personal info, contact details, social links, and professional information
+- **Extended Profile Fields**: Phone, location, professional title, Twitter, LinkedIn, GitHub integration (August 2025)
 - **Session Handling**: Server-side session management for maintaining user state
 
 ### Project Management System
@@ -50,6 +51,7 @@ Preferred communication style: Simple, everyday language.
 - **Authentication Pages**: Separate login and registration forms with modern UI
 - **Browse Page**: Project discovery with filtering and search capabilities
 - **Dashboard**: User-specific project management and collaboration overview
+- **Profile Page**: Redesigned sidebar layout with profile info on left, content on right (August 2025)
 
 ## Data Flow
 
