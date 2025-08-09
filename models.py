@@ -191,6 +191,9 @@ class Discussion(db.Model):
     content = db.Column(db.Text, nullable=False)
     category = db.Column(db.String(100), nullable=False)
     tags = db.Column(db.Text, nullable=True)  # Store as comma-separated string
+    media_type = db.Column(db.String(20), nullable=True)  # 'image', 'video', or None
+    media_url = db.Column(db.Text, nullable=True)  # Store base64 data or URL
+    media_filename = db.Column(db.String(255), nullable=True)  # Original filename
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -218,6 +221,9 @@ class Discussion(db.Model):
             'content': self.content,
             'category': self.category,
             'tags': tags_list,
+            'media_type': self.media_type,
+            'media_url': self.media_url,
+            'media_filename': self.media_filename,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
             'author': self.author.to_dict() if hasattr(self, 'author') and self.author else None,

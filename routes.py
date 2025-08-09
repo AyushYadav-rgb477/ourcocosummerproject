@@ -522,6 +522,12 @@ def create_discussion():
         discussion.tags = ','.join(data.get('tags', []))
         discussion.user_id = user_id
         
+        # Handle media upload
+        if data.get('media_data') and data.get('media_type'):
+            discussion.media_type = data['media_type']
+            discussion.media_url = data['media_data']  # Store base64 data
+            discussion.media_filename = data.get('media_filename', 'uploaded_file')
+        
         db.session.add(discussion)
         db.session.commit()
         

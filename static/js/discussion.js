@@ -9,6 +9,8 @@ let currentFilters = {
 };
 let currentDiscussion = null;
 let isLoading = false;
+let selectedMedia = null;
+let mediaData = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Check authentication
@@ -19,6 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup modals
     setupModals();
+    
+    // Setup media upload
+    setupMediaUpload();
     
     // Load initial discussions
     loadDiscussions();
@@ -185,6 +190,14 @@ function displayDiscussions(discussions, clearExisting = false) {
             </div>
             <h3 class="discussion-title">${escapeHtml(discussion.title)}</h3>
             <p class="discussion-preview">${escapeHtml(discussion.content.substring(0, 150))}</p>
+            ${discussion.media_url && discussion.media_type ? `
+                <div class="discussion-media">
+                    ${discussion.media_type === 'image' ? 
+                        `<img src="${discussion.media_url}" alt="${discussion.media_filename || 'Uploaded image'}" loading="lazy">` :
+                        `<video controls><source src="${discussion.media_url}" type="video/mp4">Your browser does not support the video tag.</video>`
+                    }
+                </div>
+            ` : ''}
             <div class="discussion-tags">
                 ${discussion.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
             </div>
@@ -268,17 +281,26 @@ async function handleCreateDiscussion() {
     createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
     
     try {
+        const discussionData = {
+            title: title.trim(),
+            category,
+            content: content.trim(),
+            tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
+        };
+        
+        // Add media data if available
+        if (mediaData) {
+            discussionData.media_data = mediaData;
+            discussionData.media_type = selectedMedia.type.startsWith('image/') ? 'image' : 'video';
+            discussionData.media_filename = selectedMedia.name;
+        }
+        
         const response = await fetch('/api/discussions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                title: title.trim(),
-                category,
-                content: content.trim(),
-                tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-            })
+            body: JSON.stringify(discussionData)
         });
         
         const data = await response.json();
@@ -291,6 +313,7 @@ async function handleCreateDiscussion() {
             document.getElementById('discussion-category-modal').value = '';
             document.getElementById('discussion-content').value = '';
             document.getElementById('discussion-tags').value = '';
+            removeMedia();
             
             // Reload discussions
             resetAndLoadDiscussions();
@@ -336,7 +359,29 @@ function displayDiscussionModal(discussion) {
     document.getElementById('view-discussion-likes').textContent = discussion.like_count || 0;
     document.getElementById('like-count').textContent = discussion.like_count || 0;
     document.getElementById('view-discussion-date').textContent = formatDate(discussion.created_at);
-    document.getElementById('view-discussion-content').textContent = discussion.content;
+    
+    // Display content with media if available
+    const contentElement = document.getElementById('view-discussion-content');
+    contentElement.textContent = discussion.content;
+    
+    // Add media display after content if available
+    const existingMedia = contentElement.nextElementSibling;
+    if (existingMedia && existingMedia.classList.contains('discussion-media')) {
+        existingMedia.remove();
+    }
+    
+    if (discussion.media_url && discussion.media_type) {
+        const mediaContainer = document.createElement('div');
+        mediaContainer.className = 'discussion-media';
+        
+        if (discussion.media_type === 'image') {
+            mediaContainer.innerHTML = `<img src="${discussion.media_url}" alt="${discussion.media_filename || 'Uploaded image'}" loading="lazy">`;
+        } else if (discussion.media_type === 'video') {
+            mediaContainer.innerHTML = `<video controls><source src="${discussion.media_url}" type="video/mp4">Your browser does not support the video tag.</video>`;
+        }
+        
+        contentElement.parentNode.insertBefore(mediaContainer, contentElement.nextSibling);
+    }
     
     // Display tags
     const tagsContainer = document.getElementById('view-discussion-tags');
@@ -762,6 +807,80 @@ function escapeHtml(text) {
         "'": '&#039;'
     };
     return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+}
+
+// Media upload functionality
+function setupMediaUpload() {
+    const mediaInput = document.getElementById('discussion-media');
+    if (mediaInput) {
+        mediaInput.addEventListener('change', handleMediaSelection);
+    }
+}
+
+function handleMediaSelection(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file size (10MB limit)
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    if (file.size > maxSize) {
+        alert('File size must be less than 10MB');
+        event.target.value = '';
+        return;
+    }
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'video/mp4', 'video/webm'];
+    if (!validTypes.includes(file.type)) {
+        alert('Please select a valid image (JPG, PNG, GIF) or video (MP4, WebM) file');
+        event.target.value = '';
+        return;
+    }
+
+    selectedMedia = file;
+    previewMedia(file);
+}
+
+function previewMedia(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        mediaData = e.target.result;
+        
+        const preview = document.getElementById('media-preview');
+        const previewContent = preview.querySelector('.media-preview-content');
+        
+        if (file.type.startsWith('image/')) {
+            previewContent.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+        } else if (file.type.startsWith('video/')) {
+            previewContent.innerHTML = `<video controls><source src="${e.target.result}" type="${file.type}">Your browser does not support the video tag.</video>`;
+        }
+        
+        preview.style.display = 'block';
+        document.querySelector('.media-upload-button').style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeMedia() {
+    selectedMedia = null;
+    mediaData = null;
+    
+    const mediaInput = document.getElementById('discussion-media');
+    if (mediaInput) {
+        mediaInput.value = '';
+    }
+    
+    const preview = document.getElementById('media-preview');
+    const uploadButton = document.querySelector('.media-upload-button');
+    
+    if (preview) {
+        preview.style.display = 'none';
+        preview.querySelector('.media-preview-content').innerHTML = '';
+    }
+    
+    if (uploadButton) {
+        uploadButton.style.display = 'block';
+    }
 }
 
 function formatDate(dateString) {

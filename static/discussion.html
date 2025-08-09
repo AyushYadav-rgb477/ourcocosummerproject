@@ -141,6 +141,24 @@
           <input type="text" id="discussion-tags" placeholder="Add tags separated by commas">
           <small>Example: collaboration, funding, innovation</small>
         </div>
+        
+        <div class="form-group media-group">
+          <label for="discussion-media">Add Image or Video (optional)</label>
+          <div class="media-upload-container">
+            <input type="file" id="discussion-media" accept="image/*,video/*" style="display: none;">
+            <div class="media-upload-button" onclick="document.getElementById('discussion-media').click();">
+              <i class="fas fa-camera"></i>
+              <span>Choose Image or Video</span>
+            </div>
+            <div class="media-preview" id="media-preview" style="display: none;">
+              <div class="media-preview-content"></div>
+              <button type="button" class="remove-media" onclick="removeMedia()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+          <small>Supported formats: JPG, PNG, GIF, MP4, WebM (Max 10MB)</small>
+        </div>
       </div>
       
       <div class="modal-footer">
