@@ -1144,6 +1144,130 @@ body {
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
+/* Chat Sidebar Styles */
+.chat-sidebar {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  background: white;
+  border-left: 2px solid #eee;
+  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s ease;
+  z-index: 1000;
+}
+
+.chat-sidebar.show {
+  right: 0;
+}
+
+.chat-sidebar-header {
+  padding: 1.5rem;
+  border-bottom: 2px solid #eee;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-sidebar-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.close-chat-sidebar {
+  background: transparent;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.close-chat-sidebar:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.chat-participants {
+  padding: 1rem;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.chat-participants h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.participants-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.participant-badge {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.participant-badge.owner {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+}
+
+.chat-messages-container {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-sidebar .chat-messages {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+  max-height: none;
+}
+
+.chat-input-area {
+  padding: 1rem;
+  border-top: 2px solid #eee;
+  background: #f8f9fa;
+}
+
+.dashboard-container.chat-open {
+  margin-right: 400px;
+  transition: margin-right 0.3s ease;
+}
+
+/* Mobile responsive for chat sidebar */
+@media (max-width: 768px) {
+  .chat-sidebar {
+    width: 100vw;
+    right: -100vw;
+  }
+  
+  .chat-sidebar.show {
+    right: 0;
+  }
+  
+  .dashboard-container.chat-open {
+    margin-right: 0;
+  }
+}
+
 /* Project Details Modal */
 .project-modal {
   position: fixed;

@@ -1274,6 +1274,58 @@ def send_chat_message(project_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projects/<int:project_id>/participants', methods=['GET'])
+def get_project_participants(project_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Check if user has access to this project (owner or collaborator)
+        project = Project.query.get_or_404(project_id)
+        is_owner = project.user_id == user_id
+        is_collaborator = Collaboration.query.filter_by(
+            project_id=project_id,
+            user_id=user_id,
+            status='accepted'
+        ).first() is not None
+        
+        if not (is_owner or is_collaborator):
+            return jsonify({'error': 'Access denied'}), 403
+        
+        # Get all participants (owner + accepted collaborators)
+        participants = []
+        
+        # Add project owner
+        owner = User.query.get(project.user_id)
+        if owner:
+            participants.append({
+                'user': owner.to_dict(),
+                'is_owner': True,
+                'joined_at': project.created_at.isoformat() if project.created_at else None
+            })
+        
+        # Add accepted collaborators
+        collaborators = Collaboration.query.filter_by(
+            project_id=project_id,
+            status='accepted'
+        ).join(User).all()
+        
+        for collab in collaborators:
+            participants.append({
+                'user': collab.user.to_dict(),
+                'is_owner': False,
+                'joined_at': collab.created_at.isoformat() if collab.created_at else None
+            })
+        
+        return jsonify({
+            'participants': participants,
+            'project': project.to_dict()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
         
         user_id = session['user_id']
         

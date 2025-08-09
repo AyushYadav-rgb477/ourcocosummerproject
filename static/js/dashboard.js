@@ -935,13 +935,9 @@ function closeProjectModal() {
 // Close modal when clicking outside
 window.addEventListener('click', function(e) {
     const projectModal = document.getElementById('project-modal');
-    const chatModal = document.getElementById('team-chat-modal');
     
     if (e.target === projectModal) {
         closeProjectDetails();
-    }
-    if (e.target === chatModal) {
-        closeTeamChat();
     }
 });
 
@@ -1006,7 +1002,7 @@ function displayTeamMembers(teamMembers) {
                                     <a href="profile.html?user=${member.user.id}" class="view-profile-btn">
                                         <i class="fas fa-eye"></i> View Profile
                                     </a>
-                                    <button class="message-btn" onclick="openProjectChat(${member.project_id}, '${escapeHtml(project.project_title)}')">
+                                    <button class="message-btn" onclick="openProjectChatSidebar(${member.project_id}, '${escapeHtml(project.project_title)}')">
                                         <i class="fas fa-comments"></i> Team Chat
                                     </button>
                                 </div>
@@ -1032,56 +1028,85 @@ function displayEmptyTeam() {
     `;
 }
 
-// Team Chat Functions
+// Chat sidebar functionality
 let currentChatProject = null;
 
-async function openProjectChat(projectId, projectTitle) {
-    try {
-        currentChatProject = { id: projectId, title: projectTitle };
-        
-        document.getElementById('chat-project-name').textContent = projectTitle;
-        
-        // Load chat messages for this project
-        await loadProjectChatMessages(projectId);
-        
-        document.getElementById('team-chat-modal').classList.add('show');
-    } catch (error) {
-        console.error('Error opening project chat:', error);
-    }
+async function openProjectChatSidebar(projectId, projectTitle) {
+    currentChatProject = { id: projectId, title: projectTitle };
+    
+    const sidebar = document.getElementById('chat-sidebar');
+    const container = document.querySelector('.dashboard-container');
+    const title = document.getElementById('chat-sidebar-title');
+    
+    title.textContent = `${projectTitle} - Team Chat`;
+    
+    sidebar.classList.add('show');
+    container.classList.add('chat-open');
+    
+    await loadChatParticipants(projectId);
+    await loadSidebarChatMessages(projectId);
 }
 
-function closeTeamChat() {
-    document.getElementById('team-chat-modal').classList.remove('show');
+function closeChatSidebar() {
+    const sidebar = document.getElementById('chat-sidebar');
+    const container = document.querySelector('.dashboard-container');
+    
+    sidebar.classList.remove('show');
+    container.classList.remove('chat-open');
+    
     currentChatProject = null;
 }
 
-async function loadProjectChatMessages(projectId) {
+async function loadChatParticipants(projectId) {
+    try {
+        const response = await fetch(`/api/projects/${projectId}/participants`);
+        if (response.ok) {
+            const data = await response.json();
+            displayChatParticipants(data.participants || []);
+        }
+    } catch (error) {
+        console.error('Error loading participants:', error);
+    }
+}
+
+function displayChatParticipants(participants) {
+    const container = document.getElementById('chat-participants-list');
+    if (!container) return;
+    
+    container.innerHTML = participants.map(participant => `
+        <div class="participant-badge ${participant.is_owner ? 'owner' : ''}">
+            <i class="fas fa-user"></i> ${escapeHtml(participant.user.full_name)}
+            ${participant.is_owner ? ' (Owner)' : ''}
+        </div>
+    `).join('');
+}
+
+async function loadSidebarChatMessages(projectId) {
     try {
         const response = await fetch(`/api/projects/${projectId}/chat`);
         if (response.ok) {
             const data = await response.json();
-            displayChatMessages(data.messages || []);
-        } else {
-            displayChatMessages([]);
+            displaySidebarChatMessages(data.messages || []);
         }
     } catch (error) {
         console.error('Error loading chat messages:', error);
-        displayChatMessages([]);
     }
 }
 
-function displayChatMessages(messages) {
-    const container = document.getElementById('chat-messages');
+function displaySidebarChatMessages(messages) {
+    const container = document.getElementById('sidebar-chat-messages');
+    if (!container) return;
+    
     if (messages.length === 0) {
         container.innerHTML = `
             <div style="text-align: center; color: #999; padding: 2rem;">
-                <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
+                <i class="fas fa-comments" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.3;"></i>
                 <p>Start a conversation with your team!</p>
             </div>
         `;
         return;
     }
-
+    
     container.innerHTML = messages.map(message => `
         <div class="chat-message">
             <div class="message-header">
@@ -1092,19 +1117,18 @@ function displayChatMessages(messages) {
         </div>
     `).join('');
     
-    // Scroll to bottom
     container.scrollTop = container.scrollHeight;
 }
 
-async function sendTeamMessage() {
+async function sendSidebarMessage() {
     if (!currentChatProject) return;
     
-    const input = document.getElementById('chat-message-input');
+    const input = document.getElementById('sidebar-chat-input');
     const message = input.value.trim();
     
     if (!message) return;
     
-    const sendBtn = document.querySelector('.send-message-btn');
+    const sendBtn = document.querySelector('.chat-input-area .send-message-btn');
     if (sendBtn) sendBtn.disabled = true;
     
     try {
@@ -1118,7 +1142,7 @@ async function sendTeamMessage() {
         
         if (response.ok) {
             input.value = '';
-            await loadProjectChatMessages(currentChatProject.id);
+            await loadSidebarChatMessages(currentChatProject.id);
         } else {
             const data = await response.json();
             showMessage(data.error || 'Error sending message', 'error');
@@ -1128,6 +1152,13 @@ async function sendTeamMessage() {
         showMessage('Error sending message', 'error');
     } finally {
         if (sendBtn) sendBtn.disabled = false;
+    }
+}
+
+function handleChatKeyPress(event) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendSidebarMessage();
     }
 }
 

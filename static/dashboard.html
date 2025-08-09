@@ -276,6 +276,38 @@
       </section>
 
     </main>
+
+    <!-- Team Chat Sidebar -->
+    <aside class="chat-sidebar" id="chat-sidebar">
+      <div class="chat-sidebar-header">
+        <h3 id="chat-sidebar-title">Team Chat</h3>
+        <button class="close-chat-sidebar" onclick="closeChatSidebar()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <div class="chat-participants">
+        <h4>Team Members</h4>
+        <div class="participants-list" id="chat-participants-list">
+          <!-- Participants will be loaded here -->
+        </div>
+      </div>
+      
+      <div class="chat-messages-container">
+        <div class="chat-messages" id="sidebar-chat-messages">
+          <!-- Messages will be loaded here -->
+        </div>
+      </div>
+      
+      <div class="chat-input-area">
+        <div class="chat-input-group">
+          <input type="text" id="sidebar-chat-input" placeholder="Type your message..." onkeypress="handleChatKeyPress(event)">
+          <button class="send-message-btn" onclick="sendSidebarMessage()">
+            <i class="fas fa-paper-plane"></i>
+          </button>
+        </div>
+      </div>
+    </aside>
   </div>
 
   <!-- Success/Error Messages -->
@@ -296,33 +328,7 @@
     </div>
   </div>
 
-  <!-- Team Chat Modal -->
-  <div class="team-chat-modal" id="team-chat-modal">
-    <div class="chat-container">
-      <div class="chat-header">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div>
-            <h3 id="chat-project-name">Team Chat</h3>
-            <p id="chat-member-username" style="margin: 0; opacity: 0.9; font-size: 0.9rem;"></p>
-          </div>
-          <button class="close-modal" onclick="closeTeamChat()">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
-      <div class="chat-messages" id="chat-messages">
-        <!-- Messages will be loaded here -->
-      </div>
-      <div class="chat-input">
-        <div class="chat-input-group">
-          <input type="text" id="chat-message-input" placeholder="Type your message...">
-          <button class="send-message-btn" onclick="sendTeamMessage()">
-            <i class="fas fa-paper-plane"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+
 
   <script src="js/dashboard.js"></script>
 </body>
