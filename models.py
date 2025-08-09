@@ -89,6 +89,10 @@ class Project(db.Model):
         return Comment.query.filter_by(project_id=self.id).count()
     
     def to_dict(self):
+        owner_data = None
+        if hasattr(self, 'owner') and self.owner:
+            owner_data = self.owner.to_dict()
+        
         return {
             'id': self.id,
             'title': self.title,
@@ -99,7 +103,7 @@ class Project(db.Model):
             'status': self.status,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
-            'owner': self.owner.to_dict() if hasattr(self, 'owner') and self.owner else None,
+            'owner': owner_data,
             'vote_count': self.get_vote_count(),
             'collaboration_count': self.get_collaboration_count(),
             'comment_count': self.get_comment_count()
@@ -117,11 +121,15 @@ class Comment(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     
     def to_dict(self):
+        author_data = None
+        if hasattr(self, 'author') and self.author:
+            author_data = self.author.to_dict()
+            
         return {
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
-            'author': self.author.to_dict() if hasattr(self, 'author') and self.author else None
+            'author': author_data
         }
 
 class Vote(db.Model):
@@ -154,12 +162,16 @@ class Collaboration(db.Model):
     __table_args__ = (db.UniqueConstraint('user_id', 'project_id', name='unique_user_project_collab'),)
     
     def to_dict(self):
+        collaborator_data = None
+        if hasattr(self, 'collaborator') and self.collaborator:
+            collaborator_data = self.collaborator.to_dict()
+            
         return {
             'id': self.id,
             'message': self.message,
             'status': self.status,
             'created_at': self.created_at.isoformat(),
-            'collaborator': self.collaborator.to_dict() if hasattr(self, 'collaborator') and self.collaborator else None
+            'collaborator': collaborator_data
         }
 
 class Donation(db.Model):
@@ -175,12 +187,16 @@ class Donation(db.Model):
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     
     def to_dict(self):
+        donor_data = None
+        if hasattr(self, 'donor') and self.donor:
+            donor_data = self.donor.to_dict()
+            
         return {
             'id': self.id,
             'amount': self.amount,
             'message': self.message,
             'created_at': self.created_at.isoformat(),
-            'donor': self.donor.to_dict() if hasattr(self, 'donor') and self.donor else None
+            'donor': donor_data
         }
 
 class Discussion(db.Model):
@@ -215,6 +231,10 @@ class Discussion(db.Model):
     
     def to_dict(self, current_user_id=None):
         tags_list = [tag.strip() for tag in self.tags.split(',')] if self.tags else []
+        author_data = None
+        if hasattr(self, 'author') and self.author:
+            author_data = self.author.to_dict()
+            
         return {
             'id': self.id,
             'title': self.title,
@@ -226,7 +246,7 @@ class Discussion(db.Model):
             'media_filename': self.media_filename,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
-            'author': self.author.to_dict() if hasattr(self, 'author') and self.author else None,
+            'author': author_data,
             'like_count': self.get_like_count(),
             'reply_count': self.get_reply_count(),
             'is_liked': self.is_liked_by_user(current_user_id) if current_user_id else False,
@@ -257,15 +277,27 @@ class DiscussionReply(db.Model):
         return ReplyReaction.query.filter_by(reply_id=self.id, user_id=user_id, reaction_type=reaction_type).first() is not None
     
     def to_dict(self, current_user_id=None):
+        author_data = None
+        if hasattr(self, 'author') and self.author:
+            author_data = self.author.to_dict()
+            
+        # Handle nested replies safely
+        nested_replies_list = []
+        try:
+            if hasattr(self, 'nested_replies') and self.nested_replies:
+                nested_replies_list = [nested.to_dict(current_user_id) for nested in self.nested_replies]
+        except Exception:
+            nested_replies_list = []
+            
         return {
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
-            'author': self.author.to_dict() if hasattr(self, 'author') and self.author else None,
+            'author': author_data,
             'likes': self.get_reaction_count('like'),
             'hearts': self.get_reaction_count('heart'),
             'parent_reply_id': self.parent_reply_id,
-            'nested_replies': [nested.to_dict(current_user_id) for nested in (self.nested_replies if hasattr(self, 'nested_replies') else [])],
+            'nested_replies': nested_replies_list,
             'user_reactions': {
                 'like': self.is_reacted_by_user(current_user_id, 'like') if current_user_id else False,
                 'heart': self.is_reacted_by_user(current_user_id, 'heart') if current_user_id else False,
