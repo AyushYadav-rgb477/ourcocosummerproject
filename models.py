@@ -120,17 +120,37 @@ class Comment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     
-    def to_dict(self):
+    def get_reaction_count(self, reaction_type):
+        """Get count of reactions of specific type for this comment"""
+        return len([r for r in self.reactions if r.reaction_type == reaction_type])
+    
+    def get_user_reaction(self, user_id):
+        """Get user's reaction type on this comment (if any)"""
+        for reaction in self.reactions:
+            if reaction.user_id == user_id:
+                return reaction.reaction_type
+        return None
+    
+    def to_dict(self, user_id=None):
         author_data = None
         if hasattr(self, 'author') and self.author:
             author_data = self.author.to_dict()
             
-        return {
+        result = {
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
-            'author': author_data
+            'author': author_data,
+            'like_count': self.get_reaction_count('like'),
+            'heart_count': self.get_reaction_count('heart'),
+            'reply_count': len(self.replies) if hasattr(self, 'replies') else 0
         }
+        
+        # Include user's current reaction if user_id provided
+        if user_id:
+            result['user_reaction'] = self.get_user_reaction(user_id)
+            
+        return result
 
 class Vote(db.Model):
     __tablename__ = 'votes'
@@ -361,6 +381,51 @@ class Notification(db.Model):
             'created_at': self.created_at.isoformat(),
             'actor': self.actor.to_dict() if self.actor else None,
             'project': self.related_project.to_dict() if self.related_project else None
+        }
+
+class CommentReaction(db.Model):
+    __tablename__ = 'comment_reactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    reaction_type = db.Column(db.String(20), nullable=False)  # 'like', 'heart'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=False)
+    
+    # Relationships
+    user = db.relationship('User', backref='comment_reactions')
+    comment = db.relationship('Comment', backref='reactions')
+    
+    # Ensure one reaction per user per comment (they can change reaction type)
+    __table_args__ = (db.UniqueConstraint('user_id', 'comment_id', name='unique_user_comment_reaction'),)
+
+class CommentReply(db.Model):
+    __tablename__ = 'comment_replies'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=False)
+    
+    # Relationships
+    author = db.relationship('User', backref='comment_replies')
+    comment = db.relationship('Comment', backref='replies')
+    
+    def to_dict(self):
+        author_data = None
+        if hasattr(self, 'author') and self.author:
+            author_data = self.author.to_dict()
+            
+        return {
+            'id': self.id,
+            'content': self.content,
+            'created_at': self.created_at.isoformat(),
+            'author': author_data
         }
 
 class TeamChat(db.Model):

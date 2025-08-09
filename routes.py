@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, ReplyReaction, Notification, TeamChat
+from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, ReplyReaction, Notification, TeamChat, CommentReaction, CommentReply
 from sqlalchemy import desc, func
 
 # Helper function to create notifications
@@ -304,10 +304,11 @@ def vote_project(project_id):
 @app.route('/api/projects/<int:project_id>/comments', methods=['GET'])
 def get_comments(project_id):
     try:
+        user_id = session.get('user_id')  # Get current user for reaction info
         comments = Comment.query.filter_by(project_id=project_id)\
                                .order_by(desc(Comment.created_at)).all()
         return jsonify({
-            'comments': [comment.to_dict() for comment in comments]
+            'comments': [comment.to_dict(user_id) for comment in comments]
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -361,25 +362,52 @@ def toggle_comment_reaction(comment_id):
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        # For now, let's simulate reactions since we don't have a comment reaction model
-        # In a full implementation, you'd need a CommentReaction model similar to ReplyReaction
+        data = request.get_json()
+        reaction_type = data.get('reaction_type')
+        
+        if reaction_type not in ['like', 'heart']:
+            return jsonify({'error': 'Invalid reaction type'}), 400
+        
+        comment = Comment.query.get_or_404(comment_id)
+        
+        # Check if user already has any reaction on this comment
+        existing_reaction = CommentReaction.query.filter_by(user_id=user_id, comment_id=comment_id).first()
+        
+        if existing_reaction:
+            if existing_reaction.reaction_type == reaction_type:
+                # Same reaction - remove it
+                db.session.delete(existing_reaction)
+                user_reacted = False
+                action = 'removed'
+            else:
+                # Different reaction - change it
+                existing_reaction.reaction_type = reaction_type
+                user_reacted = True
+                action = 'changed'
+        else:
+            # No existing reaction - add new one
+            reaction = CommentReaction()
+            reaction.user_id = user_id
+            reaction.comment_id = comment_id
+            reaction.reaction_type = reaction_type
+            db.session.add(reaction)
+            user_reacted = True
+            action = 'added'
+        
+        db.session.commit()
+        
         return jsonify({
-            'message': 'Reaction updated successfully',
-            'count': 0,  # Placeholder count
-            'user_reacted': False
+            'message': f'Reaction {action} successfully',
+            'like_count': comment.get_reaction_count('like'),
+            'heart_count': comment.get_reaction_count('heart'),
+            'user_reaction': comment.get_user_reaction(user_id)
         }), 200
         
     except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-# Comment reply APIs (for project comments) 
-@app.route('/api/comment/<int:comment_id>/replies', methods=['GET'])
-def get_comment_replies(comment_id):
-    try:
-        # For now, return empty replies since we don't have nested comment structure
-        return jsonify({'replies': []}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+# Comment reply APIs (for project comments)
 
 @app.route('/api/comment/<int:comment_id>/replies', methods=['POST'])
 def add_comment_reply(comment_id):
@@ -392,16 +420,48 @@ def add_comment_reply(comment_id):
         if not data.get('content'):
             return jsonify({'error': 'Content is required'}), 400
         
-        # For now, just return success - in full implementation you'd create nested comment structure
+        # Verify comment exists
+        comment = Comment.query.get_or_404(comment_id)
+        
+        # Create the reply
+        reply = CommentReply()
+        reply.content = data['content']
+        reply.user_id = user_id
+        reply.comment_id = comment_id
+        
+        db.session.add(reply)
+        db.session.commit()
+        
+        # Get user info for the response
+        user = User.query.get(user_id)
+        
         return jsonify({
             'message': 'Reply posted successfully',
             'reply': {
-                'id': 1,
-                'content': data['content'],
-                'author': {'full_name': session.get('username', 'User')},
-                'created_at': datetime.utcnow().isoformat()
+                'id': reply.id,
+                'content': reply.content,
+                'author': {'full_name': user.full_name if user else 'User'},
+                'created_at': reply.created_at.isoformat()
             }
         }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/comment/<int:comment_id>/replies', methods=['GET'])
+def get_comment_replies(comment_id):
+    try:
+        # Verify comment exists
+        comment = Comment.query.get_or_404(comment_id)
+        
+        # Get all replies for this comment
+        replies = CommentReply.query.filter_by(comment_id=comment_id)\
+                                   .order_by(CommentReply.created_at.asc()).all()
+        
+        return jsonify({
+            'replies': [reply.to_dict() for reply in replies]
+        }), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

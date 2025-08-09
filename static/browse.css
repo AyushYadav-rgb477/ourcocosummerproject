@@ -763,6 +763,19 @@ body {
   border-color: #aaa;
 }
 
+/* Active reaction button styles */
+.reaction-btn.active {
+  background: rgba(106, 17, 203, 0.1);
+  color: #6a11cb;
+  transform: scale(1.05);
+  font-weight: 600;
+}
+
+.reaction-btn.active:hover {
+  background: rgba(106, 17, 203, 0.2);
+  color: #5a01a7;
+}
+
 .comment-reply {
   background: #f1f3f4;
   padding: 0.5rem;

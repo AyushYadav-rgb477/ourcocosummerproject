@@ -365,14 +365,14 @@ function displayComments(comments) {
             <div class="comment-content">${escapeHtml(comment.content)}</div>
             <div class="comment-date">${formatDate(comment.created_at)}</div>
             <div class="comment-actions">
-                <button class="reaction-btn" onclick="toggleCommentReaction(${comment.id}, 'like')">
-                    <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${comment.likes || 0}</span>
+                <button class="reaction-btn ${comment.user_reaction === 'like' ? 'active' : ''}" onclick="toggleCommentReaction(${comment.id}, 'like')">
+                    <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${comment.like_count || 0}</span>
                 </button>
-                <button class="reaction-btn" onclick="toggleCommentReaction(${comment.id}, 'heart')">
-                    <i class="fas fa-heart"></i> <span class="reaction-count">${comment.hearts || 0}</span>
+                <button class="reaction-btn ${comment.user_reaction === 'heart' ? 'active' : ''}" onclick="toggleCommentReaction(${comment.id}, 'heart')">
+                    <i class="fas fa-heart"></i> <span class="reaction-count">${comment.heart_count || 0}</span>
                 </button>
                 <button class="comment-reply-btn" onclick="showCommentReply(${comment.id})">
-                    <i class="fas fa-reply"></i> Reply
+                    <i class="fas fa-reply"></i> Reply ${comment.reply_count > 0 ? `(${comment.reply_count})` : ''}
                 </button>
             </div>
             <div class="comment-replies" id="comment-replies-${comment.id}">
@@ -686,22 +686,19 @@ async function toggleCommentReaction(commentId, reactionType) {
         if (response.ok) {
             const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
             if (commentElement) {
-                const reactionBtn = commentElement.querySelector(`[onclick*="${reactionType}"]`);
-                const countSpan = reactionBtn.querySelector('.reaction-count');
+                // Update both like and heart buttons based on server response
+                const likeBtn = commentElement.querySelector(`[onclick*="'like'"]`);
+                const heartBtn = commentElement.querySelector(`[onclick*="'heart'"]`);
+                const likeCount = likeBtn.querySelector('.reaction-count');
+                const heartCount = heartBtn.querySelector('.reaction-count');
                 
-                if (countSpan) {
-                    // Toggle reaction count (simple increment/decrement for now)
-                    const currentCount = parseInt(countSpan.textContent) || 0;
-                    const isActive = reactionBtn.classList.contains('active');
-                    
-                    if (isActive) {
-                        countSpan.textContent = Math.max(0, currentCount - 1);
-                        reactionBtn.classList.remove('active');
-                    } else {
-                        countSpan.textContent = currentCount + 1;
-                        reactionBtn.classList.add('active');
-                    }
-                }
+                // Update counts
+                likeCount.textContent = data.like_count || 0;
+                heartCount.textContent = data.heart_count || 0;
+                
+                // Update active states - only one can be active at a time
+                likeBtn.classList.toggle('active', data.user_reaction === 'like');
+                heartBtn.classList.toggle('active', data.user_reaction === 'heart');
             }
             showMessage('Reaction updated!', 'success');
         } else {
