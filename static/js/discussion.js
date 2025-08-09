@@ -71,12 +71,40 @@ function setupEventListeners() {
     });
 }
 
+// Toggle create discussion form
+function toggleCreateForm() {
+    const form = document.getElementById('discussion-form');
+    const button = document.querySelector('.btn-create-toggle');
+    
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        button.innerHTML = '<i class="fas fa-minus"></i> Cancel';
+        button.classList.add('cancel');
+    } else {
+        form.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-plus"></i> Create Post';
+        button.classList.remove('cancel');
+        // Clear form
+        form.reset();
+        clearImagePreview();
+    }
+}
+
+// Clear image preview
+function clearImagePreview() {
+    const preview = document.getElementById('image-preview');
+    if (preview) {
+        preview.remove();
+    }
+    selectedMedia = null;
+    mediaData = null;
+}
+
 async function checkAuthStatus() {
     try {
-        const response = await fetch('/api/auth/status');
-        const data = await response.json();
-        
-        if (data.authenticated) {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+            const data = await response.json();
             currentUser = data.user;
             showAuthenticatedUI();
         } else {
@@ -90,19 +118,24 @@ async function checkAuthStatus() {
 
 function showAuthenticatedUI() {
     const createSection = document.getElementById('create-discussion-section');
-    const navAuth = document.getElementById('nav-auth');
     const dashboardLink = document.getElementById('dashboard-link');
-    const addCommentBtn = document.getElementById('add-comment-btn');
+    const profileLink = document.getElementById('profile-link');
+    const userMenu = document.getElementById('user-menu');
+    const userName = document.getElementById('user-name');
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
     
     if (createSection) createSection.style.display = 'block';
-    if (dashboardLink) dashboardLink.style.display = 'inline-block';
+    if (dashboardLink) dashboardLink.style.display = 'inline-flex';
+    if (profileLink) profileLink.style.display = 'inline-flex';
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (registerBtn) registerBtn.style.display = 'none';
     
-    if (navAuth) {
-        navAuth.innerHTML = `
-            <span class="user-greeting">Welcome, ${currentUser.username}!</span>
-            <a href="profile.html" class="profile-link"><i class="fas fa-user"></i> Profile</a>
-            <button class="logout-btn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-        `;
+    if (userMenu) {
+        userMenu.style.display = 'inline-block';
+        if (userName) {
+            userName.textContent = currentUser.first_name || currentUser.username || 'User';
+        }
     }
 }
 
@@ -114,27 +147,7 @@ function showGuestUI() {
     if (dashboardLink) dashboardLink.style.display = 'none';
 }
 
-function toggleCreateForm() {
-    const form = document.getElementById('discussion-form');
-    const button = document.querySelector('.btn-create-toggle');
-    
-    if (form.style.display === 'none' || !form.style.display) {
-        form.style.display = 'block';
-        button.innerHTML = '<i class="fas fa-minus"></i> Cancel';
-    } else {
-        form.style.display = 'none';
-        button.innerHTML = '<i class="fas fa-plus"></i> Create Post';
-        resetDiscussionForm();
-    }
-}
 
-function resetDiscussionForm() {
-    const form = document.getElementById('discussion-form');
-    if (form) {
-        form.reset();
-        removeImage();
-    }
-}
 
 function handleImageUpload(event) {
     const file = event.target.files[0];

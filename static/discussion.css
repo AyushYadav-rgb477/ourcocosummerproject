@@ -77,6 +77,14 @@
   box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
+.btn-create-toggle.cancel {
+  background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+}
+
+.btn-create-toggle.cancel:hover {
+  box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
 /* Discussion Form */
 .discussion-form {
   animation: slideDown 0.3s ease;
