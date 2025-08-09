@@ -42,6 +42,10 @@ def dashboard_page():
 def browse_page():
     return send_from_directory('static', 'browse.html')
 
+@app.route('/discussion.html')
+def discussion_page():
+    return send_from_directory('static', 'discussion.html')
+
 @app.route('/profile.html')
 def profile_page():
     return send_from_directory('static', 'profile.html')
@@ -66,6 +70,10 @@ def dashboard_css():
 @app.route('/browse.css')
 def browse_css():
     return send_from_directory('static', 'browse.css')
+
+@app.route('/discussion.css')
+def discussion_css():
+    return send_from_directory('static', 'discussion.css')
 
 @app.route('/profile.css')
 def profile_css():
@@ -1075,6 +1083,178 @@ def get_discussion_stats():
             'ideasShared': ideas_shared              # Ideas shared (total discussion posts)
         }), 200
     except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Discussion Comment API endpoints (renamed to avoid conflicts)
+@app.route('/api/discussions/<int:discussion_id>/comments', methods=['GET'])
+def get_discussion_comments(discussion_id):
+    try:
+        user_id = session.get('user_id')
+        # Get top-level replies (comments) for this discussion
+        comments = DiscussionReply.query.filter_by(discussion_id=discussion_id, parent_reply_id=None)\
+                                      .order_by(DiscussionReply.created_at).all()
+        return jsonify({
+            'comments': [comment.to_dict(user_id) for comment in comments]
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/<int:discussion_id>/comments', methods=['POST'])
+def add_discussion_comment(discussion_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        if not data.get('content'):
+            return jsonify({'error': 'Content is required'}), 400
+        
+        comment = DiscussionReply()
+        comment.content = data['content']
+        comment.user_id = user_id
+        comment.discussion_id = discussion_id
+        # No parent_reply_id means it's a top-level comment
+        
+        db.session.add(comment)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Comment added successfully',
+            'comment': comment.to_dict(user_id)
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussion-comments/<int:comment_id>', methods=['PUT'])
+def update_discussion_comment(comment_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        comment = DiscussionReply.query.get_or_404(comment_id)
+        
+        # Check if user owns the comment
+        if comment.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        data = request.get_json()
+        content = data.get('content', '').strip()
+        
+        if not content:
+            return jsonify({'error': 'Comment content is required'}), 400
+        
+        comment.content = content
+        comment.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Comment updated successfully',
+            'comment': comment.to_dict(user_id)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussion-comments/<int:comment_id>', methods=['DELETE'])
+def delete_discussion_comment(comment_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        comment = DiscussionReply.query.get_or_404(comment_id)
+        
+        # Check if user owns the comment
+        if comment.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        db.session.delete(comment)
+        db.session.commit()
+        
+        return jsonify({'message': 'Comment deleted successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussion-comments/<int:comment_id>/react', methods=['POST'])
+def toggle_discussion_comment_reaction(comment_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        reaction_type = data.get('reaction_type', 'like')
+        
+        comment = DiscussionReply.query.get_or_404(comment_id)
+        
+        # Check if user already reacted with this type
+        existing_reaction = ReplyReaction.query.filter_by(
+            user_id=user_id, 
+            reply_id=comment_id, 
+            reaction_type=reaction_type
+        ).first()
+        
+        if existing_reaction:
+            # Remove reaction
+            db.session.delete(existing_reaction)
+            user_reacted = False
+        else:
+            # Add reaction
+            reaction = ReplyReaction()
+            reaction.user_id = user_id
+            reaction.reply_id = comment_id
+            reaction.reaction_type = reaction_type
+            db.session.add(reaction)
+            user_reacted = True
+        
+        db.session.commit()
+        
+        return jsonify({
+            'reacted': user_reacted,
+            'reaction_count': comment.get_reaction_count(reaction_type)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussion-comments/<int:comment_id>/replies', methods=['POST'])
+def add_discussion_comment_reply(comment_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        if not data.get('content'):
+            return jsonify({'error': 'Content is required'}), 400
+        
+        parent_comment = DiscussionReply.query.get_or_404(comment_id)
+        
+        reply = DiscussionReply()
+        reply.content = data['content']
+        reply.user_id = user_id
+        reply.discussion_id = parent_comment.discussion_id
+        reply.parent_reply_id = comment_id
+        
+        db.session.add(reply)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Reply added successfully',
+            'reply': reply.to_dict(user_id)
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 # Profile API endpoints
