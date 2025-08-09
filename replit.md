@@ -49,9 +49,19 @@ Preferred communication style: Simple, everyday language.
 ### Frontend Pages
 - **Landing Page**: Hero section with typewriter effect and feature showcase
 - **Authentication Pages**: Separate login and registration forms with modern UI
-- **Browse Page**: Project discovery with filtering and search capabilities
+- **Browse Page**: Project discovery with filtering and search capabilities with edit/delete functionality
 - **Dashboard**: User-specific project management and collaboration overview
+- **Discussion Page**: Community discussions with category filtering, search, and full CRUD functionality
 - **Profile Page**: Redesigned sidebar layout with profile info on left, content on right (August 2025)
+
+### Edit/Delete Functionality (August 2025)
+- **Complete CRUD Operations**: Full edit and delete functionality implemented across all content types
+- **Projects**: Users can edit and delete their own projects with ownership verification
+- **Comments**: Project comments can be edited and deleted by their authors
+- **Discussions**: Full discussion management with edit, delete, and category-based filtering
+- **Discussion Replies**: Nested reply system with edit/delete capabilities and reaction features
+- **Ownership Security**: Backend verification ensures users can only modify their own content
+- **UI Integration**: Hover-based edit/delete overlays with modern CSS styling
 
 ## Data Flow
 
