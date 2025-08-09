@@ -371,13 +371,9 @@ function displayComments(comments) {
                 <button class="reaction-btn ${comment.user_reaction === 'heart' ? 'active' : ''}" onclick="toggleCommentReaction(${comment.id}, 'heart')">
                     <i class="fas fa-heart"></i> <span class="reaction-count">${comment.heart_count || 0}</span>
                 </button>
-                <button class="comment-reply-btn" onclick="showCommentReply(${comment.id})">
-                    <i class="fas fa-reply"></i> Reply ${comment.reply_count > 0 ? `(${comment.reply_count})` : ''}
-                </button>
+
             </div>
-            <div class="comment-replies" id="comment-replies-${comment.id}">
-                <!-- Comment replies will be loaded here -->
-            </div>
+
         </div>
     `).join('');
 }
@@ -710,113 +706,7 @@ async function toggleCommentReaction(commentId, reactionType) {
     }
 }
 
-function showCommentReply(commentId) {
-    if (!currentUser) {
-        showMessage('Please login to reply', 'error');
-        return;
-    }
 
-    const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
-    if (!repliesContainer) return;
-
-    // Check if reply form already exists
-    if (repliesContainer.querySelector('.comment-reply-form')) {
-        return;
-    }
-
-    const replyForm = `
-        <div class="comment-reply-form">
-            <textarea class="comment-reply-input" placeholder="Write your reply..." rows="3"></textarea>
-            <div class="comment-reply-actions">
-                <button class="reply-cancel-btn" onclick="cancelCommentReply(${commentId})">Cancel</button>
-                <button class="reply-submit-btn" onclick="submitCommentReply(${commentId})">
-                    <i class="fas fa-paper-plane"></i> Reply
-                </button>
-            </div>
-        </div>
-    `;
-
-    repliesContainer.insertAdjacentHTML('beforeend', replyForm);
-    const textArea = repliesContainer.querySelector('.comment-reply-input');
-    if (textArea) {
-        textArea.focus();
-    }
-}
-
-function cancelCommentReply(commentId) {
-    const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
-    if (repliesContainer) {
-        const replyForm = repliesContainer.querySelector('.comment-reply-form');
-        if (replyForm) {
-            replyForm.remove();
-        }
-    }
-}
-
-async function submitCommentReply(commentId) {
-    if (!currentUser) {
-        showMessage('Please login to reply', 'error');
-        return;
-    }
-
-    const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
-    const replyForm = repliesContainer?.querySelector('.comment-reply-form');
-    const textArea = replyForm?.querySelector('.comment-reply-input');
-    const submitBtn = replyForm?.querySelector('.reply-submit-btn');
-    
-    if (!textArea || !submitBtn) return;
-    
-    const content = textArea.value.trim();
-    if (!content) {
-        showMessage('Please enter a reply', 'error');
-        return;
-    }
-
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
-
-    try {
-        const response = await fetch(`/api/comment/${commentId}/replies`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                content: content
-            })
-        });
-
-        const data = await response.json();
-        
-        if (response.ok) {
-            showMessage('Reply posted successfully!', 'success');
-            
-            // Add the new reply to the UI
-            const newReplyHTML = `
-                <div class="comment-reply">
-                    <div class="comment-author">${escapeHtml(data.reply.author.full_name)}</div>
-                    <div class="comment-content">${escapeHtml(data.reply.content)}</div>
-                    <div class="comment-date">Just now</div>
-                </div>
-            `;
-            
-            // Insert the reply before the form
-            replyForm.insertAdjacentHTML('beforebegin', newReplyHTML);
-            
-            // Remove the form
-            replyForm.remove();
-            
-        } else {
-            showMessage(data.error || 'Error posting reply', 'error');
-        }
-    } catch (error) {
-        console.error('Reply error:', error);
-        showMessage('Error posting reply', 'error');
-    } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Reply';
-    }
-}
 
 function cancelCommentReply(commentId) {
     const repliesContainer = document.getElementById(`comment-replies-${commentId}`);

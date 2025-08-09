@@ -142,8 +142,7 @@ class Comment(db.Model):
             'created_at': self.created_at.isoformat(),
             'author': author_data,
             'like_count': self.get_reaction_count('like'),
-            'heart_count': self.get_reaction_count('heart'),
-            'reply_count': len(self.replies) if hasattr(self, 'replies') else 0
+            'heart_count': self.get_reaction_count('heart')
         }
         
         # Include user's current reaction if user_id provided

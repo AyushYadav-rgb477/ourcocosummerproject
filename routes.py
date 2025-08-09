@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, ReplyReaction, Notification, TeamChat, CommentReaction, CommentReply
+from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, ReplyReaction, Notification, TeamChat, CommentReaction
 from sqlalchemy import desc, func
 
 # Helper function to create notifications
@@ -407,64 +407,7 @@ def toggle_comment_reaction(comment_id):
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-# Comment reply APIs (for project comments)
 
-@app.route('/api/comment/<int:comment_id>/replies', methods=['POST'])
-def add_comment_reply(comment_id):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            return jsonify({'error': 'Authentication required'}), 401
-        
-        data = request.get_json()
-        if not data.get('content'):
-            return jsonify({'error': 'Content is required'}), 400
-        
-        # Verify comment exists
-        comment = Comment.query.get_or_404(comment_id)
-        
-        # Create the reply
-        reply = CommentReply()
-        reply.content = data['content']
-        reply.user_id = user_id
-        reply.comment_id = comment_id
-        
-        db.session.add(reply)
-        db.session.commit()
-        
-        # Get user info for the response
-        user = User.query.get(user_id)
-        
-        return jsonify({
-            'message': 'Reply posted successfully',
-            'reply': {
-                'id': reply.id,
-                'content': reply.content,
-                'author': {'full_name': user.full_name if user else 'User'},
-                'created_at': reply.created_at.isoformat()
-            }
-        }), 201
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/comment/<int:comment_id>/replies', methods=['GET'])
-def get_comment_replies(comment_id):
-    try:
-        # Verify comment exists
-        comment = Comment.query.get_or_404(comment_id)
-        
-        # Get all replies for this comment
-        replies = CommentReply.query.filter_by(comment_id=comment_id)\
-                                   .order_by(CommentReply.created_at.asc()).all()
-        
-        return jsonify({
-            'replies': [reply.to_dict() for reply in replies]
-        }), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 # Collaboration APIs
 @app.route('/api/projects/<int:project_id>/collaborate', methods=['POST'])
