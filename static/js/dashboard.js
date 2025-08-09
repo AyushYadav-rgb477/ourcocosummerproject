@@ -273,130 +273,12 @@ function setupProjectForm() {
     }
     
     // Setup file upload functionality
-    setupFileUpload();
+    // File upload functionality removed
 }
 
-let selectedFiles = [];
+// File upload functionality removed as requested
 
-function setupFileUpload() {
-    const fileInput = document.getElementById('project-files');
-    const uploadArea = document.getElementById('file-upload-area');
-    const selectedFilesContainer = document.getElementById('selected-files');
-    
-    if (!fileInput || !uploadArea || !selectedFilesContainer) return;
-    
-    // File input change handler
-    fileInput.addEventListener('change', function(e) {
-        handleFileSelection(e.target.files);
-    });
-    
-    // Drag and drop handlers
-    uploadArea.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        uploadArea.classList.add('dragover');
-    });
-    
-    uploadArea.addEventListener('dragleave', function(e) {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-    });
-    
-    uploadArea.addEventListener('drop', function(e) {
-        e.preventDefault();
-        uploadArea.classList.remove('dragover');
-        handleFileSelection(e.dataTransfer.files);
-    });
-    
-    // Click to browse
-    uploadArea.addEventListener('click', function(e) {
-        if (e.target.classList.contains('file-browse-btn')) return;
-        fileInput.click();
-    });
-}
-
-function handleFileSelection(files) {
-    const maxFileSize = 10 * 1024 * 1024; // 10MB
-    const allowedTypes = [
-        'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
-        'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'video/mp4', 'video/quicktime', 'video/x-msvideo'
-    ];
-    
-    Array.from(files).forEach(file => {
-        // Check file size
-        if (file.size > maxFileSize) {
-            showMessage(`File "${file.name}" is too large. Maximum size is 10MB.`, 'error');
-            return;
-        }
-        
-        // Check file type
-        if (!allowedTypes.includes(file.type)) {
-            showMessage(`File type "${file.type}" is not supported.`, 'error');
-            return;
-        }
-        
-        // Check if file already selected
-        if (selectedFiles.find(f => f.name === file.name && f.size === file.size)) {
-            showMessage(`File "${file.name}" is already selected.`, 'warning');
-            return;
-        }
-        
-        selectedFiles.push(file);
-    });
-    
-    updateFileDisplay();
-}
-
-function updateFileDisplay() {
-    const container = document.getElementById('selected-files');
-    if (!container) return;
-    
-    container.innerHTML = '';
-    
-    selectedFiles.forEach((file, index) => {
-        const fileItem = document.createElement('div');
-        fileItem.className = 'file-item';
-        
-        const fileIcon = getFileIcon(file.type);
-        const fileSize = formatFileSize(file.size);
-        
-        fileItem.innerHTML = `
-            <div class="file-info">
-                <i class="file-icon ${fileIcon}"></i>
-                <div class="file-details">
-                    <h4>${escapeHtml(file.name)}</h4>
-                    <p>${fileSize} • ${file.type}</p>
-                </div>
-            </div>
-            <button type="button" class="file-remove" onclick="removeFile(${index})" title="Remove file">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        
-        container.appendChild(fileItem);
-    });
-}
-
-function getFileIcon(fileType) {
-    if (fileType.startsWith('image/')) return 'fas fa-image';
-    if (fileType.startsWith('video/')) return 'fas fa-video';
-    if (fileType.includes('pdf')) return 'fas fa-file-pdf';
-    if (fileType.includes('word') || fileType.includes('document')) return 'fas fa-file-word';
-    return 'fas fa-file';
-}
-
-function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-}
-
-function removeFile(index) {
-    selectedFiles.splice(index, 1);
-    updateFileDisplay();
-}
+// File upload functions removed as requested
 
 function escapeHtml(text) {
     const div = document.createElement('div');
@@ -426,21 +308,20 @@ async function handleProjectSubmission(e) {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating Project...';
     
     try {
-        // Create FormData to handle both text and file uploads
-        const formData = new FormData();
-        formData.append('title', title);
-        formData.append('category', category);
-        formData.append('description', description);
-        formData.append('fundingGoal', fundingGoal || '0');
-        
-        // Add selected files to form data
-        selectedFiles.forEach((file, index) => {
-            formData.append('files', file);
-        });
+        // Send project data as JSON (no file uploads)
+        const projectData = {
+            title: title,
+            category: category,
+            description: description,
+            fundingGoal: fundingGoal || '0'
+        };
         
         const response = await fetch('/api/projects', {
             method: 'POST',
-            body: formData  // Don't set Content-Type header, let browser set it with boundary
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(projectData)
         });
         
         const data = await response.json();
@@ -448,10 +329,8 @@ async function handleProjectSubmission(e) {
         if (response.ok) {
             showMessage('Project created successfully!', 'success');
             
-            // Reset form and file selection
+            // Reset form
             e.target.reset();
-            selectedFiles = [];
-            updateFileDisplay();
             
             // Refresh dashboard data
             loadDashboardStats();

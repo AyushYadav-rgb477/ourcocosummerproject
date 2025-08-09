@@ -2,7 +2,7 @@
 
 .profile-main {
   min-height: calc(100vh - 80px);
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 2rem;
 }
 
@@ -17,10 +17,12 @@
 
 /* Profile Sidebar */
 .profile-sidebar {
-  background: white;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
   height: fit-content;
   position: sticky;
   top: 2rem;
@@ -40,7 +42,10 @@
 .sidebar-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
 }
 
@@ -150,9 +155,11 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem 0;
+  padding: 0.75rem;
   border-bottom: 1px solid #f3f4f6;
+  border-radius: 8px;
   transition: all 0.2s ease;
+  margin: 0.25rem 0;
 }
 
 .contact-item:last-child {
@@ -160,12 +167,15 @@
 }
 
 .contact-item:hover {
-  background: #f3f4f6;
-  border-radius: 8px;
-  padding-left: 0.5rem;
-  margin: 0 -0.5rem;
-  transform: translateX(4px);
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  color: white;
+  transform: translateX(4px) scale(1.02);
   cursor: pointer;
+  box-shadow: 0 4px 15px rgba(240, 147, 251, 0.3);
+}
+
+.contact-item:hover i {
+  color: white;
 }
 
 .contact-item i {
@@ -261,10 +271,12 @@
 
 /* Right Content Area */
 .profile-content {
-  background: white;
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
   border-radius: 16px;
   padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
   overflow-y: auto;
   max-height: calc(100vh - 120px);
 }
@@ -385,7 +397,10 @@
 .content-header h2 {
   font-size: 2rem;
   font-weight: 600;
-  color: #1f2937;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
 }
 
@@ -408,10 +423,14 @@
 .section-header h2 {
   font-size: 1.5rem;
   font-weight: 600;
-  color: #1f2937;
+  background: linear-gradient(135deg, #f093fb, #f5576c);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   margin: 0;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #3b82f6;
+  border-bottom: 3px solid transparent;
+  border-image: linear-gradient(135deg, #f093fb, #f5576c) 1;
   display: inline-block;
 }
 
