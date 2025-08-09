@@ -508,7 +508,7 @@ function displayUserProjects(projects) {
                 <span class="project-category">${project.category}</span>
                 <span class="project-date" data-timestamp="${project.created_at}">${formatDate(project.created_at)}</span>
             </div>
-            <p class="project-description">${escapeHtml(project.description.substring(0, 150))}${project.description.length > 150 ? '...' : ''}</p>
+            <p class="project-description">${escapeHtml(project.description.substring(0, 140))}${project.description.length > 140 ? '...' : ''}</p>
             <div class="project-stats">
                 <div class="project-stat">
                     <i class="fas fa-thumbs-up"></i>
@@ -516,7 +516,7 @@ function displayUserProjects(projects) {
                 </div>
                 <div class="project-stat">
                     <i class="fas fa-dollar-sign"></i>
-                    <span>$${project.current_funding.toFixed(2)} / $${project.funding_goal.toFixed(2)}</span>
+                    <span>$${project.current_funding.toFixed(0)} / $${project.funding_goal.toFixed(0)}</span>
                 </div>
                 <div class="project-stat">
                     <i class="fas fa-users"></i>
@@ -527,9 +527,9 @@ function displayUserProjects(projects) {
                     <span>${project.comment_count} comments</span>
                 </div>
             </div>
-            <div style="text-align: center; margin-top: 1rem; color: #666; font-size: 0.9rem;">
-                <i class="fas fa-eye"></i> Click to view details
-            </div>
+            <button class="project-view-details">
+                <i class="fas fa-eye"></i> View Details & Manage
+            </button>
         </div>
     `).join('');
 }
