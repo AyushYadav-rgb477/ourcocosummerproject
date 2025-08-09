@@ -291,6 +291,74 @@ def create_project():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/projects/<int:project_id>', methods=['PUT'])
+def update_project(project_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        project = Project.query.get_or_404(project_id)
+        
+        # Check if user owns the project
+        if project.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['title', 'description', 'category']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field} is required'}), 400
+        
+        # Update project fields
+        project.title = data['title']
+        project.description = data['description']
+        project.category = data['category']
+        project.funding_goal = float(data.get('fundingGoal', project.funding_goal))
+        project.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Project updated successfully',
+            'project': project.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projects/<int:project_id>', methods=['DELETE'])
+def delete_project(project_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        project = Project.query.get_or_404(project_id)
+        
+        # Check if user owns the project
+        if project.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        # Delete associated files
+        import os
+        upload_dir = os.path.join('static', 'uploads', 'projects', str(project.id))
+        if os.path.exists(upload_dir):
+            import shutil
+            shutil.rmtree(upload_dir)
+        
+        db.session.delete(project)
+        db.session.commit()
+        
+        return jsonify({'message': 'Project deleted successfully'}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 
 # Serve uploaded files
 @app.route('/uploads/<path:filename>')
@@ -395,6 +463,61 @@ def add_comment(project_id):
             'message': 'Comment added successfully',
             'comment': comment.to_dict()
         }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/comments/<int:comment_id>', methods=['PUT'])
+def update_comment(comment_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        comment = Comment.query.get_or_404(comment_id)
+        
+        # Check if user owns the comment
+        if comment.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        data = request.get_json()
+        content = data.get('content', '').strip()
+        
+        if not content:
+            return jsonify({'error': 'Comment content is required'}), 400
+        
+        comment.content = content
+        comment.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Comment updated successfully',
+            'comment': comment.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/comments/<int:comment_id>', methods=['DELETE'])
+def delete_comment(comment_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        comment = Comment.query.get_or_404(comment_id)
+        
+        # Check if user owns the comment
+        if comment.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        db.session.delete(comment)
+        db.session.commit()
+        
+        return jsonify({'message': 'Comment deleted successfully'}), 200
         
     except Exception as e:
         db.session.rollback()
@@ -638,6 +761,67 @@ def create_discussion():
             'message': 'Discussion created successfully',
             'discussion': discussion.to_dict()
         }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/<int:discussion_id>', methods=['PUT'])
+def update_discussion(discussion_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        discussion = Discussion.query.get_or_404(discussion_id)
+        
+        # Check if user owns the discussion
+        if discussion.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['title', 'content', 'category']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({'error': f'{field} is required'}), 400
+        
+        # Update discussion fields
+        discussion.title = data['title']
+        discussion.content = data['content']
+        discussion.category = data['category']
+        discussion.tags = ','.join(data.get('tags', []))
+        discussion.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Discussion updated successfully',
+            'discussion': discussion.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/<int:discussion_id>', methods=['DELETE'])
+def delete_discussion(discussion_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        discussion = Discussion.query.get_or_404(discussion_id)
+        
+        # Check if user owns the discussion
+        if discussion.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        db.session.delete(discussion)
+        db.session.commit()
+        
+        return jsonify({'message': 'Discussion deleted successfully'}), 200
         
     except Exception as e:
         db.session.rollback()

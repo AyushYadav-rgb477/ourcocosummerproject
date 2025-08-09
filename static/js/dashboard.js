@@ -286,6 +286,142 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Project CRUD Functions
+async function editProject(projectId) {
+    try {
+        // Fetch project details
+        const response = await fetch(`/api/projects/${projectId}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch project details');
+        }
+        
+        const data = await response.json();
+        const project = data.project;
+        
+        // Create edit modal
+        const modalHtml = `
+            <div class="modal-overlay" id="edit-project-modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-edit"></i> Edit Project</h2>
+                        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+                    </div>
+                    <form id="edit-project-form">
+                        <div class="form-group">
+                            <label for="edit-title">Project Title</label>
+                            <input type="text" id="edit-title" value="${escapeHtml(project.title)}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-category">Category</label>
+                            <select id="edit-category" required>
+                                <option value="technology" ${project.category === 'technology' ? 'selected' : ''}>Technology</option>
+                                <option value="healthcare" ${project.category === 'healthcare' ? 'selected' : ''}>Healthcare</option>
+                                <option value="education" ${project.category === 'education' ? 'selected' : ''}>Education</option>
+                                <option value="environment" ${project.category === 'environment' ? 'selected' : ''}>Environment</option>
+                                <option value="social" ${project.category === 'social' ? 'selected' : ''}>Social Impact</option>
+                                <option value="business" ${project.category === 'business' ? 'selected' : ''}>Business</option>
+                                <option value="arts" ${project.category === 'arts' ? 'selected' : ''}>Arts & Creative</option>
+                                <option value="other" ${project.category === 'other' ? 'selected' : ''}>Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-funding">Funding Goal ($)</label>
+                            <input type="number" id="edit-funding" value="${project.funding_goal}" min="0" step="100">
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-description">Description</label>
+                            <textarea id="edit-description" rows="6" required>${escapeHtml(project.description)}</textarea>
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="cancel-btn" onclick="closeEditModal()">Cancel</button>
+                            <button type="submit" class="save-btn">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Handle form submission
+        document.getElementById('edit-project-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await updateProject(projectId);
+        });
+        
+    } catch (error) {
+        showMessage('Error loading project details: ' + error.message, 'error');
+    }
+}
+
+async function updateProject(projectId) {
+    try {
+        const title = document.getElementById('edit-title').value;
+        const category = document.getElementById('edit-category').value;
+        const funding = document.getElementById('edit-funding').value;
+        const description = document.getElementById('edit-description').value;
+        
+        const response = await fetch(`/api/projects/${projectId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                category: category,
+                fundingGoal: funding,
+                description: description
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Project updated successfully!', 'success');
+            closeEditModal();
+            loadDashboardStats(); // Refresh the project list
+        } else {
+            showMessage(data.error || 'Failed to update project', 'error');
+        }
+        
+    } catch (error) {
+        showMessage('Network error: ' + error.message, 'error');
+    }
+}
+
+async function deleteProject(projectId, projectTitle) {
+    if (!confirm(`Are you sure you want to delete "${projectTitle}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/projects/${projectId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Project deleted successfully!', 'success');
+            loadDashboardStats(); // Refresh the project list
+        } else {
+            showMessage(data.error || 'Failed to delete project', 'error');
+        }
+        
+    } catch (error) {
+        showMessage('Network error: ' + error.message, 'error');
+    }
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('edit-project-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
 async function handleProjectSubmission(e) {
     e.preventDefault();
     
@@ -378,10 +514,20 @@ function displayUserProjects(projects) {
     }
     
     container.innerHTML = projects.map(project => `
-        <div class="user-project-card" onclick="openProjectDetails(${project.id})">
+        <div class="user-project-card">
             <div class="project-header">
                 <h3>${escapeHtml(project.title)}</h3>
-                <span class="project-status ${project.status}">${project.status}</span>
+                <div class="project-actions">
+                    <span class="project-status ${project.status}">${project.status}</span>
+                    <div class="action-buttons">
+                        <button class="edit-btn" onclick="event.stopPropagation(); editProject(${project.id})" title="Edit Project">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-btn" onclick="event.stopPropagation(); deleteProject(${project.id}, '${escapeHtml(project.title)}')" title="Delete Project">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
             <div class="project-meta">
                 <span class="project-category">${project.category}</span>
@@ -406,7 +552,7 @@ function displayUserProjects(projects) {
                     <span>${project.comment_count} comments</span>
                 </div>
             </div>
-            <button class="project-view-details">
+            <button class="project-view-details" onclick="openProjectDetails(${project.id})">
                 <i class="fas fa-eye"></i> View Details & Manage
             </button>
         </div>

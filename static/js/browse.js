@@ -431,19 +431,31 @@ function displayComments(comments) {
     
     commentsList.innerHTML = comments.map(comment => `
         <div class="comment-item" data-comment-id="${comment.id}">
-            <div class="comment-author">${escapeHtml(comment.author?.full_name || 'Unknown')}</div>
-            <div class="comment-content">${escapeHtml(comment.content)}</div>
-            <div class="comment-date">${formatDate(comment.created_at)}</div>
-            <div class="comment-actions">
+            <div class="comment-header">
+                <div class="comment-author">${escapeHtml(comment.author?.full_name || 'Unknown')}</div>
+                <div class="comment-date">${formatDate(comment.created_at)}</div>
+                ${currentUser && comment.author && currentUser.id === comment.author.id ? `
+                    <div class="comment-actions">
+                        <button class="edit-comment-btn" onclick="editComment(${comment.id})" title="Edit Comment">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="delete-comment-btn" onclick="deleteComment(${comment.id})" title="Delete Comment">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ` : ''}
+            </div>
+            <div class="comment-content">
+                <p>${escapeHtml(comment.content)}</p>
+            </div>
+            <div class="comment-reactions">
                 <button class="reaction-btn ${comment.user_reaction === 'like' ? 'active' : ''}" onclick="toggleCommentReaction(${comment.id}, 'like')">
                     <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${comment.like_count || 0}</span>
                 </button>
                 <button class="reaction-btn ${comment.user_reaction === 'heart' ? 'active' : ''}" onclick="toggleCommentReaction(${comment.id}, 'heart')">
                     <i class="fas fa-heart"></i> <span class="reaction-count">${comment.heart_count || 0}</span>
                 </button>
-
             </div>
-
         </div>
     `).join('');
 }
@@ -859,4 +871,114 @@ function createMessageContainer() {
     container.className = 'message-container';
     document.body.appendChild(container);
     return container;
+}
+
+// Comment CRUD Functions
+async function editComment(commentId) {
+    try {
+        const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+        if (!commentElement) return;
+        
+        const commentContent = commentElement.querySelector(".comment-content");
+        const originalContent = commentContent.textContent.trim();
+        
+        // Create inline edit form
+        const editForm = `
+            <div class="comment-edit-form">
+                <textarea class="edit-comment-textarea" rows="3">${escapeHtml(originalContent)}</textarea>
+                <div class="comment-edit-actions">
+                    <button class="save-comment-btn" onclick="saveCommentEdit(${commentId}, this, '${escapeHtml(originalContent)}')">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button class="cancel-comment-btn" onclick="cancelCommentEdit(${commentId}, this, '${escapeHtml(originalContent)}')">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        commentContent.innerHTML = editForm;
+        
+    } catch (error) {
+        console.error("Error setting up comment edit:", error);
+        showMessage("Error setting up comment edit", "error");
+    }
+}
+
+async function saveCommentEdit(commentId, saveBtn, originalContent) {
+    try {
+        const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+        const textarea = commentElement.querySelector(".edit-comment-textarea");
+        const newContent = textarea.value.trim();
+        
+        if (!newContent) {
+            showMessage("Comment content cannot be empty", "error");
+            return;
+        }
+        
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        const response = await fetch(`/api/comments/${commentId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                content: newContent
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Replace edit form with updated content
+            const commentContent = commentElement.querySelector(".comment-content");
+            commentContent.innerHTML = `<p>${escapeHtml(newContent)} <em class="edit-indicator">(edited)</em></p>`;
+            showMessage("Comment updated successfully!", "success");
+        } else {
+            showMessage(data.error || "Failed to update comment", "error");
+            const commentContent = commentElement.querySelector(".comment-content");
+            commentContent.innerHTML = `<p>${originalContent}</p>`;
+        }
+        
+    } catch (error) {
+        console.error("Network error:", error);
+        showMessage("Network error while updating comment", "error");
+    }
+}
+
+function cancelCommentEdit(commentId, cancelBtn, originalContent) {
+    const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+    const commentContent = commentElement.querySelector(".comment-content");
+    commentContent.innerHTML = `<p>${originalContent}</p>`;
+}
+
+async function deleteComment(commentId) {
+    if (!confirm("Are you sure you want to delete this comment? This action cannot be undone.")) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/comments/${commentId}`, {
+            method: "DELETE"
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Remove comment from DOM
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+            if (commentElement) {
+                commentElement.remove();
+            }
+            showMessage("Comment deleted successfully!", "success");
+        } else {
+            showMessage(data.error || "Failed to delete comment", "error");
+        }
+        
+    } catch (error) {
+        console.error("Network error:", error);
+        showMessage("Network error while deleting comment", "error");
+    }
 }

@@ -921,3 +921,147 @@ async function handleLogout() {
         console.error('Logout error:', error);
     }
 }
+// Discussion CRUD Functions
+async function editDiscussion(discussionId) {
+    try {
+        // Fetch discussion details
+        const response = await fetch(`/api/discussions/${discussionId}`);
+        if (!response.ok) {
+            throw new Error("Failed to fetch discussion details");
+        }
+        
+        const data = await response.json();
+        const discussion = data.discussion;
+        
+        // Create edit modal
+        const modalHtml = `
+            <div class="modal-overlay" id="edit-discussion-modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-edit"></i> Edit Discussion</h2>
+                        <button class="modal-close" onclick="closeEditDiscussionModal()">&times;</button>
+                    </div>
+                    <form id="edit-discussion-form">
+                        <div class="form-group">
+                            <label for="edit-discussion-title">Title</label>
+                            <input type="text" id="edit-discussion-title" value="${escapeHtml(discussion.title)}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-discussion-category">Category</label>
+                            <select id="edit-discussion-category" required>
+                                <option value="idea" ${discussion.category === "idea" ? "selected" : ""}>💡 Ideas & Innovations</option>
+                                <option value="question" ${discussion.category === "question" ? "selected" : ""}>❓ Questions & Help</option>
+                                <option value="discussion" ${discussion.category === "discussion" ? "selected" : ""}>💬 General Discussion</option>
+                                <option value="collaboration" ${discussion.category === "collaboration" ? "selected" : ""}>🤝 Collaboration Requests</option>
+                                <option value="feedback" ${discussion.category === "feedback" ? "selected" : ""}>🔍 Feedback & Reviews</option>
+                                <option value="announcement" ${discussion.category === "announcement" ? "selected" : ""}>📢 Announcements</option>
+                                <option value="resource" ${discussion.category === "resource" ? "selected" : ""}>📚 Resources & Tips</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-discussion-content">Content</label>
+                            <textarea id="edit-discussion-content" rows="8" required>${escapeHtml(discussion.content)}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-discussion-tags">Tags (comma-separated)</label>
+                            <input type="text" id="edit-discussion-tags" value="${discussion.tags ? discussion.tags.join(", ") : ""}">
+                        </div>
+                        <div class="modal-actions">
+                            <button type="button" class="cancel-btn" onclick="closeEditDiscussionModal()">Cancel</button>
+                            <button type="submit" class="save-btn">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML("beforeend", modalHtml);
+        
+        // Handle form submission
+        document.getElementById("edit-discussion-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await updateDiscussion(discussionId);
+        });
+        
+    } catch (error) {
+        console.error("Error loading discussion details:", error);
+        alert("Error loading discussion details: " + error.message);
+    }
+}
+
+async function updateDiscussion(discussionId) {
+    try {
+        const title = document.getElementById("edit-discussion-title").value;
+        const category = document.getElementById("edit-discussion-category").value;
+        const content = document.getElementById("edit-discussion-content").value;
+        const tags = document.getElementById("edit-discussion-tags").value;
+        
+        const response = await fetch(`/api/discussions/${discussionId}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                title: title,
+                category: category,
+                content: content,
+                tags: tags.split(",").map(tag => tag.trim()).filter(tag => tag.length > 0)
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert("Discussion updated successfully!");
+            closeEditDiscussionModal();
+            loadDiscussions(); // Refresh the discussions list
+        } else {
+            alert(data.error || "Failed to update discussion");
+        }
+        
+    } catch (error) {
+        console.error("Network error:", error);
+        alert("Network error: " + error.message);
+    }
+}
+
+async function deleteDiscussion(discussionId, discussionTitle) {
+    if (!confirm(`Are you sure you want to delete "${discussionTitle}"? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/discussions/${discussionId}`, {
+            method: "DELETE"
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert("Discussion deleted successfully!");
+            loadDiscussions(); // Refresh the discussions list
+        } else {
+            alert(data.error || "Failed to delete discussion");
+        }
+        
+    } catch (error) {
+        console.error("Network error:", error);
+        alert("Network error: " + error.message);
+    }
+}
+
+function closeEditDiscussionModal() {
+    const modal = document.getElementById("edit-discussion-modal");
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function escapeHtml(text) {
+    if (!text) return "";
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}

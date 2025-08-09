@@ -144,3 +144,12 @@ Preferred communication style: Simple, everyday language.
 - **Storage**: Files stored in organized directory structure under static/uploads/projects/
 - **Validation**: File type checking, size limits (10MB), and duplicate prevention
 - **Impact**: Users can now attach supporting files to their projects including documentation, images, and video demonstrations
+
+### Comprehensive CRUD Operations (August 2025)
+- **Feature**: Added complete edit/delete functionality for all user-generated content
+- **Projects**: Users can edit and delete their own projects with modal-based forms and confirmation dialogs
+- **Discussions**: Discussion owners can edit titles, content, categories, and tags, or delete entire discussions
+- **Comments**: Inline editing and deletion for comments on both projects and discussions
+- **Security**: Proper permission checking ensures users can only modify their own content
+- **UI Enhancement**: Subtle action buttons that appear on hover with consistent styling across all content types
+- **User Experience**: Confirmation dialogs for destructive actions and success/error messaging for all operations
