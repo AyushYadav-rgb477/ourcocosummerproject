@@ -50,6 +50,10 @@ def discussion_page():
 def profile_page():
     return send_from_directory('static', 'profile.html')
 
+@app.route('/donate.html')
+def donate_page():
+    return send_from_directory('static', 'donate.html')
+
 # Serve CSS and JS files
 @app.route('/styles.css')
 def styles():
@@ -78,6 +82,10 @@ def discussion_css():
 @app.route('/profile.css')
 def profile_css():
     return send_from_directory('static', 'profile.css')
+
+@app.route('/donate.css')
+def donate_css():
+    return send_from_directory('static', 'donate.css')
 
 @app.route('/js/<path:filename>')
 def js_files(filename):

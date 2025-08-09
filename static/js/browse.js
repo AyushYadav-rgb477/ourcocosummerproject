@@ -272,7 +272,7 @@ function setupActionButtons() {
     }
     
     if (donateBtn) {
-        donateBtn.addEventListener('click', openDonateModal);
+        donateBtn.addEventListener('click', handleDonateRedirect);
     }
     
     if (submitCommentBtn) {
@@ -571,14 +571,19 @@ async function handleCollabRequest() {
     }
 }
 
-function openDonateModal() {
+function handleDonateRedirect() {
     if (!currentUser) {
         showMessage('Please login to donate', 'error');
         return;
     }
     
-    const donateModal = document.getElementById('donate-modal');
-    donateModal.classList.add('show');
+    if (!currentProject) {
+        showMessage('Project information not available', 'error');
+        return;
+    }
+    
+    // Redirect to donation page with project ID
+    window.location.href = `donate.html?project=${currentProject.id}`;
 }
 
 async function handleDonation() {
