@@ -729,6 +729,47 @@ def get_discussions():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/discussions/<int:discussion_id>/like', methods=['POST'])
+def toggle_discussion_like(discussion_id):
+    if 'user_id' not in session:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    try:
+        user_id = session['user_id']
+        
+        # Check if user already liked this discussion
+        existing_like = DiscussionLike.query.filter_by(
+            discussion_id=discussion_id,
+            user_id=user_id
+        ).first()
+        
+        if existing_like:
+            # Unlike - remove the like
+            db.session.delete(existing_like)
+            liked = False
+        else:
+            # Like - add new like
+            new_like = DiscussionLike(
+                discussion_id=discussion_id,
+                user_id=user_id
+            )
+            db.session.add(new_like)
+            liked = True
+        
+        db.session.commit()
+        
+        # Get updated like count
+        like_count = DiscussionLike.query.filter_by(discussion_id=discussion_id).count()
+        
+        return jsonify({
+            'liked': liked,
+            'like_count': like_count
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/discussions', methods=['POST'])
 def create_discussion():
     try:
@@ -843,52 +884,7 @@ def get_discussion(discussion_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/discussions/<int:discussion_id>/like', methods=['POST'])
-def toggle_discussion_like(discussion_id):
-    try:
-        user_id = session.get('user_id')
-        discussion = Discussion.query.get_or_404(discussion_id)
-        return jsonify({'discussion': discussion.to_dict(user_id)}), 200
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/discussions/<int:discussion_id>/like', methods=['POST'])
-def like_discussion(discussion_id):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            return jsonify({'error': 'Authentication required'}), 401
-        
-        discussion = Discussion.query.get_or_404(discussion_id)
-        
-        # Check if user already liked
-        existing_like = DiscussionLike.query.filter_by(user_id=user_id, discussion_id=discussion_id).first()
-        
-        if existing_like:
-            # Unlike
-            db.session.delete(existing_like)
-            is_liked = False
-            action = 'removed'
-        else:
-            # Like
-            like = DiscussionLike()
-            like.user_id = user_id
-            like.discussion_id = discussion_id
-            db.session.add(like)
-            is_liked = True
-            action = 'added'
-        
-        db.session.commit()
-        
-        return jsonify({
-            'message': f'Like {action} successfully',
-            'like_count': discussion.get_like_count(),
-            'is_liked': is_liked
-        }), 200
-        
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/discussions/<int:discussion_id>/replies', methods=['GET'])
 def get_discussion_replies(discussion_id):

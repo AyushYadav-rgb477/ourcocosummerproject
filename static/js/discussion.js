@@ -166,55 +166,253 @@ function displayDiscussions(discussions, clearExisting = false) {
     }
     
     const discussionsHTML = discussions.map(discussion => `
-        <div class="discussion-item" onclick="openDiscussionModal(${discussion.id})">
-            <div class="discussion-meta">
-                <div class="author-info">
-                    <i class="fas fa-user"></i>
-                    <span>${escapeHtml(discussion.author.full_name)}</span>
-                    <span class="discussion-category">${discussion.category}</span>
+        <div class="discussion-card" data-discussion-id="${discussion.id}">
+            <div class="discussion-header">
+                <div class="user-info" onclick="viewUserProfile(${discussion.author.id})">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name">${escapeHtml(discussion.author.full_name)}</div>
+                        <div class="post-time">${formatDate(discussion.created_at)}</div>
+                    </div>
                 </div>
-                <div class="discussion-stats-inline">
-                    <span class="stat">
-                        <i class="fas fa-comments"></i>
-                        <span>${discussion.replies}</span>
-                    </span>
-                    <span class="stat">
-                        <i class="fas fa-thumbs-up"></i>
-                        <span>${discussion.likes}</span>
-                    </span>
-                    <span class="stat">
-                        <i class="fas fa-calendar"></i>
-                        <span>${formatDate(discussion.created_at)}</span>
-                    </span>
-                </div>
+                <div class="discussion-category-badge">${getCategoryIcon(discussion.category)} ${discussion.category}</div>
                 ${currentUser && discussion.can_edit ? `
-                    <div class="discussion-edit-overlay" onclick="event.stopPropagation()">
-                        <button class="btn btn-sm btn-secondary" onclick="editDiscussion(${discussion.id})" title="Edit Discussion">
+                    <div class="discussion-actions">
+                        <button class="edit-discussion-btn" onclick="editDiscussion(${discussion.id})" title="Edit Discussion">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteDiscussion(${discussion.id})" title="Delete Discussion">
+                        <button class="delete-discussion-btn" onclick="deleteDiscussion(${discussion.id})" title="Delete Discussion">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 ` : ''}
             </div>
-            <h3 class="discussion-title">${escapeHtml(discussion.title)}</h3>
-            <p class="discussion-preview">${escapeHtml(discussion.content.substring(0, 150))}</p>
-            ${discussion.media_url && discussion.media_type ? `
-                <div class="discussion-media">
-                    ${discussion.media_type === 'image' ? 
-                        `<img src="${discussion.media_url}" alt="${discussion.media_filename || 'Uploaded image'}" loading="lazy">` :
-                        `<video controls><source src="${discussion.media_url}" type="video/mp4">Your browser does not support the video tag.</video>`
-                    }
+            
+            <div class="discussion-content">
+                <h3 class="discussion-title">${escapeHtml(discussion.title)}</h3>
+                <p class="discussion-text">${escapeHtml(discussion.content)}</p>
+                ${discussion.image_url ? `
+                    <div class="discussion-image">
+                        <img src="${discussion.image_url}" alt="Discussion image" onclick="showImageModal('${discussion.image_url}')">
+                    </div>
+                ` : ''}
+                ${discussion.tags && discussion.tags.length > 0 ? `
+                    <div class="discussion-tags">
+                        ${discussion.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+                    </div>
+                ` : ''}
+            </div>
+            
+            <div class="discussion-stats">
+                <div class="engagement-stats">
+                    <span class="stat-item">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>${discussion.likes || 0}</span>
+                    </span>
+                    <span class="stat-item">
+                        <i class="fas fa-comments"></i>
+                        <span>${discussion.replies || 0}</span>
+                    </span>
+                    <span class="stat-item">
+                        <i class="fas fa-share"></i>
+                        <span>${discussion.shares || 0}</span>
+                    </span>
                 </div>
-            ` : ''}
-            <div class="discussion-tags">
-                ${discussion.tags.map(tag => `<span class="tag">${escapeHtml(tag)}</span>`).join('')}
+            </div>
+            
+            <div class="discussion-interactions">
+                <button class="interaction-btn like-btn ${discussion.is_liked ? 'active' : ''}" onclick="toggleDiscussionLike(${discussion.id})">
+                    <i class="fas fa-thumbs-up"></i>
+                    <span>Like</span>
+                </button>
+                <button class="interaction-btn comment-btn" onclick="openDiscussionModal(${discussion.id})">
+                    <i class="fas fa-comment"></i>
+                    <span>Comment</span>
+                </button>
+                <button class="interaction-btn share-btn" onclick="shareDiscussion(${discussion.id})">
+                    <i class="fas fa-share"></i>
+                    <span>Share</span>
+                </button>
             </div>
         </div>
     `).join('');
     
     discussionsContainer.insertAdjacentHTML('beforeend', discussionsHTML);
+}
+
+// Helper functions for social media features
+function getCategoryIcon(category) {
+    const icons = {
+        'General': '💬',
+        'Ideas': '💡', 
+        'Feedback': '🔍',
+        'Collaboration': '🤝',
+        'Questions': '❓',
+        'Announcements': '📢'
+    };
+    return icons[category] || '💬';
+}
+
+function viewUserProfile(userId) {
+    window.location.href = `profile.html?user_id=${userId}`;
+}
+
+async function toggleDiscussionLike(discussionId) {
+    if (!currentUser) {
+        alert('Please log in to like discussions');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/discussions/${discussionId}/like`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            
+            // Update like button and count
+            const discussionCard = document.querySelector(`[data-discussion-id="${discussionId}"]`);
+            if (discussionCard) {
+                const likeBtn = discussionCard.querySelector('.like-btn');
+                const likeCount = discussionCard.querySelector('.stat-item:first-child span');
+                
+                if (data.liked) {
+                    likeBtn.classList.add('active');
+                } else {
+                    likeBtn.classList.remove('active');
+                }
+                
+                if (likeCount) {
+                    likeCount.textContent = data.like_count;
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Error toggling like:', error);
+    }
+}
+
+async function shareDiscussion(discussionId) {
+    const url = `${window.location.origin}/discussion.html?id=${discussionId}`;
+    
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: 'Check out this discussion',
+                url: url
+            });
+        } catch (error) {
+            copyToClipboard(url);
+        }
+    } else {
+        copyToClipboard(url);
+    }
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('Link copied to clipboard!');
+    }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showNotification('Link copied to clipboard!');
+    });
+}
+
+function showNotification(message) {
+    const notification = document.createElement('div');
+    notification.className = 'notification';
+    notification.textContent = message;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 1rem;
+        border-radius: 4px;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.style.opacity = '1', 100);
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(notification), 300);
+    }, 3000);
+}
+
+function showImageModal(imageUrl) {
+    const modal = document.createElement('div');
+    modal.className = 'image-modal';
+    modal.innerHTML = `
+        <div class="image-modal-content">
+            <span class="close-image-modal">&times;</span>
+            <img src="${imageUrl}" alt="Full size image">
+        </div>
+    `;
+    
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    `;
+    
+    const content = modal.querySelector('.image-modal-content');
+    content.style.cssText = `
+        position: relative;
+        max-width: 90%;
+        max-height: 90%;
+    `;
+    
+    const img = modal.querySelector('img');
+    img.style.cssText = `
+        max-width: 100%;
+        max-height: 100%;
+        border-radius: 8px;
+    `;
+    
+    const closeBtn = modal.querySelector('.close-image-modal');
+    closeBtn.style.cssText = `
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background: #fff;
+        color: #000;
+        border: none;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+    `;
+    
+    closeBtn.onclick = () => document.body.removeChild(modal);
+    modal.onclick = (e) => {
+        if (e.target === modal) document.body.removeChild(modal);
+    };
+    
+    document.body.appendChild(modal);
 }
 
 async function loadCommunityStats() {
@@ -245,7 +443,7 @@ function setupModals() {
     }
     
     if (createDiscussionBtn) {
-        createDiscussionBtn.addEventListener('click', handleCreateDiscussion);
+        createDiscussionBtn.addEventListener('click', createDiscussion);
     }
     
     closeModalBtns.forEach(btn => {
@@ -260,83 +458,143 @@ function setupModals() {
     });
 }
 
-function openStartDiscussionModal() {
-    if (!currentUser) {
-        window.location.href = '/login.html';
-        return;
-    }
-    
-    const modal = document.getElementById('discussion-modal');
-    modal.classList.add('show');
-}
-
-async function handleCreateDiscussion() {
-    const title = document.getElementById('discussion-title').value;
+async function createDiscussion() {
+    const title = document.getElementById('discussion-title').value.trim();
     const category = document.getElementById('discussion-category-modal').value;
-    const content = document.getElementById('discussion-content').value;
-    const tags = document.getElementById('discussion-tags').value;
+    const content = document.getElementById('discussion-content').value.trim();
+    const tagsInput = document.getElementById('discussion-tags').value.trim();
     
-    if (!title.trim() || !content.trim()) {
-        alert('Title and content are required');
+    // Validate input
+    if (!title || !category || !content) {
+        alert('Please fill in all required fields.');
         return;
     }
     
-    if (!category) {
-        alert('Please select a category');
-        return;
-    }
+    // Prepare tags
+    const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
     
-    const createBtn = document.getElementById('create-discussion-btn');
-    createBtn.disabled = true;
-    createBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+    // Prepare discussion data
+    const discussionData = {
+        title,
+        category,
+        content,
+        tags
+    };
+    
+    // Add media data if present
+    if (selectedMedia && mediaData) {
+        discussionData.media_data = mediaData;
+        discussionData.media_type = selectedMedia.type.startsWith('image/') ? 'image' : 'video';
+        discussionData.media_filename = selectedMedia.name;
+    }
     
     try {
-        const discussionData = {
-            title: title.trim(),
-            category,
-            content: content.trim(),
-            tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0)
-        };
-        
-        // Add media data if available
-        if (mediaData) {
-            discussionData.media_data = mediaData;
-            discussionData.media_type = selectedMedia.type.startsWith('image/') ? 'image' : 'video';
-            discussionData.media_filename = selectedMedia.name;
-        }
-        
         const response = await fetch('/api/discussions', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(discussionData)
         });
         
-        const data = await response.json();
-        
         if (response.ok) {
-            closeModals();
+            const result = await response.json();
+            showNotification('Discussion created successfully!');
             
-            // Clear form
-            document.getElementById('discussion-title').value = '';
-            document.getElementById('discussion-category-modal').value = '';
-            document.getElementById('discussion-content').value = '';
-            document.getElementById('discussion-tags').value = '';
-            removeMedia();
+            // Close modal
+            closeStartDiscussionModal();
             
             // Reload discussions
             resetAndLoadDiscussions();
+            
+            // Reset form
+            resetDiscussionForm();
         } else {
-            alert(data.error || 'Error creating discussion');
+            const error = await response.json();
+            alert(error.error || 'Failed to create discussion');
         }
-        
     } catch (error) {
         console.error('Error creating discussion:', error);
-        alert('Error creating discussion');
-    } finally {
-        createBtn.disabled = false;
-        createBtn.innerHTML = '<i class="fas fa-plus"></i> Create Discussion';
+        alert('Failed to create discussion. Please try again.');
+    }
+}
+
+function resetDiscussionForm() {
+    document.getElementById('discussion-title').value = '';
+    document.getElementById('discussion-category-modal').value = '';
+    document.getElementById('discussion-content').value = '';
+    document.getElementById('discussion-tags').value = '';
+    removeMedia();
+}
+
+function openStartDiscussionModal() {
+    const modal = document.getElementById('discussion-modal');
+    modal.classList.add('show');
+}
+
+function closeStartDiscussionModal() {
+    const modal = document.getElementById('discussion-modal');
+    modal.classList.remove('show');
+}
+
+async function handleCreateDiscussion() {
+    const title = document.getElementById('discussion-title').value.trim();
+    const category = document.getElementById('discussion-category-modal').value;
+    const content = document.getElementById('discussion-content').value.trim();
+    const tagsInput = document.getElementById('discussion-tags').value.trim();
+    
+    // Validate input
+    if (!title || !category || !content) {
+        alert('Please fill in all required fields.');
+        return;
+    }
+    
+    // Prepare tags
+    const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()).filter(tag => tag) : [];
+    
+    // Prepare discussion data
+    const discussionData = {
+        title,
+        category,
+        content,
+        tags
+    };
+    
+    // Add media data if present
+    if (selectedMedia && mediaData) {
+        discussionData.media_data = mediaData;
+        discussionData.media_type = selectedMedia.type.startsWith('image/') ? 'image' : 'video';
+        discussionData.media_filename = selectedMedia.name;
+    }
+    
+    try {
+        const response = await fetch('/api/discussions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(discussionData)
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            showNotification('Discussion created successfully!');
+            
+            // Close modal
+            closeStartDiscussionModal();
+            
+            // Reload discussions
+            resetAndLoadDiscussions();
+            
+            // Reset form
+            resetDiscussionForm();
+        } else {
+            const error = await response.json();
+            alert(error.error || 'Failed to create discussion');
+        }
+    } catch (error) {
+        console.error('Error creating discussion:', error);
+        alert('Failed to create discussion. Please try again.');
     }
 }
 
