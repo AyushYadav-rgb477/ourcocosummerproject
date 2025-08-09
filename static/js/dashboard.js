@@ -720,6 +720,33 @@ function formatNotificationTime(dateString) {
     }
 }
 
+function formatChatMessageTime(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now - date);
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffMinutes < 1) {
+        return 'Just now';
+    } else if (diffMinutes < 60) {
+        return `${diffMinutes}m ago`;
+    } else if (diffHours < 24) {
+        return `${diffHours}h ago`;
+    } else if (diffDays === 1) {
+        return 'Yesterday';
+    } else if (diffDays < 7) {
+        return `${diffDays} days ago`;
+    } else {
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric',
+            year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+        });
+    }
+}
+
 async function markNotificationAsRead(notificationId) {
     try {
         const response = await fetch(`/api/notifications/${notificationId}/read`, {
@@ -1111,7 +1138,7 @@ function displaySidebarChatMessages(messages) {
         <div class="chat-message">
             <div class="message-header">
                 <span class="message-sender">${escapeHtml(message.author.full_name)}</span>
-                <span class="message-time">${formatNotificationTime(message.created_at)}</span>
+                <span class="message-time">${formatChatMessageTime(message.created_at)}</span>
             </div>
             <div class="message-text">${escapeHtml(message.message)}</div>
         </div>

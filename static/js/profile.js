@@ -69,12 +69,43 @@ async function loadOtherUserProfile(userId) {
             const overlay = document.getElementById('profile-image-overlay');
             if (overlay) overlay.style.display = 'none';
             
+            // Update page title to show whose profile this is
+            document.title = `${data.profile.full_name}'s Profile | CollabFund`;
+            
+            // Show a banner indicating viewing another user's profile
+            showViewingOtherProfileBanner(data.profile.full_name);
+            
         } else {
-            window.location.href = '/profile.html';
+            console.error('Failed to load user profile');
+            showMessage('User profile not found', 'error');
         }
     } catch (error) {
         console.error('Error loading user profile:', error);
-        window.location.href = '/profile.html';
+        showMessage('Error loading user profile', 'error');
+    }
+}
+
+function showViewingOtherProfileBanner(userName) {
+    const existingBanner = document.querySelector('.viewing-other-profile-banner');
+    if (existingBanner) {
+        existingBanner.remove();
+    }
+    
+    const banner = document.createElement('div');
+    banner.className = 'viewing-other-profile-banner';
+    banner.innerHTML = `
+        <div class="banner-content">
+            <i class="fas fa-eye"></i>
+            <span>Viewing ${userName}'s Profile</span>
+            <a href="profile.html" class="btn-secondary btn-small">
+                <i class="fas fa-user"></i> My Profile
+            </a>
+        </div>
+    `;
+    
+    const main = document.querySelector('.profile-main');
+    if (main) {
+        main.insertBefore(banner, main.firstChild);
     }
 }
 

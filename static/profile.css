@@ -1746,3 +1746,47 @@
     margin: 0 auto;
   }
 }
+/* Viewing Other Profile Banner */
+.viewing-other-profile-banner {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  padding: 1rem;
+  margin: 0 2rem 2rem 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #667eea;
+}
+
+.banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.banner-content i {
+  color: #667eea;
+  margin-right: 0.5rem;
+}
+
+.banner-content span {
+  flex: 1;
+  font-weight: 600;
+  color: #333;
+}
+
+.btn-small {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .viewing-other-profile-banner {
+    margin: 0 1rem 1rem 1rem;
+  }
+  
+  .banner-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}
