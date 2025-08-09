@@ -80,15 +80,12 @@ class Project(db.Model):
     donations = db.relationship('Donation', backref='project', lazy=True, cascade='all, delete-orphan')
     
     def get_vote_count(self):
-        from models import Vote
         return Vote.query.filter_by(project_id=self.id, is_upvote=True).count()
     
     def get_collaboration_count(self):
-        from models import Collaboration
         return Collaboration.query.filter_by(project_id=self.id).count()
     
     def get_comment_count(self):
-        from models import Comment
         return Comment.query.filter_by(project_id=self.id).count()
     
     def to_dict(self):
@@ -102,7 +99,7 @@ class Project(db.Model):
             'status': self.status,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
-            'owner': self.owner.to_dict() if self.owner else None,
+            'owner': self.owner.to_dict() if hasattr(self, 'owner') and self.owner else None,
             'vote_count': self.get_vote_count(),
             'collaboration_count': self.get_collaboration_count(),
             'comment_count': self.get_comment_count()
@@ -124,7 +121,7 @@ class Comment(db.Model):
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
-            'author': self.author.to_dict() if self.author else None
+            'author': self.author.to_dict() if hasattr(self, 'author') and self.author else None
         }
 
 class Vote(db.Model):
@@ -162,7 +159,7 @@ class Collaboration(db.Model):
             'message': self.message,
             'status': self.status,
             'created_at': self.created_at.isoformat(),
-            'collaborator': self.collaborator.to_dict() if self.collaborator else None
+            'collaborator': self.collaborator.to_dict() if hasattr(self, 'collaborator') and self.collaborator else None
         }
 
 class Donation(db.Model):
@@ -183,7 +180,7 @@ class Donation(db.Model):
             'amount': self.amount,
             'message': self.message,
             'created_at': self.created_at.isoformat(),
-            'donor': self.donor.to_dict() if self.donor else None
+            'donor': self.donor.to_dict() if hasattr(self, 'donor') and self.donor else None
         }
 
 class Discussion(db.Model):
@@ -223,7 +220,7 @@ class Discussion(db.Model):
             'tags': tags_list,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat(),
-            'author': self.author.to_dict() if self.author else None,
+            'author': self.author.to_dict() if hasattr(self, 'author') and self.author else None,
             'like_count': self.get_like_count(),
             'reply_count': self.get_reply_count(),
             'is_liked': self.is_liked_by_user(current_user_id) if current_user_id else False,
@@ -258,11 +255,11 @@ class DiscussionReply(db.Model):
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
-            'author': self.author.to_dict() if self.author else None,
+            'author': self.author.to_dict() if hasattr(self, 'author') and self.author else None,
             'likes': self.get_reaction_count('like'),
             'hearts': self.get_reaction_count('heart'),
             'parent_reply_id': self.parent_reply_id,
-            'nested_replies': [nested.to_dict(current_user_id) for nested in self.nested_replies],
+            'nested_replies': [nested.to_dict(current_user_id) for nested in (self.nested_replies if hasattr(self, 'nested_replies') else [])],
             'user_reactions': {
                 'like': self.is_reacted_by_user(current_user_id, 'like') if current_user_id else False,
                 'heart': self.is_reacted_by_user(current_user_id, 'heart') if current_user_id else False,
@@ -348,5 +345,5 @@ class TeamChat(db.Model):
             'id': self.id,
             'message': self.message,
             'created_at': self.created_at.isoformat(),
-            'author': self.author.to_dict() if self.author else None
+            'author': self.author.to_dict() if hasattr(self, 'author') and self.author else None
         }

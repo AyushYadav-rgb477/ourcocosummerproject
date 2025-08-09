@@ -7,14 +7,13 @@ from sqlalchemy import desc, func
 # Helper function to create notifications
 def create_notification(user_id, type, title, message, related_user_id=None, project_id=None):
     try:
-        notification = Notification(
-            user_id=user_id,
-            type=type,
-            title=title,
-            message=message,
-            related_user_id=related_user_id,
-            project_id=project_id
-        )
+        notification = Notification()
+        notification.user_id = user_id
+        notification.type = type
+        notification.title = title
+        notification.message = message
+        notification.related_user_id = related_user_id
+        notification.project_id = project_id
         db.session.add(notification)
         db.session.commit()
     except Exception as e:
@@ -712,7 +711,7 @@ def get_discussion_stats():
         ideas_shared = Discussion.query.count()
         
         # Community members = unique users who have posted discussions
-        community_members = db.session.query(Discussion.author_id).distinct().count()
+        community_members = db.session.query(Discussion.user_id).distinct().count()
         
         # Active discussions = total number of replies across all discussions
         active_discussions = DiscussionReply.query.count()
@@ -1341,11 +1340,10 @@ def send_chat_message(project_id):
             return jsonify({'error': 'Access denied'}), 403
         
         # Create new chat message
-        chat_message = TeamChat(
-            project_id=project_id,
-            user_id=user_id,
-            message=data['message']
-        )
+        chat_message = TeamChat()
+        chat_message.project_id = project_id
+        chat_message.user_id = user_id
+        chat_message.message = data['message']
         
         db.session.add(chat_message)
         db.session.commit()
