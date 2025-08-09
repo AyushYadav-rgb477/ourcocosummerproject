@@ -42,10 +42,6 @@ def dashboard_page():
 def browse_page():
     return send_from_directory('static', 'browse.html')
 
-@app.route('/discussion.html')
-def discussion_page():
-    return send_from_directory('static', 'discussion.html')
-
 @app.route('/profile.html')
 def profile_page():
     return send_from_directory('static', 'profile.html')
@@ -70,10 +66,6 @@ def dashboard_css():
 @app.route('/browse.css')
 def browse_css():
     return send_from_directory('static', 'browse.css')
-
-@app.route('/discussion.css')
-def discussion_css():
-    return send_from_directory('static', 'discussion.css')
 
 @app.route('/profile.css')
 def profile_css():
