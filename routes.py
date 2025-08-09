@@ -1333,8 +1333,8 @@ def get_homepage_stats():
     try:
         total_projects = Project.query.count()
         total_users = User.query.count()
-        # Total funding = sum of all actual donations made by users
-        total_funding = db.session.query(func.sum(Donation.amount)).scalar() or 0
+        # Total funding = sum of all project funding goals (what users set as their goals)
+        total_funding = db.session.query(func.sum(Project.funding_goal)).scalar() or 0
         
         return jsonify({
             'totalProjects': total_projects,

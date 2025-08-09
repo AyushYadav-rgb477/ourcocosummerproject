@@ -174,7 +174,14 @@ function updateStatsElements(projects, users, funding) {
     }
     
     if (totalFundingEl) {
-        totalFundingEl.textContent = `$${funding.toFixed(0)}K+`;
+        // Format funding amount appropriately
+        if (funding >= 1000) {
+            totalFundingEl.textContent = `$${(funding / 1000).toFixed(1)}K+`;
+        } else if (funding > 0) {
+            totalFundingEl.textContent = `$${funding.toFixed(0)}+`;
+        } else {
+            totalFundingEl.textContent = `$0`;
+        }
     }
 }
 
