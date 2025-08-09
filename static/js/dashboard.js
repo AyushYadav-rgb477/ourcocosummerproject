@@ -56,12 +56,16 @@ function updateUserGreeting() {
 
 function setupSidebarNavigation() {
     const navItems = document.querySelectorAll('.nav-item');
+    console.log('Setting up navigation for', navItems.length, 'items');
     
     navItems.forEach(item => {
+        const section = item.getAttribute('data-section');
+        console.log('Adding listener for section:', section);
+        
         item.addEventListener('click', function(e) {
             e.preventDefault();
+            console.log('Navigation clicked:', section);
             
-            const section = this.getAttribute('data-section');
             if (section) {
                 switchSection(section);
             }
@@ -70,6 +74,8 @@ function setupSidebarNavigation() {
 }
 
 function switchSection(section) {
+    console.log('Switching to section:', section);
+    
     // Update active nav item
     document.querySelectorAll('.nav-item').forEach(item => {
         item.classList.remove('active');
@@ -77,6 +83,9 @@ function switchSection(section) {
     const navItem = document.querySelector(`[data-section="${section}"]`);
     if (navItem) {
         navItem.classList.add('active');
+        console.log('Added active class to nav item');
+    } else {
+        console.error('Nav item not found for section:', section);
     }
     
     // Show/hide content sections
@@ -86,6 +95,9 @@ function switchSection(section) {
     const contentSection = document.getElementById(section);
     if (contentSection) {
         contentSection.classList.add('active');
+        console.log('Showed content section:', section);
+    } else {
+        console.error('Content section not found:', section);
     }
     
     currentSection = section;
@@ -1111,56 +1123,9 @@ async function sendTeamMessage() {
     }
 }
 
-// Allow Enter key to send messages
-document.addEventListener('DOMContentLoaded', function() {
-    const chatInput = document.getElementById('chat-message-input');
-    if (chatInput) {
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendTeamMessage();
-            }
-        });
-    }
-});
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-    
-    try {
-        const response = await fetch('/api/team/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                recipient_id: currentChatMember.id,
-                content: message
-            })
-        });
-        
-        if (response.ok) {
-            input.value = '';
-            await loadChatMessages(currentChatMember.id);
-        } else {
-            const data = await response.json();
-            console.error('Error sending message:', data.error);
-        }
-    } catch (error) {
-        console.error('Error sending message:', error);
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-    }
+// Utility function for HTML escaping
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
-
-// Enable Enter key to send message
-document.addEventListener('DOMContentLoaded', function() {
-    const chatInput = document.getElementById('chat-message-input');
-    if (chatInput) {
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendTeamMessage();
-            }
-        });
-    }
-});
