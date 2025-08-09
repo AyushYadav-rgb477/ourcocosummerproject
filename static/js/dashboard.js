@@ -350,7 +350,7 @@ function displayUserProjects(projects) {
     }
     
     container.innerHTML = projects.map(project => `
-        <div class="user-project-card">
+        <div class="user-project-card" onclick="openProjectDetails(${project.id})">
             <div class="project-header">
                 <h3>${escapeHtml(project.title)}</h3>
                 <span class="project-status ${project.status}">${project.status}</span>
@@ -377,6 +377,9 @@ function displayUserProjects(projects) {
                     <i class="fas fa-comments"></i>
                     <span>${project.comment_count} comments</span>
                 </div>
+            </div>
+            <div style="text-align: center; margin-top: 1rem; color: #666; font-size: 0.9rem;">
+                <i class="fas fa-eye"></i> Click to view details
             </div>
         </div>
     `).join('');
@@ -465,6 +468,24 @@ async function handleCollaborationResponse(collabId, action) {
         if (response.ok) {
             showMessage(`Collaboration request ${action}ed successfully!`, 'success');
             loadCollaborations(); // Reload collaborations
+            
+            // If accepted, reload team data to show new team member
+            if (action === 'accept') {
+                if (currentSection === 'team') {
+                    loadTeam();
+                }
+                // Also reload notification count
+                try {
+                    const countResponse = await fetch('/api/notifications/count');
+                    if (countResponse.ok) {
+                        const countData = await countResponse.json();
+                        unreadCount = countData.unread_count || 0;
+                        updateNotificationCount();
+                    }
+                } catch (e) {
+                    console.log('Error updating notification count:', e);
+                }
+            }
         } else {
             showMessage(data.error || `Error ${action}ing collaboration request`, 'error');
         }
@@ -800,6 +821,118 @@ function updateAllTimestamps() {
     });
 }
 
+// Project Details Modal
+async function openProjectDetails(projectId) {
+    try {
+        const response = await fetch(`/api/projects/${projectId}`);
+        if (response.ok) {
+            const data = await response.json();
+            displayProjectDetails(data.project);
+        } else {
+            showMessage('Error loading project details', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading project details:', error);
+        showMessage('Error loading project details', 'error');
+    }
+}
+
+function displayProjectDetails(project) {
+    const modal = document.getElementById('project-modal');
+    const title = document.getElementById('modal-project-title');
+    const content = document.getElementById('project-modal-content');
+    
+    title.textContent = project.title;
+    
+    const fundingProgress = project.funding_goal > 0 ? 
+        (project.current_funding / project.funding_goal * 100).toFixed(1) : 0;
+    
+    content.innerHTML = `
+        <div class="project-detail-item">
+            <label>Category:</label>
+            <p>${escapeHtml(project.category)}</p>
+        </div>
+        
+        <div class="project-detail-item">
+            <label>Status:</label>
+            <p><span class="project-status ${project.status}">${project.status}</span></p>
+        </div>
+        
+        <div class="project-detail-item">
+            <label>Description:</label>
+            <p>${escapeHtml(project.description)}</p>
+        </div>
+        
+        <div class="project-stats-detail">
+            <div class="stat-detail-card">
+                <i class="fas fa-thumbs-up"></i>
+                <div class="stat-value">${project.vote_count}</div>
+                <div class="stat-label">Votes</div>
+            </div>
+            <div class="stat-detail-card">
+                <i class="fas fa-dollar-sign"></i>
+                <div class="stat-value">$${project.current_funding.toFixed(2)}</div>
+                <div class="stat-label">Raised / $${project.funding_goal.toFixed(2)}</div>
+            </div>
+            <div class="stat-detail-card">
+                <i class="fas fa-users"></i>
+                <div class="stat-value">${project.collaboration_count}</div>
+                <div class="stat-label">Collaborators</div>
+            </div>
+            <div class="stat-detail-card">
+                <i class="fas fa-comments"></i>
+                <div class="stat-value">${project.comment_count}</div>
+                <div class="stat-label">Comments</div>
+            </div>
+        </div>
+        
+        ${project.funding_goal > 0 ? `
+        <div class="project-detail-item">
+            <label>Funding Progress:</label>
+            <div style="background: #f0f0f0; border-radius: 10px; padding: 1rem; margin-top: 0.5rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span>${fundingProgress}% funded</span>
+                    <span>$${project.current_funding.toFixed(2)} / $${project.funding_goal.toFixed(2)}</span>
+                </div>
+                <div style="background: #ddd; height: 10px; border-radius: 5px; overflow: hidden;">
+                    <div style="background: linear-gradient(135deg, #6a11cb, #2575fc); height: 100%; width: ${fundingProgress}%; transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+        
+        <div class="project-detail-item">
+            <label>Created:</label>
+            <p>${formatDate(project.created_at)}</p>
+        </div>
+    `;
+    
+    modal.classList.add('show');
+}
+
+function closeProjectDetails() {
+    const modal = document.getElementById('project-modal');
+    modal.classList.remove('show');
+}
+
+// Global function for HTML onclick
+function closeProjectModal() {
+    closeProjectDetails();
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(e) {
+    const projectModal = document.getElementById('project-modal');
+    const chatModal = document.getElementById('team-chat-modal');
+    
+    if (e.target === projectModal) {
+        closeProjectDetails();
+    }
+    if (e.target === chatModal) {
+        closeTeamChat();
+    }
+});
+
 // Load team members
 async function loadTeam() {
     try {
@@ -942,6 +1075,54 @@ async function sendTeamMessage() {
     if (!message) return;
     
     const sendBtn = document.querySelector('.send-message-btn');
+    sendBtn.disabled = true;
+    
+    try {
+        const response = await fetch(`/api/team/chat/${currentChatMember.id}/send`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message })
+        });
+        
+        if (response.ok) {
+            input.value = '';
+            // Add the message to the chat immediately for better UX
+            const messagesContainer = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message own';
+            messageDiv.innerHTML = `
+                <div class="message-sender">You</div>
+                <div class="message-text">${escapeHtml(message)}</div>
+                <div class="message-time">Just now</div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } else {
+            const data = await response.json();
+            showMessage(data.error || 'Error sending message', 'error');
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        showMessage('Error sending message', 'error');
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+
+// Allow Enter key to send messages
+document.addEventListener('DOMContentLoaded', function() {
+    const chatInput = document.getElementById('chat-message-input');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendTeamMessage();
+            }
+        });
+    }
+});
     sendBtn.disabled = true;
     sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     

@@ -1257,3 +1257,80 @@ def get_user_team():
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+# Project details API
+@app.route('/api/projects/<int:project_id>', methods=['GET'])
+def get_project_details(project_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Get project with owner information
+        project = db.session.query(Project).filter_by(id=project_id).first()
+        if not project:
+            return jsonify({'error': 'Project not found'}), 404
+        
+        # Check if user owns this project or has access
+        if project.user_id != user_id:
+            return jsonify({'error': 'Access denied'}), 403
+        
+        # Get additional stats
+        vote_count = Vote.query.filter_by(project_id=project_id, is_upvote=True).count()
+        comment_count = Comment.query.filter_by(project_id=project_id).count()
+        collaboration_count = Collaboration.query.filter_by(project_id=project_id, status='accepted').count()
+        current_funding = db.session.query(func.sum(Donation.amount)).filter_by(project_id=project_id).scalar() or 0
+        
+        project_data = {
+            'id': project.id,
+            'title': project.title,
+            'description': project.description,
+            'category': project.category,
+            'status': project.status,
+            'funding_goal': project.funding_goal,
+            'current_funding': current_funding,
+            'created_at': project.created_at.isoformat(),
+            'vote_count': vote_count,
+            'comment_count': comment_count,
+            'collaboration_count': collaboration_count
+        }
+        
+        return jsonify({'project': project_data}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Team chat endpoints
+@app.route('/api/team/chat/<int:member_id>', methods=['GET'])
+def get_chat_messages(member_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # For now, return empty chat - in a full implementation you would have a messages table
+        messages = []
+        
+        return jsonify({'messages': messages}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/team/chat/<int:member_id>/send', methods=['POST'])
+def send_chat_message(member_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        message = data.get('message', '').strip()
+        
+        if not message:
+            return jsonify({'error': 'Message cannot be empty'}), 400
+        
+        # For now, just return success - in a full implementation you would save to messages table
+        return jsonify({'message': 'Message sent successfully'}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
