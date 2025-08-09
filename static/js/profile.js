@@ -433,8 +433,8 @@ function displayUserProjects(projects) {
                         <span class="tech-label">${sampleProject.tech}</span>
                     </div>
                     <div class="project-actions">
-                        <button class="action-btn btn-view">View Demo</button>
-                        <button class="action-btn btn-github">GitHub Repo</button>
+                        <button class="action-btn btn-view" onclick="event.stopPropagation(); viewProject(${project.id || sampleProject.id})">View Project</button>
+                        <button class="action-btn btn-github" onclick="event.stopPropagation();">GitHub Repo</button>
                     </div>
                 </div>
             </div>
@@ -443,9 +443,8 @@ function displayUserProjects(projects) {
 }
 
 function viewProject(projectId) {
-    // Navigate to project details or open in new tab
-    console.log('Viewing project:', projectId);
-    // You can implement project viewing logic here
+    // Navigate to browse dashboard to view project details
+    window.location.href = `/browse.html?project=${projectId}`;
 }
 
 // Load collaborations for the collaboration tab
