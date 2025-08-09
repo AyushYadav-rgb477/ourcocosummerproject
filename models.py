@@ -439,21 +439,12 @@ class ProjectAttachment(db.Model):
     original_filename = db.Column(db.String(255), nullable=False)
     file_size = db.Column(db.Integer, nullable=False)  # Size in bytes
     file_type = db.Column(db.String(100), nullable=False)  # MIME type
-    file_path = db.Column(db.String(500), nullable=True)  # Keep for backward compatibility
-    file_data = db.Column(db.LargeBinary, nullable=True)  # Store file as binary data
+    file_path = db.Column(db.String(500), nullable=False)  # Path to stored file
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Foreign Keys
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
-    def get_data_url(self):
-        """Convert binary data to data URL for HTML display"""
-        if self.file_data and self.file_type:
-            import base64
-            base64_data = base64.b64encode(self.file_data).decode('utf-8')
-            return f"data:{self.file_type};base64,{base64_data}"
-        return None
     
     def to_dict(self):
         return {
@@ -462,8 +453,6 @@ class ProjectAttachment(db.Model):
             'original_filename': self.original_filename,
             'file_size': self.file_size,
             'file_type': self.file_type,
-            'file_path': self.file_path,
-            'data_url': self.get_data_url(),
             'uploaded_at': self.uploaded_at.isoformat(),
             'user_id': self.user_id
         }

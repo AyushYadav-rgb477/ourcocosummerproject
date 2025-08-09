@@ -313,8 +313,8 @@ function getProjectImageHTML(project) {
         const imageAttachment = project.attachments.find(att => 
             att.file_type && att.file_type.startsWith('image/')
         );
-        if (imageAttachment && imageAttachment.data_url) {
-            return `<img src="${imageAttachment.data_url}" alt="${escapeHtml(project.title)}" />`;
+        if (imageAttachment) {
+            return `<img src="/static/${imageAttachment.file_path}" alt="${escapeHtml(project.title)}" />`;
         }
     }
     // Default gradient background if no image
@@ -324,11 +324,7 @@ function getProjectImageHTML(project) {
         'linear-gradient(135deg, #4facfe, #00f2fe)',
         'linear-gradient(135deg, #43e97b, #38f9d7)',
         'linear-gradient(135deg, #fa709a, #fee140)',
-        'linear-gradient(135deg, #a8edea, #fed6e3)',
-        'linear-gradient(135deg, #ff9a9e, #fecfef)',
-        'linear-gradient(135deg, #a18cd1, #fbc2eb)',
-        'linear-gradient(135deg, #fad0c4, #ffd1ff)',
-        'linear-gradient(135deg, #fdcbf1, #e6dee9)'
+        'linear-gradient(135deg, #a8edea, #fed6e3)'
     ];
     const gradient = gradients[project.id % gradients.length];
     return `<div class="project-placeholder" style="background: ${gradient}"></div>`;
@@ -395,9 +391,6 @@ function displayProjectAttachments(project) {
         const fileIcon = getFileIcon(attachment.file_type);
         const fileSize = formatFileSize(attachment.file_size);
         
-        // Use data URL if available, otherwise use API endpoint
-        const downloadUrl = attachment.data_url || `/api/attachments/${attachment.id}`;
-        
         return `
             <div class="attachment-item">
                 <div class="attachment-info">
@@ -407,7 +400,7 @@ function displayProjectAttachments(project) {
                         <span class="attachment-meta">${fileSize} • ${attachment.file_type}</span>
                     </div>
                 </div>
-                <a href="${downloadUrl}" target="_blank" class="attachment-download">
+                <a href="/static/${attachment.file_path}" target="_blank" class="attachment-download">
                     <i class="fas fa-download"></i>
                 </a>
             </div>

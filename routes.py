@@ -248,10 +248,14 @@ def create_project():
         db.session.add(project)
         db.session.flush()  # Get project ID without committing
         
-        # Handle file uploads - store in database as binary data
+        # Handle file uploads
         if files:
-            from werkzeug.utils import secure_filename
             import os
+            from werkzeug.utils import secure_filename
+            
+            # Create uploads directory if it doesn't exist
+            upload_dir = os.path.join('static', 'uploads', 'projects', str(project.id))
+            os.makedirs(upload_dir, exist_ok=True)
             
             for file in files:
                 if file and file.filename:
@@ -260,21 +264,17 @@ def create_project():
                     timestamp = str(int(datetime.now().timestamp()))
                     unique_filename = f"{timestamp}_{filename}"
                     
-                    # Read file data into memory
-                    file_data = file.read()
-                    file_size = len(file_data)
+                    # Save the file
+                    file_path = os.path.join(upload_dir, unique_filename)
+                    file.save(file_path)
                     
-                    # Validate file size (10MB limit)
-                    if file_size > 10 * 1024 * 1024:
-                        return jsonify({'error': f'File {filename} is too large. Maximum size is 10MB.'}), 400
-                    
-                    # Create attachment record with binary data
+                    # Create attachment record
                     attachment = ProjectAttachment()
                     attachment.filename = unique_filename
                     attachment.original_filename = file.filename
-                    attachment.file_size = file_size
+                    attachment.file_size = os.path.getsize(file_path)
                     attachment.file_type = file.content_type or 'application/octet-stream'
-                    attachment.file_data = file_data  # Store binary data directly
+                    attachment.file_path = file_path.replace('static/', '')  # Store relative path
                     attachment.project_id = project.id
                     attachment.user_id = user_id
                     
@@ -292,24 +292,7 @@ def create_project():
         return jsonify({'error': str(e)}), 500
 
 
-# Serve uploaded files from database
-@app.route('/api/attachments/<int:attachment_id>')
-def get_attachment(attachment_id):
-    try:
-        attachment = ProjectAttachment.query.get_or_404(attachment_id)
-        if attachment.file_data:
-            from flask import Response
-            return Response(
-                attachment.file_data,
-                mimetype=attachment.file_type,
-                headers={'Content-Disposition': f'inline; filename="{attachment.original_filename}"'}
-            )
-        else:
-            return jsonify({'error': 'File data not found'}), 404
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-# Legacy route for backward compatibility
+# Serve uploaded files
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory('static/uploads', filename)
