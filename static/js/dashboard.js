@@ -999,7 +999,7 @@ function displayTeamMembers(teamMembers) {
                                     <p class="member-role">${member.is_owner ? 'Project Owner' : 'Collaborator'}</p>
                                 </div>
                                 <div class="member-actions">
-                                    <a href="profile.html?user=${member.user.id}" class="view-profile-btn">
+                                    <a href="profile.html?user_id=${member.user.id}" class="view-profile-btn">
                                         <i class="fas fa-eye"></i> View Profile
                                     </a>
                                     <button class="message-btn" onclick="openProjectChatSidebar(${member.project_id}, '${escapeHtml(project.project_title)}')">

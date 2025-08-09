@@ -127,3 +127,13 @@ Preferred communication style: Simple, everyday language.
 - **Issue**: No communication mechanism between team members
 - **Solution**: Implemented project-specific chat system using TeamChat model
 - **Impact**: Team members can now communicate within project context, messages are persistent and properly attributed
+
+### Profile Page Redirection
+- **Issue**: View Profile button redirected to current user's profile instead of collaborator's profile
+- **Solution**: Fixed URL parameter from 'user' to 'user_id' to match profile page implementation
+- **Impact**: Users can now correctly view other team members' profiles when clicking "View Profile"
+
+### Enhanced Chat Interface
+- **Issue**: Modal-based chat was limiting and not user-friendly for team collaboration
+- **Solution**: Replaced modal with sliding right-side chat sidebar showing all team participants
+- **Impact**: Improved user experience with persistent chat, participant visibility, and keyboard support
