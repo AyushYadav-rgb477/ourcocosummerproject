@@ -34,44 +34,7 @@
   margin-bottom: 2rem;
 }
 
-.discussion-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-.stat-item {
-  background: rgba(255, 255, 255, 0.1);
-  padding: 1.5rem;
-  border-radius: 15px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  text-align: center;
-  transition: transform 0.3s ease;
-}
-
-.stat-item:hover {
-  transform: translateY(-5px);
-}
-
-.stat-item i {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
-  color: #4ecdc4;
-}
-
-.stat-item span {
-  display: block;
-  font-size: 2rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
-
-.stat-item label {
-  font-size: 0.9rem;
-  opacity: 0.8;
-}
+/* Remove discussion stats - no longer used */
 
 /* Discussion Controls */
 .discussion-controls {
@@ -144,28 +107,34 @@
 
 /* Discussion List */
 .discussion-list {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 15px;
   padding: 2rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .discussion-item {
-  border-bottom: 1px solid #eee;
-  padding: 1.5rem 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .discussion-item:hover {
-  background: #f8f9fa;
-  border-radius: 10px;
-  padding: 1.5rem;
-  margin: 0 -1.5rem;
+  background: #f9fafb;
+  border-color: #667eea;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
 }
 
 .discussion-item:last-child {
-  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .discussion-meta {
@@ -180,14 +149,30 @@
 .discussion-title {
   font-size: 1.3rem;
   font-weight: 600;
-  color: #333;
+  color: #1f2937;
   margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.discussion-author {
+  font-weight: 600;
+  color: #667eea;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.discussion-author i {
+  color: #9ca3af;
 }
 
 .discussion-preview {
-  color: #666;
+  color: #4b5563;
   line-height: 1.6;
   margin-bottom: 1rem;
+  font-size: 0.95rem;
 }
 
 .discussion-stats-inline {
@@ -200,8 +185,15 @@
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.discussion-date {
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .discussion-tags {
@@ -257,11 +249,20 @@
 }
 
 .discussion-content {
-  background: #f8f9fa;
+  background: #f9fafb;
   padding: 1.5rem;
   border-radius: 10px;
   margin: 1rem 0;
   line-height: 1.6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.modal-content .discussion-author {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .discussion-actions {
@@ -344,19 +345,30 @@
 
 .reply-author {
   font-weight: 600;
-  color: #333;
+  color: #667eea;
   margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.reply-author i {
+  color: #9ca3af;
+  font-size: 0.8rem;
 }
 
 .reply-content {
-  color: #666;
+  color: #374151;
   line-height: 1.6;
   margin-bottom: 0.5rem;
+  font-size: 0.95rem;
 }
 
 .reply-date {
   font-size: 0.8rem;
-  color: #999;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 /* Add Reply Form */
@@ -536,20 +548,30 @@
 
 .nested-reply .reply-author {
   font-weight: 600;
-  color: #495057;
+  color: #667eea;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.nested-reply .reply-author i {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
+.nested-reply .reply-content {
+  color: #374151;
+  line-height: 1.4;
   margin-bottom: 0.25rem;
   font-size: 0.9rem;
 }
 
-.nested-reply .reply-content {
-  color: #6c757d;
-  line-height: 1.4;
-  margin-bottom: 0.25rem;
-}
-
 .nested-reply .reply-date {
-  font-size: 0.8rem;
-  color: #adb5bd;
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 /* Responsive Design */
@@ -573,13 +595,7 @@
     align-items: flex-start;
   }
   
-  .discussion-stats {
-    grid-template-columns: 1fr;
-  }
-  
-  .stat-item {
-    padding: 1rem;
-  }
+  /* Remove stats section from mobile - no longer used */
   
   .container {
     padding: 0 1rem;
