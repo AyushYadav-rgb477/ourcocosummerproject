@@ -8,30 +8,31 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     viewingUserId = urlParams.get('user_id');
     
-    if (viewingUserId) {
-        // Load other user's profile
-        loadOtherUserProfile(viewingUserId);
-    } else {
-        // Check authentication for own profile
-        checkAuthStatus();
-        // Load own profile data
-        loadProfileData();
-    }
-    
-    // Setup modals
-    setupModals();
-    
-    // Setup profile image functionality
-    setupProfileImage();
-    
-    // Setup search functionality
-    setupSearchFunction();
-    
-    // Load all sections
-    loadAllSections();
-    
-    // Start real-time updates
-    startRealTimeUpdates();
+    // First verify authentication for any profile access
+    checkAuthStatus().then(() => {
+        if (viewingUserId) {
+            // Load other user's profile
+            loadOtherUserProfile(viewingUserId);
+        } else {
+            // Load own profile data
+            loadProfileData();
+        }
+        
+        // Setup modals (only for own profile)
+        if (!viewingUserId) {
+            setupModals();
+            setupProfileImage();
+        }
+        
+        // Setup search functionality
+        setupSearchFunction();
+        
+        // Load all sections
+        loadAllSections();
+        
+        // Start real-time updates
+        startRealTimeUpdates();
+    });
 });
 
 async function checkAuthStatus() {
@@ -40,22 +41,33 @@ async function checkAuthStatus() {
         if (response.ok) {
             const data = await response.json();
             currentUser = data.user;
-            updateProfileInfo();
+            // Only update profile info if we're not viewing another user's profile
+            if (!viewingUserId) {
+                updateProfileInfo();
+            }
+            return true;
         } else {
             // Redirect to login if not authenticated
             window.location.href = 'login.html';
+            return false;
         }
     } catch (error) {
         console.error('Auth check error:', error);
         window.location.href = 'login.html';
+        return false;
     }
 }
 
 async function loadOtherUserProfile(userId) {
+    console.log('Loading profile for user ID:', userId);
     try {
         const response = await fetch(`/api/users/${userId}/profile`);
+        console.log('API response status:', response.status);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log('Profile data received:', data);
+            
             currentUser = data.profile;
             updateProfileInfo();
             updateProfileStats(data.profile);
@@ -76,7 +88,8 @@ async function loadOtherUserProfile(userId) {
             showViewingOtherProfileBanner(data.profile.full_name);
             
         } else {
-            console.error('Failed to load user profile');
+            const errorText = await response.text();
+            console.error('Failed to load user profile:', response.status, errorText);
             showMessage('User profile not found', 'error');
         }
     } catch (error) {
