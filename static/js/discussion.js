@@ -192,6 +192,18 @@ function removeImage() {
     mediaData = null;
 }
 
+function resetDiscussionForm() {
+    const form = document.getElementById('discussion-form');
+    if (form) {
+        form.reset();
+        removeImage();
+    }
+}
+
+function cancelDiscussion() {
+    toggleCreateForm();
+}
+
 async function handleDiscussionSubmit(event) {
     event.preventDefault();
     
