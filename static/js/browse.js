@@ -179,7 +179,16 @@ function displayProjects(projects, clearExisting = false) {
                 <i class="fas fa-user"></i>
                 <span>${escapeHtml(project.owner?.full_name || 'Unknown')}</span>
             </div>
-            <p class="project-description">${escapeHtml(project.description)}</p>
+            <div class="project-description-container">
+                <p class="project-description ${project.description.length > 150 ? 'truncated' : 'expanded'}" id="desc-${project.id}">
+                    ${escapeHtml(project.description)}
+                </p>
+                ${project.description.length > 150 ? `
+                    <button class="description-toggle" onclick="toggleDescription(${project.id}, event)" id="toggle-${project.id}">
+                        Read More <i class="fas fa-chevron-down"></i>
+                    </button>
+                ` : ''}
+            </div>
             <div class="project-stats">
                 <div class="project-stat">
                     <i class="fas fa-thumbs-up"></i>
@@ -631,6 +640,29 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+function toggleDescription(projectId, event) {
+    event.stopPropagation(); // Prevent opening project modal
+    
+    const descElement = document.getElementById(`desc-${projectId}`);
+    const toggleElement = document.getElementById(`toggle-${projectId}`);
+    
+    if (!descElement || !toggleElement) return;
+    
+    const isExpanded = descElement.classList.contains('expanded');
+    
+    if (isExpanded) {
+        descElement.classList.remove('expanded');
+        descElement.classList.add('truncated');
+        toggleElement.innerHTML = 'Read More <i class="fas fa-chevron-down"></i>';
+        toggleElement.classList.remove('expanded');
+    } else {
+        descElement.classList.remove('truncated');
+        descElement.classList.add('expanded');
+        toggleElement.innerHTML = 'Read Less <i class="fas fa-chevron-up"></i>';
+        toggleElement.classList.add('expanded');
+    }
 }
 
 function formatDate(dateString) {

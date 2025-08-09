@@ -113,7 +113,7 @@ body {
 
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: 2rem;
   margin-bottom: 2rem;
 }
@@ -121,11 +121,14 @@ body {
 .project-card {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 2rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
   cursor: pointer;
   border: 2px solid transparent;
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
 }
 
 .project-card:hover {
@@ -178,12 +181,46 @@ body {
 
 .project-description {
   color: #555;
-  line-height: 1.5;
+  line-height: 1.6;
   margin-bottom: 1rem;
+  flex-grow: 1;
+  position: relative;
+}
+
+.project-description.truncated {
   display: -webkit-box;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.project-description.expanded {
+  display: block;
+}
+
+.description-toggle {
+  background: none;
+  border: none;
+  color: #6a11cb;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.description-toggle:hover {
+  color: #2575fc;
+}
+
+.description-toggle i {
+  margin-left: 0.25rem;
+  transition: transform 0.3s ease;
+}
+
+.description-toggle.expanded i {
+  transform: rotate(180deg);
 }
 
 .project-stats {
@@ -192,6 +229,7 @@ body {
   padding-top: 1rem;
   border-top: 1px solid #e0e0e0;
   font-size: 0.9rem;
+  margin-top: auto;
 }
 
 .project-stat {
@@ -784,5 +822,27 @@ body {
   
   .project-stats {
     justify-content: space-between;
+  }
+  
+  .project-card {
+    min-height: 280px;
+    padding: 1.5rem;
+  }
+  
+  .project-description.truncated {
+    -webkit-line-clamp: 3;
+  }
+}
+
+/* Additional responsive breakpoints for better expandability */
+@media (max-width: 1200px) {
+  .projects-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+@media (max-width: 500px) {
+  .project-card {
+    margin: 0 0.5rem;
   }
 }
