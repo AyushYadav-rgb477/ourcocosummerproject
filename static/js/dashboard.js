@@ -971,26 +971,47 @@ function displayTeamMembers(teamMembers) {
         return;
     }
 
+    // Group team members by project
+    const projectGroups = {};
+    teamMembers.forEach(member => {
+        if (!projectGroups[member.project_id]) {
+            projectGroups[member.project_id] = {
+                project_title: member.project_title,
+                members: []
+            };
+        }
+        projectGroups[member.project_id].members.push(member);
+    });
+
     container.innerHTML = `
-        <div class="team-grid">
-            ${teamMembers.map(member => `
-                <div class="team-member-card">
-                    <div class="member-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="member-info">
-                        <h3>${escapeHtml(member.full_name)}</h3>
-                        <p class="member-username">@${escapeHtml(member.username)}</p>
-                        <p class="member-college">${escapeHtml(member.college || 'No college specified')}</p>
-                        <p class="member-email">${escapeHtml(member.email)}</p>
-                    </div>
-                    <div class="member-actions">
-                        <a href="profile.html?user=${member.id}" class="view-profile-btn">
-                            <i class="fas fa-eye"></i> View Profile
-                        </a>
-                        <button class="message-btn" onclick="openTeamChat(${member.id})">
-                            <i class="fas fa-comments"></i> Message
-                        </button>
+        <div class="team-projects">
+            ${Object.values(projectGroups).map(project => `
+                <div class="project-team-section">
+                    <h3 class="project-title">
+                        <i class="fas fa-project-diagram"></i> ${escapeHtml(project.project_title)}
+                    </h3>
+                    <div class="team-grid">
+                        ${project.members.map(member => `
+                            <div class="team-member-card">
+                                <div class="member-avatar">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div class="member-info">
+                                    <h4>${escapeHtml(member.user.full_name)}</h4>
+                                    <p class="member-username">@${escapeHtml(member.user.username)}</p>
+                                    <p class="member-college">${escapeHtml(member.user.college || 'No college specified')}</p>
+                                    <p class="member-role">${member.is_owner ? 'Project Owner' : 'Collaborator'}</p>
+                                </div>
+                                <div class="member-actions">
+                                    <a href="profile.html?user=${member.user.id}" class="view-profile-btn">
+                                        <i class="fas fa-eye"></i> View Profile
+                                    </a>
+                                    <button class="message-btn" onclick="openProjectChat(${member.project_id}, '${escapeHtml(project.project_title)}')">
+                                        <i class="fas fa-comments"></i> Team Chat
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
                     </div>
                 </div>
             `).join('')}
@@ -1012,36 +1033,31 @@ function displayEmptyTeam() {
 }
 
 // Team Chat Functions
-let currentChatMember = null;
+let currentChatProject = null;
 
-async function openTeamChat(memberId) {
+async function openProjectChat(projectId, projectTitle) {
     try {
-        const response = await fetch(`/api/user/${memberId}`);
-        if (response.ok) {
-            const data = await response.json();
-            currentChatMember = data.user;
-            
-            document.getElementById('chat-member-name').textContent = data.user.full_name;
-            document.getElementById('chat-member-username').textContent = `@${data.user.username}`;
-            
-            // Load chat messages
-            await loadChatMessages(memberId);
-            
-            document.getElementById('team-chat-modal').classList.add('show');
-        }
+        currentChatProject = { id: projectId, title: projectTitle };
+        
+        document.getElementById('chat-project-name').textContent = projectTitle;
+        
+        // Load chat messages for this project
+        await loadProjectChatMessages(projectId);
+        
+        document.getElementById('team-chat-modal').classList.add('show');
     } catch (error) {
-        console.error('Error opening team chat:', error);
+        console.error('Error opening project chat:', error);
     }
 }
 
 function closeTeamChat() {
     document.getElementById('team-chat-modal').classList.remove('show');
-    currentChatMember = null;
+    currentChatProject = null;
 }
 
-async function loadChatMessages(memberId) {
+async function loadProjectChatMessages(projectId) {
     try {
-        const response = await fetch(`/api/team/chat/${memberId}`);
+        const response = await fetch(`/api/projects/${projectId}/chat`);
         if (response.ok) {
             const data = await response.json();
             displayChatMessages(data.messages || []);
@@ -1060,17 +1076,19 @@ function displayChatMessages(messages) {
         container.innerHTML = `
             <div style="text-align: center; color: #999; padding: 2rem;">
                 <i class="fas fa-comments" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                <p>Start a conversation with your team member!</p>
+                <p>Start a conversation with your team!</p>
             </div>
         `;
         return;
     }
 
     container.innerHTML = messages.map(message => `
-        <div class="chat-message ${message.is_own ? 'own' : ''}">
-            <div class="message-sender">${escapeHtml(message.sender_name)}</div>
-            <div class="message-text">${escapeHtml(message.content)}</div>
-            <div class="message-time">${formatDate(message.created_at)}</div>
+        <div class="chat-message">
+            <div class="message-header">
+                <span class="message-sender">${escapeHtml(message.author.full_name)}</span>
+                <span class="message-time">${formatNotificationTime(message.created_at)}</span>
+            </div>
+            <div class="message-text">${escapeHtml(message.message)}</div>
         </div>
     `).join('');
     
@@ -1079,7 +1097,7 @@ function displayChatMessages(messages) {
 }
 
 async function sendTeamMessage() {
-    if (!currentChatMember) return;
+    if (!currentChatProject) return;
     
     const input = document.getElementById('chat-message-input');
     const message = input.value.trim();
@@ -1087,10 +1105,10 @@ async function sendTeamMessage() {
     if (!message) return;
     
     const sendBtn = document.querySelector('.send-message-btn');
-    sendBtn.disabled = true;
+    if (sendBtn) sendBtn.disabled = true;
     
     try {
-        const response = await fetch(`/api/team/chat/${currentChatMember.id}/send`, {
+        const response = await fetch(`/api/projects/${currentChatProject.id}/chat`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -1100,17 +1118,7 @@ async function sendTeamMessage() {
         
         if (response.ok) {
             input.value = '';
-            // Add the message to the chat immediately for better UX
-            const messagesContainer = document.getElementById('chat-messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'chat-message own';
-            messageDiv.innerHTML = `
-                <div class="message-sender">You</div>
-                <div class="message-text">${escapeHtml(message)}</div>
-                <div class="message-time">Just now</div>
-            `;
-            messagesContainer.appendChild(messageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            await loadProjectChatMessages(currentChatProject.id);
         } else {
             const data = await response.json();
             showMessage(data.error || 'Error sending message', 'error');
@@ -1119,7 +1127,7 @@ async function sendTeamMessage() {
         console.error('Error sending message:', error);
         showMessage('Error sending message', 'error');
     } finally {
-        sendBtn.disabled = false;
+        if (sendBtn) sendBtn.disabled = false;
     }
 }
 

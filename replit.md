@@ -110,3 +110,20 @@ Preferred communication style: Simple, everyday language.
 - **Session Storage**: Server-side sessions (may need external session store for scaling)
 - **Static Assets**: Served directly by Flask (consider CDN for production)
 - **Database Connections**: Connection pooling configured for concurrent users
+
+## Recent Changes (August 2025)
+
+### Fixed Notification System
+- **Issue**: Mark as read functionality was not working properly
+- **Solution**: Implemented dedicated Notification model with proper persistence
+- **Impact**: Users can now mark notifications as read, mark all as read, and clear notifications
+
+### Enhanced Team Management  
+- **Issue**: Team members were not displayed when collaboration requests were accepted
+- **Solution**: Created comprehensive team API that shows accepted collaborators grouped by project
+- **Impact**: Users can see their team members organized by project with roles clearly defined
+
+### Project-Based Team Chat
+- **Issue**: No communication mechanism between team members
+- **Solution**: Implemented project-specific chat system using TeamChat model
+- **Impact**: Team members can now communicate within project context, messages are persistent and properly attributed

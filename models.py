@@ -262,3 +262,58 @@ class DiscussionLike(db.Model):
     
     # Ensure one like per user per discussion
     __table_args__ = (db.UniqueConstraint('user_id', 'discussion_id', name='unique_user_discussion_like'),)
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(50), nullable=False)  # comment, like, collaboration, donation, etc.
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # recipient
+    related_user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # actor (who caused the notification)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)
+    
+    # Relationships
+    recipient = db.relationship('User', foreign_keys=[user_id], backref='received_notifications')
+    actor = db.relationship('User', foreign_keys=[related_user_id], backref='sent_notifications')
+    related_project = db.relationship('Project', backref='notifications')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'type': self.type,
+            'title': self.title,
+            'message': self.message,
+            'is_read': self.is_read,
+            'created_at': self.created_at.isoformat(),
+            'actor': self.actor.to_dict() if self.actor else None,
+            'project': self.related_project.to_dict() if self.related_project else None
+        }
+
+class TeamChat(db.Model):
+    __tablename__ = 'team_chats'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    # Relationships
+    project = db.relationship('Project', backref='chat_messages')
+    author = db.relationship('User', backref='chat_messages')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'message': self.message,
+            'created_at': self.created_at.isoformat(),
+            'author': self.author.to_dict() if self.author else None
+        }

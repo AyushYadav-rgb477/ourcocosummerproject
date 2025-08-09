@@ -1,8 +1,25 @@
 import os
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike
+from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, Notification, TeamChat
 from sqlalchemy import desc, func
+
+# Helper function to create notifications
+def create_notification(user_id, type, title, message, related_user_id=None, project_id=None):
+    try:
+        notification = Notification(
+            user_id=user_id,
+            type=type,
+            title=title,
+            message=message,
+            related_user_id=related_user_id,
+            project_id=project_id
+        )
+        db.session.add(notification)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error creating notification: {e}")
 
 # Serve static HTML files
 @app.route('/')
@@ -313,6 +330,19 @@ def add_comment(project_id):
         
         db.session.add(comment)
         db.session.commit()
+        
+        # Create notification for project owner
+        project = Project.query.get(project_id)
+        commenter = User.query.get(user_id)
+        if project and commenter and project.user_id != user_id:
+            create_notification(
+                user_id=project.user_id,
+                type='comment',
+                title='New Comment',
+                message=f'{commenter.full_name} commented on your project "{project.title}"',
+                related_user_id=user_id,
+                project_id=project.id
+            )
         
         return jsonify({
             'message': 'Comment added successfully',
@@ -966,6 +996,19 @@ def accept_collaboration(collab_id):
         collaboration.status = 'accepted'
         db.session.commit()
         
+        # Create notification for the collaborator
+        requester = User.query.get(collaboration.user_id)
+        project = Project.query.get(collaboration.project_id)
+        if requester and project:
+            create_notification(
+                user_id=collaboration.user_id,
+                type='collaboration',
+                title='Collaboration Accepted',
+                message=f'Your collaboration request for "{project.title}" has been accepted!',
+                related_user_id=user_id,
+                project_id=project.id
+            )
+        
         return jsonify({
             'message': 'Collaboration request accepted',
             'collaboration': collaboration.to_dict()
@@ -1008,108 +1051,17 @@ def get_notifications():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        notifications = []
+        # Get notifications from database
+        notifications = Notification.query.filter_by(user_id=user_id)\
+            .order_by(desc(Notification.created_at))\
+            .limit(50).all()
         
-        # Get user's projects
-        user_projects = Project.query.filter_by(user_id=user_id).all()
-        project_ids = [p.id for p in user_projects]
-        
-        if project_ids:
-            # Recent comments on user's projects
-            recent_comments = db.session.query(
-                Comment, Project.title, User.full_name
-            ).join(
-                Project, Comment.project_id == Project.id
-            ).join(
-                User, Comment.user_id == User.id
-            ).filter(
-                Comment.project_id.in_(project_ids),
-                Comment.user_id != user_id
-            ).order_by(desc(Comment.created_at)).limit(10).all()
-            
-            for comment, project_title, commenter_name in recent_comments:
-                notifications.append({
-                    'id': f'comment_{comment.id}',
-                    'type': 'comment',
-                    'title': 'New Comment',
-                    'message': f'{commenter_name} commented on your project "{project_title}"',
-                    'created_at': comment.created_at.isoformat(),
-                    'is_read': False
-                })
-            
-            # Recent votes on user's projects
-            recent_votes = db.session.query(
-                Vote, Project.title, User.full_name
-            ).join(
-                Project, Vote.project_id == Project.id
-            ).join(
-                User, Vote.user_id == User.id
-            ).filter(
-                Vote.project_id.in_(project_ids),
-                Vote.user_id != user_id,
-                Vote.is_upvote == True
-            ).order_by(desc(Vote.created_at)).limit(10).all()
-            
-            for vote, project_title, voter_name in recent_votes:
-                notifications.append({
-                    'id': f'vote_{vote.id}',
-                    'type': 'like',
-                    'title': 'Project Liked',
-                    'message': f'{voter_name} liked your project "{project_title}"',
-                    'created_at': vote.created_at.isoformat(),
-                    'is_read': False
-                })
-            
-            # Recent donations to user's projects
-            recent_donations = db.session.query(
-                Donation, Project.title, User.full_name
-            ).join(
-                Project, Donation.project_id == Project.id
-            ).join(
-                User, Donation.user_id == User.id
-            ).filter(
-                Donation.project_id.in_(project_ids),
-                Donation.user_id != user_id
-            ).order_by(desc(Donation.created_at)).limit(10).all()
-            
-            for donation, project_title, donor_name in recent_donations:
-                notifications.append({
-                    'id': f'donation_{donation.id}',
-                    'type': 'project',
-                    'title': 'New Donation',
-                    'message': f'{donor_name} donated ${donation.amount:.2f} to your project "{project_title}"',
-                    'created_at': donation.created_at.isoformat(),
-                    'is_read': False
-                })
-        
-        # Recent collaboration requests
-        recent_collabs = db.session.query(
-            Collaboration, Project.title, User.full_name
-        ).join(
-            Project, Collaboration.project_id == Project.id
-        ).join(
-            User, Collaboration.user_id == User.id
-        ).filter(
-            Project.user_id == user_id,
-            Collaboration.status == 'pending'
-        ).order_by(desc(Collaboration.created_at)).limit(10).all()
-        
-        for collab, project_title, requester_name in recent_collabs:
-            notifications.append({
-                'id': f'collaboration_{collab.id}',
-                'type': 'collaboration',
-                'title': 'Collaboration Request',
-                'message': f'{requester_name} wants to collaborate on your project "{project_title}"',
-                'created_at': collab.created_at.isoformat(),
-                'is_read': False
-            })
-        
-        # Sort notifications by date (newest first)
-        notifications.sort(key=lambda x: x['created_at'], reverse=True)
+        # Count unread notifications
+        unread_count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
         
         return jsonify({
-            'notifications': notifications[:20],  # Return latest 20 notifications
-            'unread_count': len(notifications)
+            'notifications': [n.to_dict() for n in notifications],
+            'unread_count': unread_count
         }), 200
         
     except Exception as e:
@@ -1122,38 +1074,8 @@ def get_notification_count():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        # Count recent activity as unread notifications
-        count = 0
-        
-        # Get user's projects
-        user_projects = Project.query.filter_by(user_id=user_id).all()
-        project_ids = [p.id for p in user_projects]
-        
-        if project_ids:
-            # Count recent comments
-            count += Comment.query.filter(
-                Comment.project_id.in_(project_ids),
-                Comment.user_id != user_id
-            ).count()
-            
-            # Count recent votes
-            count += Vote.query.filter(
-                Vote.project_id.in_(project_ids),
-                Vote.user_id != user_id,
-                Vote.is_upvote == True
-            ).count()
-            
-            # Count recent donations
-            count += Donation.query.filter(
-                Donation.project_id.in_(project_ids),
-                Donation.user_id != user_id
-            ).count()
-        
-        # Count pending collaboration requests
-        count += Collaboration.query.join(Project).filter(
-            Project.user_id == user_id,
-            Collaboration.status == 'pending'
-        ).count()
+        # Count unread notifications from database
+        count = Notification.query.filter_by(user_id=user_id, is_read=False).count()
         
         return jsonify({'unread_count': min(count, 99)}), 200  # Cap at 99
         
@@ -1167,10 +1089,16 @@ def mark_notification_read(notification_id):
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        # For now, just return success
+        # Find and mark notification as read
+        notification = Notification.query.filter_by(id=notification_id, user_id=user_id).first()
+        if notification:
+            notification.is_read = True
+            db.session.commit()
+        
         return jsonify({'message': 'Notification marked as read'}), 200
         
     except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/notifications/mark-all-read', methods=['POST'])
@@ -1180,10 +1108,14 @@ def mark_all_notifications_read():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        # For now, just return success
+        # Mark all notifications as read for this user
+        Notification.query.filter_by(user_id=user_id, is_read=False).update({'is_read': True})
+        db.session.commit()
+        
         return jsonify({'message': 'All notifications marked as read'}), 200
         
     except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/notifications/clear-all', methods=['DELETE'])
@@ -1193,10 +1125,14 @@ def clear_all_notifications():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        # For now, just return success
+        # Delete all notifications for this user
+        Notification.query.filter_by(user_id=user_id).delete()
+        db.session.commit()
+        
         return jsonify({'message': 'All notifications cleared'}), 200
         
     except Exception as e:
+        db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
 # Homepage stats API with accurate donation totals
@@ -1220,8 +1156,124 @@ def get_homepage_stats():
 @app.route('/api/user/team', methods=['GET'])
 def get_user_team():
     try:
-        if 'user_id' not in session:
+        user_id = session.get('user_id')
+        if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
+        
+        # Get all projects owned by the user
+        owned_projects = Project.query.filter_by(user_id=user_id).all()
+        
+        # Get all accepted collaborations for these projects
+        team_members = []
+        for project in owned_projects:
+            collaborations = Collaboration.query.filter_by(
+                project_id=project.id,
+                status='accepted'
+            ).all()
+            
+            for collab in collaborations:
+                team_member = {
+                    'project_id': project.id,
+                    'project_title': project.title,
+                    'user': collab.collaborator.to_dict(),
+                    'collaboration_date': collab.created_at.isoformat()
+                }
+                team_members.append(team_member)
+        
+        # Also get projects where current user is a collaborator
+        user_collaborations = Collaboration.query.filter_by(
+            user_id=user_id,
+            status='accepted'
+        ).all()
+        
+        for collab in user_collaborations:
+            team_member = {
+                'project_id': collab.project.id,
+                'project_title': collab.project.title,
+                'user': collab.project.owner.to_dict(),
+                'collaboration_date': collab.created_at.isoformat(),
+                'is_owner': True
+            }
+            team_members.append(team_member)
+        
+        return jsonify({'team_members': team_members}), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Team Chat APIs
+@app.route('/api/projects/<int:project_id>/chat', methods=['GET'])
+def get_project_chat(project_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Check if user has access to this project (owner or collaborator)
+        project = Project.query.get_or_404(project_id)
+        is_owner = project.user_id == user_id
+        is_collaborator = Collaboration.query.filter_by(
+            project_id=project_id,
+            user_id=user_id,
+            status='accepted'
+        ).first() is not None
+        
+        if not (is_owner or is_collaborator):
+            return jsonify({'error': 'Access denied'}), 403
+        
+        # Get chat messages for this project
+        messages = TeamChat.query.filter_by(project_id=project_id)\
+            .order_by(TeamChat.created_at.asc()).all()
+        
+        return jsonify({
+            'messages': [msg.to_dict() for msg in messages],
+            'project': project.to_dict()
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/projects/<int:project_id>/chat', methods=['POST'])
+def send_chat_message(project_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        if not data.get('message'):
+            return jsonify({'error': 'Message is required'}), 400
+        
+        # Check if user has access to this project (owner or collaborator)
+        project = Project.query.get_or_404(project_id)
+        is_owner = project.user_id == user_id
+        is_collaborator = Collaboration.query.filter_by(
+            project_id=project_id,
+            user_id=user_id,
+            status='accepted'
+        ).first() is not None
+        
+        if not (is_owner or is_collaborator):
+            return jsonify({'error': 'Access denied'}), 403
+        
+        # Create new chat message
+        chat_message = TeamChat(
+            project_id=project_id,
+            user_id=user_id,
+            message=data['message']
+        )
+        
+        db.session.add(chat_message)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Message sent successfully',
+            'chat_message': chat_message.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
         
         user_id = session['user_id']
         
@@ -1300,37 +1352,4 @@ def get_project_details(project_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Team chat endpoints
-@app.route('/api/team/chat/<int:member_id>', methods=['GET'])
-def get_chat_messages(member_id):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            return jsonify({'error': 'Authentication required'}), 401
-        
-        # For now, return empty chat - in a full implementation you would have a messages table
-        messages = []
-        
-        return jsonify({'messages': messages}), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
-@app.route('/api/team/chat/<int:member_id>/send', methods=['POST'])
-def send_chat_message(member_id):
-    try:
-        user_id = session.get('user_id')
-        if not user_id:
-            return jsonify({'error': 'Authentication required'}), 401
-        
-        data = request.get_json()
-        message = data.get('message', '').strip()
-        
-        if not message:
-            return jsonify({'error': 'Message cannot be empty'}), 400
-        
-        # For now, just return success - in a full implementation you would save to messages table
-        return jsonify({'message': 'Message sent successfully'}), 200
-        
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
