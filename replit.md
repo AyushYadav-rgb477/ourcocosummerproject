@@ -137,3 +137,10 @@ Preferred communication style: Simple, everyday language.
 - **Issue**: Modal-based chat was limiting and not user-friendly for team collaboration
 - **Solution**: Replaced modal with sliding right-side chat sidebar showing all team participants
 - **Impact**: Improved user experience with persistent chat, participant visibility, and keyboard support
+
+### File Upload System for Projects (August 2025)
+- **Feature**: Added comprehensive file attachment system to project creation
+- **Implementation**: New ProjectAttachment model with drag-and-drop interface supporting images, documents, and videos
+- **Storage**: Files stored in organized directory structure under static/uploads/projects/
+- **Validation**: File type checking, size limits (10MB), and duplicate prevention
+- **Impact**: Users can now attach supporting files to their projects including documentation, images, and video demonstrations

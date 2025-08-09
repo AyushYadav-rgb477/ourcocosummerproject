@@ -913,6 +913,104 @@ body {
   font-weight: normal;
 }
 
+/* File Upload Styles */
+.file-upload-area {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  background: #f9f9f9;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.file-upload-area:hover,
+.file-upload-area.dragover {
+  border-color: #6a11cb;
+  background: rgba(106, 17, 203, 0.05);
+}
+
+.file-upload-content i {
+  font-size: 2rem;
+  color: #6a11cb;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.file-upload-content p {
+  margin: 0.5rem 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.file-browse-btn {
+  background: none;
+  border: none;
+  color: #6a11cb;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: inherit;
+}
+
+.file-browse-btn:hover {
+  color: #5a01a7;
+}
+
+.selected-files {
+  margin-top: 1rem;
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: #f0f0f0;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.file-icon {
+  font-size: 1.2rem;
+  color: #6a11cb;
+}
+
+.file-details h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #333;
+}
+
+.file-details p {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.file-remove {
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.file-remove:hover {
+  background: #cc0000;
+}
+
 /* Form styling improvements */
 .form-group small {
   display: block;

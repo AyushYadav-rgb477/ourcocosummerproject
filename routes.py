@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, ReplyReaction, Notification, TeamChat, CommentReaction
+from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, ReplyReaction, Notification, TeamChat, CommentReaction, ProjectAttachment
 from sqlalchemy import desc, func
 
 # Helper function to create notifications
@@ -219,7 +219,13 @@ def create_project():
         if not user_id:
             return jsonify({'error': 'Authentication required'}), 401
         
-        data = request.get_json()
+        # Handle both JSON and multipart form data
+        if request.is_json:
+            data = request.get_json()
+            files = []
+        else:
+            data = request.form.to_dict()
+            files = request.files.getlist('files')
         
         # Validate required fields
         required_fields = ['title', 'description', 'category']
@@ -240,6 +246,40 @@ def create_project():
         project.user_id = user_id
         
         db.session.add(project)
+        db.session.flush()  # Get project ID without committing
+        
+        # Handle file uploads
+        if files:
+            import os
+            from werkzeug.utils import secure_filename
+            
+            # Create uploads directory if it doesn't exist
+            upload_dir = os.path.join('static', 'uploads', 'projects', str(project.id))
+            os.makedirs(upload_dir, exist_ok=True)
+            
+            for file in files:
+                if file and file.filename:
+                    # Secure the filename
+                    filename = secure_filename(file.filename)
+                    timestamp = str(int(datetime.now().timestamp()))
+                    unique_filename = f"{timestamp}_{filename}"
+                    
+                    # Save the file
+                    file_path = os.path.join(upload_dir, unique_filename)
+                    file.save(file_path)
+                    
+                    # Create attachment record
+                    attachment = ProjectAttachment()
+                    attachment.filename = unique_filename
+                    attachment.original_filename = file.filename
+                    attachment.file_size = os.path.getsize(file_path)
+                    attachment.file_type = file.content_type or 'application/octet-stream'
+                    attachment.file_path = file_path.replace('static/', '')  # Store relative path
+                    attachment.project_id = project.id
+                    attachment.user_id = user_id
+                    
+                    db.session.add(attachment)
+        
         db.session.commit()
         
         return jsonify({
@@ -250,6 +290,12 @@ def create_project():
     except Exception as e:
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
+
+
+# Serve uploaded files
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory('static/uploads', filename)
 
 @app.route('/api/projects/<int:project_id>', methods=['GET'])
 def get_project(project_id):

@@ -78,6 +78,7 @@ class Project(db.Model):
     votes = db.relationship('Vote', backref='project', lazy=True, cascade='all, delete-orphan')
     collaborations = db.relationship('Collaboration', backref='project', lazy=True, cascade='all, delete-orphan')
     donations = db.relationship('Donation', backref='project', lazy=True, cascade='all, delete-orphan')
+    attachments = db.relationship('ProjectAttachment', backref='project', lazy=True, cascade='all, delete-orphan')
     
     def get_vote_count(self):
         return Vote.query.filter_by(project_id=self.id, is_upvote=True).count()
@@ -106,7 +107,8 @@ class Project(db.Model):
             'owner': owner_data,
             'vote_count': self.get_vote_count(),
             'collaboration_count': self.get_collaboration_count(),
-            'comment_count': self.get_comment_count()
+            'comment_count': self.get_comment_count(),
+            'attachments': [attachment.to_dict() for attachment in self.attachments] if hasattr(self, 'attachments') else []
         }
 
 class Comment(db.Model):
@@ -426,6 +428,35 @@ class CommentReply(db.Model):
             'created_at': self.created_at.isoformat(),
             'author': author_data
         }
+
+
+# Project Attachment model for file uploads
+class ProjectAttachment(db.Model):
+    __tablename__ = 'project_attachments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    filename = db.Column(db.String(255), nullable=False)
+    original_filename = db.Column(db.String(255), nullable=False)
+    file_size = db.Column(db.Integer, nullable=False)  # Size in bytes
+    file_type = db.Column(db.String(100), nullable=False)  # MIME type
+    file_path = db.Column(db.String(500), nullable=False)  # Path to stored file
+    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'filename': self.filename,
+            'original_filename': self.original_filename,
+            'file_size': self.file_size,
+            'file_type': self.file_type,
+            'uploaded_at': self.uploaded_at.isoformat(),
+            'user_id': self.user_id
+        }
+
 
 class TeamChat(db.Model):
     __tablename__ = 'team_chats'
