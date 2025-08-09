@@ -46,17 +46,31 @@ async function checkAuthStatus() {
 }
 
 function updateNavbarForLoggedInUser(user) {
-    const navAuth = document.getElementById('nav-auth');
-    if (navAuth) {
-        navAuth.innerHTML = `
-            <span class="user-greeting">Welcome, ${user.username}!</span>
-            <a href="dashboard.html" class="login-btn"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-            <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
-        `;
+    const loginBtn = document.getElementById('login-btn');
+    const registerBtn = document.getElementById('register-btn');
+    const dashboardLink = document.getElementById('dashboard-link');
+    const profileLink = document.getElementById('profile-link');
+    const userMenu = document.getElementById('user-menu');
+    const userName = document.getElementById('user-name');
+    
+    if (user) {
+        // Hide login/register buttons
+        if (loginBtn) loginBtn.style.display = 'none';
+        if (registerBtn) registerBtn.style.display = 'none';
+        
+        // Show authenticated user elements
+        if (dashboardLink) dashboardLink.style.display = 'inline-flex';
+        if (profileLink) profileLink.style.display = 'inline-flex';
+        if (userMenu) {
+            userMenu.style.display = 'inline-block';
+            if (userName) {
+                userName.textContent = user.first_name || user.username || 'User';
+            }
+        }
     }
 }
 
-async function handleLogout() {
+async function logout() {
     try {
         const response = await fetch('/api/logout', {
             method: 'POST'
@@ -225,3 +239,46 @@ function createMessageContainer() {
     document.body.appendChild(container);
     return container;
 }
+
+// Toggle user dropdown menu
+function toggleUserMenu() {
+    const dropdown = document.getElementById('user-dropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const userMenu = document.querySelector('.user-menu');
+    if (userMenu && !userMenu.contains(event.target)) {
+        const dropdown = document.getElementById('user-dropdown');
+        if (dropdown) {
+            dropdown.classList.remove('show');
+        }
+    }
+});
+
+// Initialize everything when DOM loads
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuthStatus();
+    
+    // Check if we're on the home page and load stats
+    if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+        loadStats();
+    }
+    
+    // Get any error message from session storage
+    const errorMessage = sessionStorage.getItem('errorMessage');
+    if (errorMessage) {
+        showNotification(errorMessage, 'error');
+        sessionStorage.removeItem('errorMessage');
+    }
+    
+    // Get any success message from session storage
+    const successMessage = sessionStorage.getItem('successMessage');
+    if (successMessage) {
+        showNotification(successMessage, 'success');
+        sessionStorage.removeItem('successMessage');
+    }
+});

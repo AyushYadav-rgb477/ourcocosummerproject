@@ -19,11 +19,24 @@
         <a href="browse.html"><i class="bi bi-search-heart-fill"></i> Browse Projects</a>
         <a href="discussion.html" class="active"><i class="bi bi-chat-dots-fill"></i> Discussion</a>
         <a href="dashboard.html" id="dashboard-link" style="display: none;"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="profile.html" id="profile-link" style="display: none;"><i class="bi bi-person-circle"></i> Profile</a>
       </nav>
     </div>
     <div class="nav-right" id="nav-auth">
       <a href="login.html" class="login-btn" id="login-btn"><i class="fas fa-sign-in-alt"></i> Login</a>
       <a href="register.html" class="register-btn" id="register-btn"><i class="fas fa-user-plus"></i> Sign Up</a>
+      <!-- Authenticated user menu (hidden by default) -->
+      <div class="user-menu" id="user-menu" style="display: none;">
+        <button class="user-dropdown-btn" onclick="toggleUserMenu()">
+          <i class="fas fa-user-circle"></i> <span id="user-name">User</span>
+          <i class="fas fa-chevron-down"></i>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <a href="profile.html"><i class="fas fa-user"></i> Profile</a>
+          <a href="dashboard.html"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+          <a href="#" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -36,7 +49,7 @@
       </div>
 
       <!-- Create Discussion Section -->
-      <div class="create-discussion-section" id="create-discussion-section" style="display: none;">
+      <div class="create-discussion-section" id="create-discussion-section">
         <div class="create-discussion-card">
           <div class="create-header">
             <h3><i class="fas fa-plus-circle"></i> Start a Discussion</h3>
