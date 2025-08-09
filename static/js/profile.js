@@ -425,16 +425,9 @@ function displayUserProjects(projects) {
                 </div>
                 <div class="project-info">
                     <h3 class="project-title">${escapeHtml(project.title || sampleProject.title)}</h3>
-                    <p class="project-description">${escapeHtml(project.description || sampleProject.description)}</p>
-                    <div class="project-tech">
-                        <div class="tech-icon">
-                            <i class="fab fa-${sampleProject.tech.toLowerCase()}"></i>
-                        </div>
-                        <span class="tech-label">${sampleProject.tech}</span>
-                    </div>
+                    <div class="project-category">${escapeHtml(project.category || sampleProject.category)}</div>
                     <div class="project-actions">
                         <button class="action-btn btn-view" onclick="event.stopPropagation(); viewProject(${project.id || sampleProject.id})">View Project</button>
-                        <button class="action-btn btn-github" onclick="event.stopPropagation();">GitHub Repo</button>
                     </div>
                 </div>
             </div>
