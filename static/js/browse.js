@@ -240,26 +240,7 @@ function setupModals() {
     setupActionButtons();
 }
 
-function setupDescriptionExpand() {
-    const expandBtn = document.getElementById('description-expand-btn');
-    const descriptionEl = document.getElementById('modal-description');
-    
-    if (expandBtn && descriptionEl) {
-        expandBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            
-            if (descriptionEl.classList.contains('collapsed')) {
-                descriptionEl.classList.remove('collapsed');
-                descriptionEl.classList.add('expanded');
-                expandBtn.innerHTML = '<i class="fas fa-chevron-up"></i> Read Less';
-            } else {
-                descriptionEl.classList.remove('expanded');
-                descriptionEl.classList.add('collapsed');
-                expandBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Read More';
-            }
-        });
-    }
-}
+
 
 function setupActionButtons() {
     const voteBtn = document.getElementById('vote-btn');
@@ -331,19 +312,10 @@ function displayProjectModal(project) {
     document.getElementById('modal-collabs').textContent = project.collaboration_count;
     document.getElementById('modal-goal').textContent = `$${project.funding_goal ? project.funding_goal.toFixed(2) : '0.00'}`;
     
-    // Set description and reset expand state
+    // Show full description in modal (no truncation needed)
     const descriptionEl = document.getElementById('modal-description');
-    const expandBtn = document.getElementById('description-expand-btn');
-    descriptionEl.innerHTML = `
-        <button class="description-expand-btn" id="description-expand-btn">
-            <i class="fas fa-chevron-down"></i> Read More
-        </button>
-        ${escapeHtml(project.description)}
-    `;
-    descriptionEl.className = 'project-description collapsed';
-    
-    // Setup expand/collapse functionality
-    setupDescriptionExpand();
+    descriptionEl.innerHTML = escapeHtml(project.description);
+    descriptionEl.className = 'project-description full';
     
     // Update action buttons based on ownership
     const isOwner = currentUser && currentUser.id === project.owner?.id;
@@ -779,7 +751,7 @@ async function submitCommentReply(commentId) {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Replying...';
 
     try {
-        const response = await fetch(`/api/comment/${commentId}/reply`, {
+        const response = await fetch(`/api/projects/${currentProject.id}/comments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -794,15 +766,8 @@ async function submitCommentReply(commentId) {
         if (response.ok) {
             cancelCommentReply(commentId);
             
-            const newReplyHTML = `
-                <div class="comment-reply">
-                    <div class="comment-author">${escapeHtml(currentUser.full_name)}</div>
-                    <div class="comment-content">${escapeHtml(content)}</div>
-                    <div class="comment-date">Just now</div>
-                </div>
-            `;
-            
-            repliesContainer.insertAdjacentHTML('beforeend', newReplyHTML);
+            // Reload comments to show the new comment
+            loadProjectComments(currentProject.id);
         } else {
             alert(data.error || 'Error posting reply');
         }

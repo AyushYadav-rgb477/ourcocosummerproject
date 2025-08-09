@@ -187,6 +187,12 @@ body {
   position: relative;
 }
 
+.project-description.full {
+  display: block;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
 .project-description.truncated {
   display: -webkit-box;
   -webkit-line-clamp: 4;
