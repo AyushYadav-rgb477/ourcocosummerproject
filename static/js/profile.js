@@ -441,11 +441,25 @@ function getProjectImage(project, sampleProject) {
         const imageAttachment = project.attachments.find(att => 
             att.file_type && att.file_type.startsWith('image/')
         );
-        if (imageAttachment) {
-            return `url('/static/${imageAttachment.file_path}') center/cover`;
+        if (imageAttachment && imageAttachment.data_url) {
+            return `url('${imageAttachment.data_url}') center/cover`;
         }
     }
-    return sampleProject.gradient;
+    // Generate random gradient background if no image
+    const gradients = [
+        'linear-gradient(135deg, #667eea, #764ba2)',
+        'linear-gradient(135deg, #f093fb, #f5576c)',
+        'linear-gradient(135deg, #4facfe, #00f2fe)',
+        'linear-gradient(135deg, #43e97b, #38f9d7)',
+        'linear-gradient(135deg, #fa709a, #fee140)',
+        'linear-gradient(135deg, #a8edea, #fed6e3)',
+        'linear-gradient(135deg, #ff9a9e, #fecfef)',
+        'linear-gradient(135deg, #a18cd1, #fbc2eb)',
+        'linear-gradient(135deg, #fad0c4, #ffd1ff)',
+        'linear-gradient(135deg, #fdcbf1, #e6dee9)'
+    ];
+    const projectId = project.id || Math.floor(Math.random() * 1000);
+    return gradients[projectId % gradients.length];
 }
 
 function getProjectImageElement(project, sampleProject) {
@@ -454,11 +468,11 @@ function getProjectImageElement(project, sampleProject) {
         const imageAttachment = project.attachments.find(att => 
             att.file_type && att.file_type.startsWith('image/')
         );
-        if (imageAttachment) {
-            return `<img src="/static/${imageAttachment.file_path}" alt="${escapeHtml(project.title || sampleProject.title)}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        if (imageAttachment && imageAttachment.data_url) {
+            return `<img src="${imageAttachment.data_url}" alt="${escapeHtml(project.title || sampleProject.title)}" style="width: 100%; height: 100%; object-fit: cover;">`;
         }
     }
-    return sampleProject.image ? `<img src="${sampleProject.image}" alt="${escapeHtml(project.title || sampleProject.title)}">` : '';
+    return '';
 }
 
 function viewProject(projectId) {
