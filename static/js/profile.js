@@ -419,8 +419,8 @@ function displayUserProjects(projects) {
         const sampleProject = sampleProjects[index % sampleProjects.length];
         return `
             <div class="project-card" onclick="viewProject(${project.id || sampleProject.id})">
-                <div class="project-image" style="background: ${sampleProject.gradient}">
-                    ${sampleProject.image ? `<img src="${sampleProject.image}" alt="${project.title || sampleProject.title}">` : ''}
+                <div class="project-image" style="background: ${getProjectImage(project, sampleProject)}">
+                    ${getProjectImageElement(project, sampleProject)}
                     <div class="project-badge">${sampleProject.badge}</div>
                 </div>
                 <div class="project-info">
@@ -433,6 +433,32 @@ function displayUserProjects(projects) {
             </div>
         `;
     }).join('');
+}
+
+function getProjectImage(project, sampleProject) {
+    // Check if project has image attachments
+    if (project.attachments && project.attachments.length > 0) {
+        const imageAttachment = project.attachments.find(att => 
+            att.file_type && att.file_type.startsWith('image/')
+        );
+        if (imageAttachment) {
+            return `url('/static/${imageAttachment.file_path}') center/cover`;
+        }
+    }
+    return sampleProject.gradient;
+}
+
+function getProjectImageElement(project, sampleProject) {
+    // Check if project has image attachments
+    if (project.attachments && project.attachments.length > 0) {
+        const imageAttachment = project.attachments.find(att => 
+            att.file_type && att.file_type.startsWith('image/')
+        );
+        if (imageAttachment) {
+            return `<img src="/static/${imageAttachment.file_path}" alt="${escapeHtml(project.title || sampleProject.title)}" style="width: 100%; height: 100%; object-fit: cover;">`;
+        }
+    }
+    return sampleProject.image ? `<img src="${sampleProject.image}" alt="${escapeHtml(project.title || sampleProject.title)}">` : '';
 }
 
 function viewProject(projectId) {

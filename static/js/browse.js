@@ -170,37 +170,42 @@ function displayProjects(projects, clearExisting = false) {
     
     const projectsHTML = projects.map(project => `
         <div class="project-card" onclick="openProjectModal(${project.id})">
-            <div class="project-header">
-                <span class="project-category">${project.category}</span>
-                <span class="project-date">${formatDate(project.created_at)}</span>
+            <div class="project-image">
+                ${getProjectImageHTML(project)}
             </div>
-            <h3 class="project-title">${escapeHtml(project.title)}</h3>
-            <div class="project-owner">
-                <i class="fas fa-user"></i>
-                <span>${escapeHtml(project.owner?.full_name || 'Unknown')}</span>
-            </div>
-            <div class="project-description-container">
-                <p class="project-description ${project.description.length > 150 ? 'truncated' : 'expanded'}" id="desc-${project.id}">
-                    ${escapeHtml(project.description)}
-                </p>
-                ${project.description.length > 150 ? `
-                    <button class="description-toggle" onclick="toggleDescription(${project.id}, event)" id="toggle-${project.id}">
-                        Read More <i class="fas fa-chevron-down"></i>
-                    </button>
-                ` : ''}
-            </div>
-            <div class="project-stats">
-                <div class="project-stat">
-                    <i class="fas fa-thumbs-up"></i>
-                    <span>${project.vote_count}</span>
+            <div class="project-content">
+                <div class="project-header">
+                    <span class="project-category">${project.category}</span>
+                    <span class="project-date">${formatDate(project.created_at)}</span>
                 </div>
-                <div class="project-stat">
-                    <i class="fas fa-dollar-sign"></i>
-                    <span>$${project.current_funding.toFixed(2)}</span>
+                <h3 class="project-title">${escapeHtml(project.title)}</h3>
+                <div class="project-owner">
+                    <i class="fas fa-user"></i>
+                    <span>${escapeHtml(project.owner?.full_name || 'Unknown')}</span>
                 </div>
-                <div class="project-stat">
-                    <i class="fas fa-users"></i>
-                    <span>${project.collaboration_count}</span>
+                <div class="project-description-container">
+                    <p class="project-description ${project.description.length > 150 ? 'truncated' : 'expanded'}" id="desc-${project.id}">
+                        ${escapeHtml(project.description)}
+                    </p>
+                    ${project.description.length > 150 ? `
+                        <button class="description-toggle" onclick="toggleDescription(${project.id}, event)" id="toggle-${project.id}">
+                            Read More <i class="fas fa-chevron-down"></i>
+                        </button>
+                    ` : ''}
+                </div>
+                <div class="project-stats">
+                    <div class="project-stat">
+                        <i class="fas fa-thumbs-up"></i>
+                        <span>${project.vote_count}</span>
+                    </div>
+                    <div class="project-stat">
+                        <i class="fas fa-dollar-sign"></i>
+                        <span>$${project.current_funding.toFixed(2)}</span>
+                    </div>
+                    <div class="project-stat">
+                        <i class="fas fa-users"></i>
+                        <span>${project.collaboration_count}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -302,6 +307,29 @@ async function openProjectModal(projectId) {
     }
 }
 
+function getProjectImageHTML(project) {
+    // Check if project has image attachments
+    if (project.attachments && project.attachments.length > 0) {
+        const imageAttachment = project.attachments.find(att => 
+            att.file_type && att.file_type.startsWith('image/')
+        );
+        if (imageAttachment) {
+            return `<img src="/static/${imageAttachment.file_path}" alt="${escapeHtml(project.title)}" />`;
+        }
+    }
+    // Default gradient background if no image
+    const gradients = [
+        'linear-gradient(135deg, #667eea, #764ba2)',
+        'linear-gradient(135deg, #f093fb, #f5576c)',
+        'linear-gradient(135deg, #4facfe, #00f2fe)',
+        'linear-gradient(135deg, #43e97b, #38f9d7)',
+        'linear-gradient(135deg, #fa709a, #fee140)',
+        'linear-gradient(135deg, #a8edea, #fed6e3)'
+    ];
+    const gradient = gradients[project.id % gradients.length];
+    return `<div class="project-placeholder" style="background: ${gradient}"></div>`;
+}
+
 function displayProjectModal(project) {
     document.getElementById('modal-title').textContent = project.title;
     document.getElementById('modal-category').textContent = project.category;
@@ -311,6 +339,15 @@ function displayProjectModal(project) {
     document.getElementById('modal-funding').textContent = `$${project.current_funding.toFixed(2)}`;
     document.getElementById('modal-collabs').textContent = project.collaboration_count;
     document.getElementById('modal-goal').textContent = `$${project.funding_goal ? project.funding_goal.toFixed(2) : '0.00'}`;
+    
+    // Update modal image
+    const modalImage = document.getElementById('modal-project-image');
+    if (modalImage) {
+        modalImage.innerHTML = getProjectImageHTML(project);
+    }
+    
+    // Show attachments if any
+    displayProjectAttachments(project);
     
     // Show full description in modal (no truncation needed)
     const descriptionEl = document.getElementById('modal-description');
@@ -336,6 +373,39 @@ function displayProjectModal(project) {
         if (collabBtn) collabBtn.disabled = false;
         if (collabBtn) collabBtn.innerHTML = '<i class="fas fa-handshake"></i> Collaborate';
     }
+}
+
+function displayProjectAttachments(project) {
+    const attachmentsContainer = document.getElementById('modal-attachments');
+    if (!attachmentsContainer) return;
+    
+    if (!project.attachments || project.attachments.length === 0) {
+        attachmentsContainer.style.display = 'none';
+        return;
+    }
+    
+    attachmentsContainer.style.display = 'block';
+    const attachmentsList = attachmentsContainer.querySelector('.attachments-list');
+    
+    attachmentsList.innerHTML = project.attachments.map(attachment => {
+        const fileIcon = getFileIcon(attachment.file_type);
+        const fileSize = formatFileSize(attachment.file_size);
+        
+        return `
+            <div class="attachment-item">
+                <div class="attachment-info">
+                    <i class="${fileIcon}"></i>
+                    <div class="attachment-details">
+                        <span class="attachment-name">${escapeHtml(attachment.original_filename)}</span>
+                        <span class="attachment-meta">${fileSize} • ${attachment.file_type}</span>
+                    </div>
+                </div>
+                <a href="/static/${attachment.file_path}" target="_blank" class="attachment-download">
+                    <i class="fas fa-download"></i>
+                </a>
+            </div>
+        `;
+    }).join('');
 }
 
 async function loadProjectComments(projectId) {
@@ -758,6 +828,29 @@ async function submitCommentReply(commentId) {
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Reply';
     }
+}
+
+function getFileIcon(fileType) {
+    if (!fileType) return 'fas fa-file';
+    
+    if (fileType.startsWith('image/')) return 'fas fa-image';
+    if (fileType.startsWith('video/')) return 'fas fa-video';
+    if (fileType === 'application/pdf') return 'fas fa-file-pdf';
+    if (fileType.includes('word')) return 'fas fa-file-word';
+    if (fileType.includes('excel')) return 'fas fa-file-excel';
+    if (fileType.includes('powerpoint')) return 'fas fa-file-powerpoint';
+    
+    return 'fas fa-file';
+}
+
+function formatFileSize(bytes) {
+    if (!bytes) return '0 B';
+    
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 function createMessageContainer() {
