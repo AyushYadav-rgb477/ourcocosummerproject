@@ -1,7 +1,7 @@
 import os
 from flask import request, jsonify, send_from_directory, session
 from app import app, db
-from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, Notification, TeamChat
+from models import User, Project, Comment, Vote, Collaboration, Donation, Discussion, DiscussionReply, DiscussionLike, ReplyReaction, Notification, TeamChat
 from sqlalchemy import desc, func
 
 # Helper function to create notifications
@@ -585,10 +585,12 @@ def like_discussion(discussion_id):
 @app.route('/api/discussions/<int:discussion_id>/replies', methods=['GET'])
 def get_discussion_replies(discussion_id):
     try:
-        replies = DiscussionReply.query.filter_by(discussion_id=discussion_id)\
+        user_id = session.get('user_id')
+        # Only get top-level replies (parent_reply_id is None)
+        replies = DiscussionReply.query.filter_by(discussion_id=discussion_id, parent_reply_id=None)\
                                      .order_by(desc(DiscussionReply.created_at)).all()
         return jsonify({
-            'replies': [reply.to_dict() for reply in replies]
+            'replies': [reply.to_dict(user_id) for reply in replies]
         }), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -614,7 +616,89 @@ def add_discussion_reply(discussion_id):
         
         return jsonify({
             'message': 'Reply added successfully',
-            'reply': reply.to_dict()
+            'reply': reply.to_dict(user_id)
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# Reply reaction APIs
+@app.route('/api/reply/<int:reply_id>/reaction', methods=['POST'])
+def toggle_reply_reaction(reply_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        reaction_type = data.get('reaction_type')
+        
+        if reaction_type not in ['like', 'heart']:
+            return jsonify({'error': 'Invalid reaction type'}), 400
+        
+        reply = DiscussionReply.query.get_or_404(reply_id)
+        
+        # Check if user already reacted with this type
+        existing_reaction = ReplyReaction.query.filter_by(
+            user_id=user_id, 
+            reply_id=reply_id, 
+            reaction_type=reaction_type
+        ).first()
+        
+        if existing_reaction:
+            # Remove reaction
+            db.session.delete(existing_reaction)
+            user_reacted = False
+            action = 'removed'
+        else:
+            # Add reaction
+            reaction = ReplyReaction()
+            reaction.user_id = user_id
+            reaction.reply_id = reply_id
+            reaction.reaction_type = reaction_type
+            db.session.add(reaction)
+            user_reacted = True
+            action = 'added'
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': f'Reaction {action} successfully',
+            'count': reply.get_reaction_count(reaction_type),
+            'user_reacted': user_reacted
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# Nested reply APIs
+@app.route('/api/reply/<int:parent_reply_id>/replies', methods=['POST'])
+def add_nested_reply(parent_reply_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        data = request.get_json()
+        if not data.get('content'):
+            return jsonify({'error': 'Content is required'}), 400
+        
+        parent_reply = DiscussionReply.query.get_or_404(parent_reply_id)
+        
+        nested_reply = DiscussionReply()
+        nested_reply.content = data['content']
+        nested_reply.user_id = user_id
+        nested_reply.discussion_id = parent_reply.discussion_id
+        nested_reply.parent_reply_id = parent_reply_id
+        
+        db.session.add(nested_reply)
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Nested reply added successfully',
+            'reply': nested_reply.to_dict(user_id)
         }), 201
         
     except Exception as e:

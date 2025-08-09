@@ -381,14 +381,17 @@ function displayReplies(replies) {
     
     repliesContainer.innerHTML = replies.map(reply => `
         <div class="reply-item" data-reply-id="${reply.id}">
-            <div class="reply-author">${escapeHtml(reply.author.full_name)}</div>
+            <div class="reply-author">
+                <i class="fas fa-user"></i>
+                ${escapeHtml(reply.author.full_name)}
+            </div>
             <div class="reply-content">${escapeHtml(reply.content)}</div>
             <div class="reply-date">${formatDate(reply.created_at)}</div>
             <div class="reply-actions">
-                <button class="reaction-btn" onclick="toggleReplyReaction(${reply.id}, 'like')">
+                <button class="reaction-btn ${reply.user_reactions?.like ? 'active' : ''}" onclick="toggleReplyReaction(${reply.id}, 'like')">
                     <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${reply.likes || 0}</span>
                 </button>
-                <button class="reaction-btn" onclick="toggleReplyReaction(${reply.id}, 'heart')">
+                <button class="reaction-btn ${reply.user_reactions?.heart ? 'active' : ''}" onclick="toggleReplyReaction(${reply.id}, 'heart')">
                     <i class="fas fa-heart"></i> <span class="reaction-count">${reply.hearts || 0}</span>
                 </button>
                 <button class="reply-to-reply-btn" onclick="showReplyToReply(${reply.id})">
@@ -396,7 +399,16 @@ function displayReplies(replies) {
                 </button>
             </div>
             <div class="nested-replies" id="nested-replies-${reply.id}">
-                <!-- Nested replies will be loaded here -->
+                ${reply.nested_replies ? reply.nested_replies.map(nestedReply => `
+                    <div class="nested-reply">
+                        <div class="reply-author">
+                            <i class="fas fa-user"></i>
+                            ${escapeHtml(nestedReply.author.full_name)}
+                        </div>
+                        <div class="reply-content">${escapeHtml(nestedReply.content)}</div>
+                        <div class="reply-date">${formatDate(nestedReply.created_at)}</div>
+                    </div>
+                `).join('') : ''}
             </div>
         </div>
     `).join('');
@@ -635,7 +647,7 @@ async function submitNestedReply(parentReplyId) {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Replying...';
 
     try {
-        const response = await fetch(`/api/reply/${parentReplyId}/reply`, {
+        const response = await fetch(`/api/reply/${parentReplyId}/replies`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -654,7 +666,10 @@ async function submitNestedReply(parentReplyId) {
             // Add the new nested reply
             const newReplyHTML = `
                 <div class="nested-reply">
-                    <div class="reply-author">${escapeHtml(currentUser.full_name)}</div>
+                    <div class="reply-author">
+                        <i class="fas fa-user"></i>
+                        ${escapeHtml(currentUser.full_name)}
+                    </div>
                     <div class="reply-content">${escapeHtml(content)}</div>
                     <div class="reply-date">Just now</div>
                 </div>

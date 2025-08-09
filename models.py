@@ -241,13 +241,32 @@ class DiscussionReply(db.Model):
     # Foreign Keys
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     discussion_id = db.Column(db.Integer, db.ForeignKey('discussions.id'), nullable=False)
+    parent_reply_id = db.Column(db.Integer, db.ForeignKey('discussion_replies.id'), nullable=True)  # For nested replies
     
-    def to_dict(self):
+    # Relationships
+    reactions = db.relationship('ReplyReaction', backref='reply', lazy=True, cascade='all, delete-orphan')
+    nested_replies = db.relationship('DiscussionReply', backref=db.backref('parent_reply', remote_side=[id]), lazy=True)
+    
+    def get_reaction_count(self, reaction_type):
+        return ReplyReaction.query.filter_by(reply_id=self.id, reaction_type=reaction_type).count()
+    
+    def is_reacted_by_user(self, user_id, reaction_type):
+        return ReplyReaction.query.filter_by(reply_id=self.id, user_id=user_id, reaction_type=reaction_type).first() is not None
+    
+    def to_dict(self, current_user_id=None):
         return {
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
-            'author': self.author.to_dict() if self.author else None
+            'author': self.author.to_dict() if self.author else None,
+            'likes': self.get_reaction_count('like'),
+            'hearts': self.get_reaction_count('heart'),
+            'parent_reply_id': self.parent_reply_id,
+            'nested_replies': [nested.to_dict(current_user_id) for nested in self.nested_replies],
+            'user_reactions': {
+                'like': self.is_reacted_by_user(current_user_id, 'like') if current_user_id else False,
+                'heart': self.is_reacted_by_user(current_user_id, 'heart') if current_user_id else False,
+            } if current_user_id else {}
         }
 
 class DiscussionLike(db.Model):
@@ -262,6 +281,20 @@ class DiscussionLike(db.Model):
     
     # Ensure one like per user per discussion
     __table_args__ = (db.UniqueConstraint('user_id', 'discussion_id', name='unique_user_discussion_like'),)
+
+class ReplyReaction(db.Model):
+    __tablename__ = 'reply_reactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    reaction_type = db.Column(db.String(20), nullable=False)  # 'like', 'heart'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Foreign Keys
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    reply_id = db.Column(db.Integer, db.ForeignKey('discussion_replies.id'), nullable=False)
+    
+    # Ensure one reaction per user per reply per type
+    __table_args__ = (db.UniqueConstraint('user_id', 'reply_id', 'reaction_type', name='unique_user_reply_reaction'),)
 
 class Notification(db.Model):
     __tablename__ = 'notifications'
