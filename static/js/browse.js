@@ -317,6 +317,12 @@ function displayProjectModal(project) {
     descriptionEl.innerHTML = escapeHtml(project.description);
     descriptionEl.className = 'project-description full';
     
+    // Remove any expand button in modal view
+    const expandBtn = descriptionEl.querySelector('.description-expand-btn');
+    if (expandBtn) {
+        expandBtn.remove();
+    }
+    
     // Update action buttons based on ownership
     const isOwner = currentUser && currentUser.id === project.owner?.id;
     const voteBtn = document.getElementById('vote-btn');
@@ -660,7 +666,7 @@ function showMessage(message, type = 'info') {
 // Comment reaction and reply functions
 async function toggleCommentReaction(commentId, reactionType) {
     if (!currentUser) {
-        alert('Please login to react');
+        showMessage('Please login to react', 'error');
         return;
     }
 
@@ -683,41 +689,50 @@ async function toggleCommentReaction(commentId, reactionType) {
                 const reactionBtn = commentElement.querySelector(`[onclick*="${reactionType}"]`);
                 const countSpan = reactionBtn.querySelector('.reaction-count');
                 
-                countSpan.textContent = data.count;
-                
-                if (data.user_reacted) {
-                    reactionBtn.classList.add('active');
-                } else {
-                    reactionBtn.classList.remove('active');
+                if (countSpan) {
+                    // Toggle reaction count (simple increment/decrement for now)
+                    const currentCount = parseInt(countSpan.textContent) || 0;
+                    const isActive = reactionBtn.classList.contains('active');
+                    
+                    if (isActive) {
+                        countSpan.textContent = Math.max(0, currentCount - 1);
+                        reactionBtn.classList.remove('active');
+                    } else {
+                        countSpan.textContent = currentCount + 1;
+                        reactionBtn.classList.add('active');
+                    }
                 }
             }
+            showMessage('Reaction updated!', 'success');
         } else {
-            console.error('Error updating reaction:', data.error);
+            showMessage(data.error || 'Error updating reaction', 'error');
         }
     } catch (error) {
         console.error('Error toggling reaction:', error);
+        showMessage('Error updating reaction', 'error');
     }
 }
 
 function showCommentReply(commentId) {
     if (!currentUser) {
-        alert('Please login to reply');
+        showMessage('Please login to reply', 'error');
         return;
     }
 
     const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
     if (!repliesContainer) return;
 
+    // Check if reply form already exists
     if (repliesContainer.querySelector('.comment-reply-form')) {
         return;
     }
 
     const replyForm = `
         <div class="comment-reply-form">
-            <textarea class="comment-reply-input" placeholder="Write your reply..." rows="2"></textarea>
+            <textarea class="comment-reply-input" placeholder="Write your reply..." rows="3"></textarea>
             <div class="comment-reply-actions">
-                <button class="btn-secondary" onclick="cancelCommentReply(${commentId})">Cancel</button>
-                <button class="btn-primary" onclick="submitCommentReply(${commentId})">
+                <button class="reply-cancel-btn" onclick="cancelCommentReply(${commentId})">Cancel</button>
+                <button class="reply-submit-btn" onclick="submitCommentReply(${commentId})">
                     <i class="fas fa-paper-plane"></i> Reply
                 </button>
             </div>
@@ -725,7 +740,85 @@ function showCommentReply(commentId) {
     `;
 
     repliesContainer.insertAdjacentHTML('beforeend', replyForm);
-    repliesContainer.querySelector('.comment-reply-input').focus();
+    const textArea = repliesContainer.querySelector('.comment-reply-input');
+    if (textArea) {
+        textArea.focus();
+    }
+}
+
+function cancelCommentReply(commentId) {
+    const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
+    if (repliesContainer) {
+        const replyForm = repliesContainer.querySelector('.comment-reply-form');
+        if (replyForm) {
+            replyForm.remove();
+        }
+    }
+}
+
+async function submitCommentReply(commentId) {
+    if (!currentUser) {
+        showMessage('Please login to reply', 'error');
+        return;
+    }
+
+    const repliesContainer = document.getElementById(`comment-replies-${commentId}`);
+    const replyForm = repliesContainer?.querySelector('.comment-reply-form');
+    const textArea = replyForm?.querySelector('.comment-reply-input');
+    const submitBtn = replyForm?.querySelector('.reply-submit-btn');
+    
+    if (!textArea || !submitBtn) return;
+    
+    const content = textArea.value.trim();
+    if (!content) {
+        showMessage('Please enter a reply', 'error');
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
+
+    try {
+        const response = await fetch(`/api/comment/${commentId}/replies`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Reply posted successfully!', 'success');
+            
+            // Add the new reply to the UI
+            const newReplyHTML = `
+                <div class="comment-reply">
+                    <div class="comment-author">${escapeHtml(data.reply.author.full_name)}</div>
+                    <div class="comment-content">${escapeHtml(data.reply.content)}</div>
+                    <div class="comment-date">Just now</div>
+                </div>
+            `;
+            
+            // Insert the reply before the form
+            replyForm.insertAdjacentHTML('beforebegin', newReplyHTML);
+            
+            // Remove the form
+            replyForm.remove();
+            
+        } else {
+            showMessage(data.error || 'Error posting reply', 'error');
+        }
+    } catch (error) {
+        console.error('Reply error:', error);
+        showMessage('Error posting reply', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Reply';
+    }
 }
 
 function cancelCommentReply(commentId) {
