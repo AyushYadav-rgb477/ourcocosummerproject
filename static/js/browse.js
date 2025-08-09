@@ -172,6 +172,16 @@ function displayProjects(projects, clearExisting = false) {
         <div class="project-card" onclick="openProjectModal(${project.id})">
             <div class="project-image">
                 ${getProjectImageHTML(project)}
+                ${currentUser && project.can_edit ? `
+                    <div class="project-edit-overlay" onclick="event.stopPropagation()">
+                        <button class="btn btn-sm btn-secondary" onclick="editProject(${project.id})" title="Edit Project">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteProject(${project.id})" title="Delete Project">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ` : ''}
             </div>
             <div class="project-content">
                 <div class="project-header">
@@ -365,6 +375,23 @@ function displayProjectModal(project) {
     const voteBtn = document.getElementById('vote-btn');
     const collabBtn = document.getElementById('collab-btn');
     const donateBtn = document.getElementById('donate-btn');
+    
+    // Add project management buttons for owner
+    const projectActions = document.getElementById('project-actions');
+    if (projectActions) {
+        if (isOwner) {
+            projectActions.innerHTML = `
+                <button class="btn btn-secondary" onclick="editProject(${project.id})">
+                    <i class="fas fa-edit"></i> Edit Project
+                </button>
+                <button class="btn btn-danger" onclick="deleteProject(${project.id})">
+                    <i class="fas fa-trash"></i> Delete Project
+                </button>
+            `;
+        } else {
+            projectActions.innerHTML = '';
+        }
+    }
     
     if (isOwner) {
         if (collabBtn) collabBtn.disabled = true;
@@ -980,5 +1007,192 @@ async function deleteComment(commentId) {
     } catch (error) {
         console.error("Network error:", error);
         showMessage("Network error while deleting comment", "error");
+    }
+}
+
+// Project CRUD Functions
+async function editProject(projectId) {
+    if (!currentUser) {
+        showMessage('Please login to edit projects', 'error');
+        return;
+    }
+    
+    try {
+        // Get current project data
+        const response = await fetch(`/api/projects/${projectId}`);
+        if (!response.ok) {
+            showMessage('Error loading project data', 'error');
+            return;
+        }
+        
+        const data = await response.json();
+        const project = data.project;
+        
+        // Check permission
+        if (!project.can_edit) {
+            showMessage('You can only edit your own projects', 'error');
+            return;
+        }
+        
+        // Create and show edit modal
+        const editModal = `
+            <div class="modal show" id="edit-project-modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Edit Project</h2>
+                        <button class="close-modal" onclick="closeEditProjectModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="edit-project-form">
+                            <div class="form-group">
+                                <label for="edit-title">Project Title</label>
+                                <input type="text" id="edit-title" value="${escapeHtml(project.title)}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-description">Description</label>
+                                <textarea id="edit-description" rows="5" required>${escapeHtml(project.description)}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-category">Category</label>
+                                <select id="edit-category" required>
+                                    <option value="Web Development" ${project.category === 'Web Development' ? 'selected' : ''}>Web Development</option>
+                                    <option value="Mobile Apps" ${project.category === 'Mobile Apps' ? 'selected' : ''}>Mobile Apps</option>
+                                    <option value="AI/ML" ${project.category === 'AI/ML' ? 'selected' : ''}>AI/ML</option>
+                                    <option value="IoT" ${project.category === 'IoT' ? 'selected' : ''}>IoT</option>
+                                    <option value="Game Development" ${project.category === 'Game Development' ? 'selected' : ''}>Game Development</option>
+                                    <option value="Other" ${project.category === 'Other' ? 'selected' : ''}>Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-funding-goal">Funding Goal ($)</label>
+                                <input type="number" id="edit-funding-goal" value="${project.funding_goal || 0}" min="0" step="0.01">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeEditProjectModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveProjectEdit(${projectId})">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', editModal);
+        
+    } catch (error) {
+        console.error('Error setting up project edit:', error);
+        showMessage('Error setting up project edit', 'error');
+    }
+}
+
+async function saveProjectEdit(projectId) {
+    try {
+        const title = document.getElementById('edit-title').value.trim();
+        const description = document.getElementById('edit-description').value.trim();
+        const category = document.getElementById('edit-category').value;
+        const fundingGoal = parseFloat(document.getElementById('edit-funding-goal').value) || 0;
+        
+        if (!title || !description || !category) {
+            showMessage('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        if (description.split(' ').length < 50) {
+            showMessage('Project description must be at least 50 words', 'error');
+            return;
+        }
+        
+        const saveBtn = document.querySelector('#edit-project-modal .btn-primary');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        const response = await fetch(`/api/projects/${projectId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                category: category,
+                fundingGoal: fundingGoal
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Project updated successfully!', 'success');
+            closeEditProjectModal();
+            
+            // Refresh the projects list
+            currentPage = 1;
+            loadProjects();
+            
+            // Update current project if modal is open
+            if (currentProject && currentProject.id === projectId) {
+                currentProject = data.project;
+                displayProjectModal(currentProject);
+            }
+        } else {
+            showMessage(data.error || 'Failed to update project', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        showMessage('Network error while updating project', 'error');
+    } finally {
+        const saveBtn = document.querySelector('#edit-project-modal .btn-primary');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = 'Save Changes';
+        }
+    }
+}
+
+function closeEditProjectModal() {
+    const modal = document.getElementById('edit-project-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function deleteProject(projectId) {
+    if (!currentUser) {
+        showMessage('Please login to delete projects', 'error');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this project? This action cannot be undone and will remove all associated comments and data.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/projects/${projectId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Project deleted successfully!', 'success');
+            
+            // Close modal if current project was deleted
+            if (currentProject && currentProject.id === projectId) {
+                closeModals();
+                currentProject = null;
+            }
+            
+            // Refresh the projects list
+            currentPage = 1;
+            loadProjects();
+            
+        } else {
+            showMessage(data.error || 'Failed to delete project', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        showMessage('Network error while deleting project', 'error');
     }
 }

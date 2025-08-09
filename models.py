@@ -89,7 +89,7 @@ class Project(db.Model):
     def get_comment_count(self):
         return Comment.query.filter_by(project_id=self.id).count()
     
-    def to_dict(self):
+    def to_dict(self, current_user_id=None):
         owner_data = None
         if hasattr(self, 'owner') and self.owner:
             owner_data = self.owner.to_dict()
@@ -108,7 +108,8 @@ class Project(db.Model):
             'vote_count': self.get_vote_count(),
             'collaboration_count': self.get_collaboration_count(),
             'comment_count': self.get_comment_count(),
-            'attachments': [attachment.to_dict() for attachment in self.attachments] if hasattr(self, 'attachments') else []
+            'attachments': [attachment.to_dict() for attachment in self.attachments] if hasattr(self, 'attachments') else [],
+            'can_edit': current_user_id == self.user_id if current_user_id else False
         }
 
 class Comment(db.Model):
@@ -117,6 +118,7 @@ class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Foreign Keys
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -142,9 +144,11 @@ class Comment(db.Model):
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat() if hasattr(self, 'updated_at') and self.updated_at else self.created_at.isoformat(),
             'author': author_data,
             'like_count': self.get_reaction_count('like'),
-            'heart_count': self.get_reaction_count('heart')
+            'heart_count': self.get_reaction_count('heart'),
+            'can_edit': user_id == self.user_id if user_id else False
         }
         
         # Include user's current reaction if user_id provided
@@ -272,7 +276,8 @@ class Discussion(db.Model):
             'reply_count': self.get_reply_count(),
             'is_liked': self.is_liked_by_user(current_user_id) if current_user_id else False,
             'likes': self.get_like_count(),
-            'replies': self.get_reply_count()
+            'replies': self.get_reply_count(),
+            'can_edit': current_user_id == self.user_id if current_user_id else False
         }
 
 class DiscussionReply(db.Model):
@@ -281,6 +286,7 @@ class DiscussionReply(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Foreign Keys
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -314,11 +320,13 @@ class DiscussionReply(db.Model):
             'id': self.id,
             'content': self.content,
             'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat() if hasattr(self, 'updated_at') and self.updated_at else self.created_at.isoformat(),
             'author': author_data,
             'likes': self.get_reaction_count('like'),
             'hearts': self.get_reaction_count('heart'),
             'parent_reply_id': self.parent_reply_id,
             'nested_replies': nested_replies_list,
+            'can_edit': current_user_id == self.user_id if current_user_id else False,
             'user_reactions': {
                 'like': self.is_reacted_by_user(current_user_id, 'like') if current_user_id else False,
                 'heart': self.is_reacted_by_user(current_user_id, 'heart') if current_user_id else False,

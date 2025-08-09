@@ -200,7 +200,8 @@ def get_projects():
         
         # Paginate
         paginated = query.paginate(page=page, per_page=per_page, error_out=False)
-        projects = [project.to_dict() for project in paginated.items]
+        user_id = session.get('user_id')
+        projects = [project.to_dict(user_id) for project in paginated.items]
         
         return jsonify({
             'projects': projects,
@@ -284,7 +285,7 @@ def create_project():
         
         return jsonify({
             'message': 'Project created successfully',
-            'project': project.to_dict()
+            'project': project.to_dict(user_id)
         }), 201
         
     except Exception as e:
@@ -323,7 +324,7 @@ def update_project(project_id):
         
         return jsonify({
             'message': 'Project updated successfully',
-            'project': project.to_dict()
+            'project': project.to_dict(user_id)
         }), 200
         
     except Exception as e:
@@ -368,8 +369,9 @@ def uploaded_file(filename):
 @app.route('/api/projects/<int:project_id>', methods=['GET'])
 def get_project(project_id):
     try:
+        user_id = session.get('user_id')
         project = Project.query.get_or_404(project_id)
-        return jsonify({'project': project.to_dict()}), 200
+        return jsonify({'project': project.to_dict(user_id)}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -461,7 +463,7 @@ def add_comment(project_id):
         
         return jsonify({
             'message': 'Comment added successfully',
-            'comment': comment.to_dict()
+            'comment': comment.to_dict(user_id)
         }), 201
         
     except Exception as e:
@@ -494,7 +496,7 @@ def update_comment(comment_id):
         
         return jsonify({
             'message': 'Comment updated successfully',
-            'comment': comment.to_dict()
+            'comment': comment.to_dict(user_id)
         }), 200
         
     except Exception as e:
@@ -714,7 +716,8 @@ def get_discussions():
         
         # Paginate
         paginated = query.paginate(page=page, per_page=per_page, error_out=False)
-        discussions = [discussion.to_dict() for discussion in paginated.items]
+        user_id = session.get('user_id')
+        discussions = [discussion.to_dict(user_id) for discussion in paginated.items]
         
         return jsonify({
             'discussions': discussions,
@@ -759,7 +762,7 @@ def create_discussion():
         
         return jsonify({
             'message': 'Discussion created successfully',
-            'discussion': discussion.to_dict()
+            'discussion': discussion.to_dict(user_id)
         }), 201
         
     except Exception as e:
@@ -798,7 +801,7 @@ def update_discussion(discussion_id):
         
         return jsonify({
             'message': 'Discussion updated successfully',
-            'discussion': discussion.to_dict()
+            'discussion': discussion.to_dict(user_id)
         }), 200
         
     except Exception as e:
@@ -829,6 +832,19 @@ def delete_discussion(discussion_id):
 
 @app.route('/api/discussions/<int:discussion_id>', methods=['GET'])
 def get_discussion(discussion_id):
+    try:
+        user_id = session.get('user_id')
+        discussion = Discussion.query.get_or_404(discussion_id)
+        
+        return jsonify({
+            'discussion': discussion.to_dict(user_id)
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/discussions/<int:discussion_id>/like', methods=['POST'])
+def toggle_discussion_like(discussion_id):
     try:
         user_id = session.get('user_id')
         discussion = Discussion.query.get_or_404(discussion_id)
@@ -960,6 +976,62 @@ def toggle_reply_reaction(reply_id):
             'count': reply.get_reaction_count(reaction_type),
             'user_reacted': user_reacted
         }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+# Discussion Reply Edit and Delete APIs
+@app.route('/api/replies/<int:reply_id>', methods=['PUT'])
+def update_discussion_reply(reply_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        reply = DiscussionReply.query.get_or_404(reply_id)
+        
+        # Check if user owns the reply
+        if reply.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        data = request.get_json()
+        content = data.get('content', '').strip()
+        
+        if not content:
+            return jsonify({'error': 'Reply content is required'}), 400
+        
+        reply.content = content
+        reply.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Reply updated successfully',
+            'reply': reply.to_dict(user_id)
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/replies/<int:reply_id>', methods=['DELETE'])
+def delete_discussion_reply(reply_id):
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        reply = DiscussionReply.query.get_or_404(reply_id)
+        
+        # Check if user owns the reply
+        if reply.user_id != user_id:
+            return jsonify({'error': 'Permission denied'}), 403
+        
+        db.session.delete(reply)
+        db.session.commit()
+        
+        return jsonify({'message': 'Reply deleted successfully'}), 200
         
     except Exception as e:
         db.session.rollback()

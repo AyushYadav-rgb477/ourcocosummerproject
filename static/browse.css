@@ -309,6 +309,139 @@ body {
   color: #999;
 }
 
+/* Project Edit Overlay */
+.project-edit-overlay {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.project-card:hover .project-edit-overlay {
+  opacity: 1;
+}
+
+.project-edit-overlay .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.project-edit-overlay .btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.project-edit-overlay .btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+.project-edit-overlay .btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.project-edit-overlay .btn-danger:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+/* Comment Actions */
+.comment-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.comment-actions button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.edit-comment-btn:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.delete-comment-btn:hover {
+  background: #ffebee;
+  color: #d32f2f;
+}
+
+/* Comment Edit Form */
+.comment-edit-form {
+  margin-top: 0.5rem;
+}
+
+.edit-comment-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+  min-height: 80px;
+}
+
+.comment-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.save-comment-btn, .cancel-comment-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.save-comment-btn {
+  background: #28a745;
+  color: white;
+}
+
+.save-comment-btn:hover {
+  background: #218838;
+}
+
+.save-comment-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.cancel-comment-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.cancel-comment-btn:hover {
+  background: #5a6268;
+}
+
+.edit-indicator {
+  color: #666;
+  font-size: 0.8rem;
+  font-style: italic;
+}
+
 /* Load More Button */
 .load-more-container {
   text-align: center;

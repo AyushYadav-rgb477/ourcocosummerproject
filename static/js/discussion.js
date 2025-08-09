@@ -187,6 +187,16 @@ function displayDiscussions(discussions, clearExisting = false) {
                         <span>${formatDate(discussion.created_at)}</span>
                     </span>
                 </div>
+                ${currentUser && discussion.can_edit ? `
+                    <div class="discussion-edit-overlay" onclick="event.stopPropagation()">
+                        <button class="btn btn-sm btn-secondary" onclick="editDiscussion(${discussion.id})" title="Edit Discussion">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteDiscussion(${discussion.id})" title="Delete Discussion">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                ` : ''}
             </div>
             <h3 class="discussion-title">${escapeHtml(discussion.title)}</h3>
             <p class="discussion-preview">${escapeHtml(discussion.content.substring(0, 150))}</p>
@@ -442,6 +452,14 @@ function displayReplies(replies) {
                 <button class="reply-to-reply-btn" onclick="showReplyToReply(${reply.id})">
                     <i class="fas fa-reply"></i> Reply
                 </button>
+                ${currentUser && reply.can_edit ? `
+                    <button class="edit-reply-btn" onclick="editDiscussionReply(${reply.id})" title="Edit Reply">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="delete-reply-btn" onclick="deleteDiscussionReply(${reply.id})" title="Delete Reply">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ` : ''}
             </div>
             <div class="nested-replies" id="nested-replies-${reply.id}">
                 ${reply.nested_replies ? reply.nested_replies.map(nestedReply => `
@@ -865,10 +883,313 @@ function removeMedia() {
     selectedMedia = null;
     mediaData = null;
     
+    const preview = document.getElementById('media-preview');
+    preview.style.display = 'none';
+    document.querySelector('.media-upload-button').style.display = 'block';
+    
     const mediaInput = document.getElementById('discussion-media');
     if (mediaInput) {
         mediaInput.value = '';
     }
+}
+
+// Discussion CRUD Functions
+async function editDiscussion(discussionId) {
+    if (!currentUser) {
+        showMessage('Please login to edit discussions', 'error');
+        return;
+    }
+    
+    try {
+        // Get current discussion data
+        const response = await fetch(`/api/discussions/${discussionId}`);
+        if (!response.ok) {
+            showMessage('Error loading discussion data', 'error');
+            return;
+        }
+        
+        const data = await response.json();
+        const discussion = data.discussion;
+        
+        // Check permission
+        if (!discussion.can_edit) {
+            showMessage('You can only edit your own discussions', 'error');
+            return;
+        }
+        
+        // Create and show edit modal
+        const editModal = `
+            <div class="modal show" id="edit-discussion-modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Edit Discussion</h2>
+                        <button class="close-modal" onclick="closeEditDiscussionModal()">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="edit-discussion-form">
+                            <div class="form-group">
+                                <label for="edit-discussion-title">Discussion Title</label>
+                                <input type="text" id="edit-discussion-title" value="${escapeHtml(discussion.title)}" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-discussion-content">Content</label>
+                                <textarea id="edit-discussion-content" rows="8" required>${escapeHtml(discussion.content)}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-discussion-category">Category</label>
+                                <select id="edit-discussion-category" required>
+                                    <option value="General" ${discussion.category === 'General' ? 'selected' : ''}>General</option>
+                                    <option value="Ideas" ${discussion.category === 'Ideas' ? 'selected' : ''}>Ideas</option>
+                                    <option value="Feedback" ${discussion.category === 'Feedback' ? 'selected' : ''}>Feedback</option>
+                                    <option value="Collaboration" ${discussion.category === 'Collaboration' ? 'selected' : ''}>Collaboration</option>
+                                    <option value="Questions" ${discussion.category === 'Questions' ? 'selected' : ''}>Questions</option>
+                                    <option value="Announcements" ${discussion.category === 'Announcements' ? 'selected' : ''}>Announcements</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-discussion-tags">Tags (comma-separated)</label>
+                                <input type="text" id="edit-discussion-tags" value="${discussion.tags.join(', ')}" placeholder="innovation, technology, startup">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick="closeEditDiscussionModal()">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveDiscussionEdit(${discussionId})">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', editModal);
+        
+    } catch (error) {
+        console.error('Error setting up discussion edit:', error);
+        showMessage('Error setting up discussion edit', 'error');
+    }
+}
+
+async function saveDiscussionEdit(discussionId) {
+    try {
+        const title = document.getElementById('edit-discussion-title').value.trim();
+        const content = document.getElementById('edit-discussion-content').value.trim();
+        const category = document.getElementById('edit-discussion-category').value;
+        const tags = document.getElementById('edit-discussion-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        
+        if (!title || !content || !category) {
+            showMessage('Please fill in all required fields', 'error');
+            return;
+        }
+        
+        const saveBtn = document.querySelector('#edit-discussion-modal .btn-primary');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+        
+        const response = await fetch(`/api/discussions/${discussionId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title,
+                content: content,
+                category: category,
+                tags: tags
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Discussion updated successfully!', 'success');
+            closeEditDiscussionModal();
+            
+            // Refresh the discussions list
+            currentPage = 1;
+            loadDiscussions();
+            
+            // Update current discussion if modal is open
+            if (currentDiscussion && currentDiscussion.id === discussionId) {
+                currentDiscussion = data.discussion;
+                displayDiscussionModal(currentDiscussion);
+            }
+        } else {
+            showMessage(data.error || 'Failed to update discussion', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        showMessage('Network error while updating discussion', 'error');
+    } finally {
+        const saveBtn = document.querySelector('#edit-discussion-modal .btn-primary');
+        if (saveBtn) {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = 'Save Changes';
+        }
+    }
+}
+
+function closeEditDiscussionModal() {
+    const modal = document.getElementById('edit-discussion-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+async function deleteDiscussion(discussionId) {
+    if (!currentUser) {
+        showMessage('Please login to delete discussions', 'error');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this discussion? This action cannot be undone and will remove all associated replies.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/discussions/${discussionId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showMessage('Discussion deleted successfully!', 'success');
+            
+            // Close modal if current discussion was deleted
+            if (currentDiscussion && currentDiscussion.id === discussionId) {
+                closeModals();
+                currentDiscussion = null;
+            }
+            
+            // Refresh the discussions list
+            currentPage = 1;
+            loadDiscussions();
+            
+        } else {
+            showMessage(data.error || 'Failed to delete discussion', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        showMessage('Network error while deleting discussion', 'error');
+    }
+}
+
+// Discussion Reply CRUD Functions
+async function editDiscussionReply(replyId) {
+    if (!currentUser) {
+        showMessage('Please login to edit replies', 'error');
+        return;
+    }
+    
+    const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+    if (!replyElement) return;
+    
+    const replyContent = replyElement.querySelector('.reply-content');
+    const originalContent = replyContent.textContent;
+    
+    const editForm = `
+        <div class="reply-edit-form">
+            <textarea class="reply-edit-textarea" rows="3">${originalContent}</textarea>
+            <div class="reply-edit-actions">
+                <button class="btn-secondary" onclick="cancelReplyEdit(${replyId}, '${originalContent.replace(/'/g, "&apos;")}')">Cancel</button>
+                <button class="btn-primary" onclick="saveReplyEdit(${replyId})">Save</button>
+            </div>
+        </div>
+    `;
+    
+    replyContent.innerHTML = editForm;
+    replyElement.querySelector('.reply-edit-textarea').focus();
+}
+
+function cancelReplyEdit(replyId, originalContent) {
+    const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+    if (!replyElement) return;
+    
+    const replyContent = replyElement.querySelector('.reply-content');
+    replyContent.innerHTML = escapeHtml(originalContent.replace(/&apos;/g, "'"));
+}
+
+async function saveReplyEdit(replyId) {
+    const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+    if (!replyElement) return;
+    
+    const textarea = replyElement.querySelector('.reply-edit-textarea');
+    const content = textarea.value.trim();
+    
+    if (!content) {
+        showMessage('Reply content cannot be empty', 'error');
+        return;
+    }
+    
+    const saveBtn = replyElement.querySelector('.btn-primary');
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    
+    try {
+        const response = await fetch(`/api/reply/${replyId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ content: content })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            const replyContent = replyElement.querySelector('.reply-content');
+            replyContent.innerHTML = escapeHtml(content);
+            showMessage('Reply updated successfully!', 'success');
+        } else {
+            showMessage(data.error || 'Failed to update reply', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        showMessage('Network error while updating reply', 'error');
+    }
+}
+
+async function deleteDiscussionReply(replyId) {
+    if (!currentUser) {
+        showMessage('Please login to delete replies', 'error');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this reply? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/reply/${replyId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            const replyElement = document.querySelector(`[data-reply-id="${replyId}"]`);
+            if (replyElement) {
+                replyElement.remove();
+            }
+            showMessage('Reply deleted successfully!', 'success');
+            
+            // Update reply count
+            if (currentDiscussion) {
+                const newReplyCount = Math.max(0, (currentDiscussion.reply_count || 0) - 1);
+                document.getElementById('view-discussion-replies').textContent = newReplyCount;
+                currentDiscussion.reply_count = newReplyCount;
+            }
+        } else {
+            showMessage(data.error || 'Failed to delete reply', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Network error:', error);
+        showMessage('Network error while deleting reply', 'error');
+    }
+}
     
     const preview = document.getElementById('media-preview');
     const uploadButton = document.querySelector('.media-upload-button');
