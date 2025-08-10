@@ -4,41 +4,24 @@ body {
   min-height: 100vh;
 }
 
+/* Override navbar for browse page */
+.navbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
 .browse-container {
   min-height: calc(100vh - 80px);
 }
 
-/* Header Section */
-.browse-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 3rem 2rem;
-  text-align: center;
-  color: white;
-}
-
-.header-content h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-  font-weight: bold;
-}
-
-.header-content h1 i {
-  margin-right: 1rem;
-  color: #ffd700;
-}
-
-.header-content p {
-  font-size: 1.1rem;
-  opacity: 0.9;
-  max-width: 600px;
-  margin: 0 auto;
-}
+/* Header Section - Removed banner */
 
 /* Filters Section */
 .filters-section {
   background: white;
-  padding: 2rem;
+  padding: 3rem 2rem;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 80px;
 }
 
 .filters-container {
