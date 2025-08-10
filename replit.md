@@ -162,6 +162,13 @@ Preferred communication style: Simple, everyday language.
 - **Solution**: Replaced modal with sliding right-side chat sidebar showing all team participants
 - **Impact**: Improved user experience with persistent chat, participant visibility, and keyboard support
 
+### Team Chat Notification System (August 2025)
+- **Feature**: Added red notification indicators for team chat messages similar to existing notification system
+- **Implementation**: When team members send messages, notifications are created for all other project collaborators
+- **Backend Changes**: Modified team chat endpoint to create notifications with type 'team_chat' for all team members except sender
+- **Frontend Changes**: Added notification count refresh after sending messages and proper team_chat icon display
+- **User Experience**: Users now receive red notification badges when team members send messages, improving team communication awareness
+
 ### File Upload System for Projects (August 2025)
 - **Feature**: Added comprehensive file attachment system to project creation
 - **Implementation**: New ProjectAttachment model with drag-and-drop interface supporting images, documents, and videos

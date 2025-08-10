@@ -1951,6 +1951,36 @@ def send_chat_message(project_id):
         db.session.add(chat_message)
         db.session.commit()
         
+        # Get current user for notification
+        sender = User.query.get(user_id)
+        
+        # Get all team members (owner + collaborators) except the sender
+        team_members = []
+        
+        # Add project owner if not the sender
+        if project.user_id != user_id:
+            team_members.append(project.user_id)
+        
+        # Add accepted collaborators who aren't the sender
+        collaborators = Collaboration.query.filter_by(
+            project_id=project_id,
+            status='accepted'
+        ).filter(Collaboration.user_id != user_id).all()
+        
+        for collab in collaborators:
+            team_members.append(collab.user_id)
+        
+        # Create notifications for all team members
+        for member_id in team_members:
+            create_notification(
+                user_id=member_id,
+                type='team_chat',
+                title='New Team Message',
+                message=f'{sender.username} sent a message in {project.title}',
+                related_user_id=user_id,
+                project_id=project_id
+            )
+        
         return jsonify({
             'message': 'Message sent successfully',
             'chat_message': chat_message.to_dict()

@@ -856,7 +856,8 @@ function getNotificationIcon(type) {
         'collaboration': '<i class="fas fa-handshake"></i>',
         'collaborations': '<i class="fas fa-handshake"></i>',
         'project': '<i class="fas fa-rocket"></i>',
-        'projects': '<i class="fas fa-rocket"></i>'
+        'projects': '<i class="fas fa-rocket"></i>',
+        'team_chat': '<i class="fas fa-comments"></i>'
     };
     return icons[type] || '<i class="fas fa-bell"></i>';
 }
@@ -1311,6 +1312,19 @@ async function sendSidebarMessage() {
         if (response.ok) {
             input.value = '';
             await loadSidebarChatMessages(currentChatProject.id);
+            
+            // Refresh notification count after sending chat message
+            // This ensures any new notifications are reflected in the badge
+            try {
+                const notificationResponse = await fetch('/api/notifications/count');
+                if (notificationResponse.ok) {
+                    const notificationData = await notificationResponse.json();
+                    unreadCount = notificationData.unread_count || 0;
+                    updateNotificationCount();
+                }
+            } catch (e) {
+                console.log('Error refreshing notification count:', e);
+            }
         } else {
             const data = await response.json();
             showMessage(data.error || 'Error sending message', 'error');
