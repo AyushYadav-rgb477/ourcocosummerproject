@@ -28,20 +28,20 @@ body {
   align-items: center;
   font-size: 1.4rem;
   font-weight: bold;
-  color: white;
+  color: white !important;
   margin-right: 2rem;
   text-decoration: none;
 }
 
 .logo a {
   text-decoration: none;
-  color: white;
+  color: white !important;
 }
 
 .logo i {
   margin-right: 8px;
-  color: #28a745;
-  text-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+  color: white !important;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 .nav-links a {

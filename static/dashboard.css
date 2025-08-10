@@ -192,7 +192,7 @@ body {
 }
 
 .section-header h2 {
-  color: #1c1c1c;
+  color: #ffffff;
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -204,7 +204,7 @@ body {
 }
 
 .section-header p {
-  color: #666;
+  color: rgba(255, 255, 255, 0.8);
   margin: 0;
 }
 
