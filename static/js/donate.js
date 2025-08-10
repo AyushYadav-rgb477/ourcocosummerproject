@@ -352,36 +352,20 @@ async function processDonation() {
         donateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         donateBtn.disabled = true;
         
-        const response = await fetch(`/api/projects/${currentProject.id}/donate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                amount: selectedAmount,
-                message: message,
-                payment_method: selectedPaymentMethod,
-                payment_details: paymentDetails
-            })
-        });
+        // This is detail collection only - no actual payment processing
+        // In a real implementation, this would save donation intent and contact details
         
-        const data = await response.json();
-        
-        if (response.ok) {
-            showMessage('Thank you for your donation! The project owner has been notified.', 'success');
-            setTimeout(() => {
-                window.location.href = `browse.html`;
-            }, 2000);
-        } else {
-            showMessage(data.error || 'Error processing donation', 'error');
-        }
+        showMessage('Thank you! Your donation details have been recorded. The project owner will contact you to complete the donation process.', 'success');
+        setTimeout(() => {
+            window.location.href = `browse.html?project=${currentProject.id}`;
+        }, 3000);
     } catch (error) {
         console.error('Error processing donation:', error);
         showMessage('Error processing donation. Please try again.', 'error');
     } finally {
         // Reset button state
         const donateBtn = document.getElementById('process-donation');
-        donateBtn.innerHTML = '<i class="fas fa-heart"></i> Complete Donation';
+        donateBtn.innerHTML = '<i class="fas fa-heart"></i> Submit Donation Details';
         donateBtn.disabled = selectedAmount <= 0;
     }
 }

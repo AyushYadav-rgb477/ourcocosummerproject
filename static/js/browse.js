@@ -327,7 +327,7 @@ function getProjectImageHTML(project) {
             return `<img src="/static/${imageAttachment.file_path}" alt="${escapeHtml(project.title)}" />`;
         }
     }
-    // Default gradient background if no image
+    // Default gradient background if no image - no placeholder div
     const gradients = [
         'linear-gradient(135deg, #667eea, #764ba2)',
         'linear-gradient(135deg, #f093fb, #f5576c)',
@@ -337,7 +337,7 @@ function getProjectImageHTML(project) {
         'linear-gradient(135deg, #a8edea, #fed6e3)'
     ];
     const gradient = gradients[project.id % gradients.length];
-    return `<div class="project-placeholder" style="background: ${gradient}"></div>`;
+    return `<div style="background: ${gradient}; width: 100%; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-size: 1.2rem; font-weight: bold;">${escapeHtml(project.title).substring(0, 20)}...</div>`;
 }
 
 function displayProjectModal(project) {
