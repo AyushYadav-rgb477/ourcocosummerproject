@@ -7,19 +7,19 @@
 }
 
 .profile-container {
-  max-width: 1400px;
+  max-width: 1200px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 350px 1fr;
   gap: 2rem;
-  height: calc(100vh - 120px);
+  min-height: calc(100vh - 120px);
 }
 
 /* Profile Sidebar */
 .profile-sidebar {
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
@@ -27,7 +27,7 @@
   position: sticky;
   top: 2rem;
   overflow-y: auto;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 140px);
 }
 
 .sidebar-header {
@@ -273,12 +273,12 @@
 .profile-content {
   background: linear-gradient(145deg, #ffffff, #f8f9fa);
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   overflow-y: auto;
-  max-height: calc(100vh - 120px);
+  max-height: calc(100vh - 140px);
 }
 
 /* Search Section */
@@ -345,11 +345,11 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 3rem 2rem;
+  padding: 2rem 1.5rem;
   background: #fafbfc;
   border-radius: 12px;
   border: 2px dashed #e2e8f0;
-  margin: 2rem 0;
+  margin: 1.5rem 0;
 }
 
 .empty-state-icon {
@@ -406,8 +406,8 @@
 
 /* Content Sections */
 .content-section {
-  margin-bottom: 3rem;
-  padding-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
   border-bottom: 1px solid #e5e7eb;
 }
 
@@ -437,8 +437,8 @@
 /* Projects Grid */
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
   margin-bottom: 2rem;
 }
 
@@ -451,7 +451,7 @@
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  height: 280px;
+  height: 300px;
   display: flex;
   flex-direction: column;
 }
@@ -633,7 +633,7 @@
 /* Collaboration Cards */
 .collaborations-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
 }
 
@@ -701,7 +701,7 @@
 /* Donation Cards */
 .donations-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
 }
 
@@ -1306,16 +1306,17 @@
 /* Responsive Design */
 @media (max-width: 1200px) {
   .profile-container {
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 300px 1fr;
     gap: 1.5rem;
+    max-width: 1000px;
   }
   
   .profile-sidebar {
-    padding: 1rem;
+    padding: 1.25rem;
   }
   
   .profile-content {
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
 }
 
@@ -1326,50 +1327,67 @@
   
   .profile-container {
     grid-template-columns: 1fr;
-    gap: 1rem;
-    height: auto;
+    gap: 1.5rem;
+    min-height: auto;
   }
   
   .profile-sidebar {
     position: static;
     max-height: none;
     order: 1;
+    padding: 1rem;
   }
   
   .profile-content {
     order: 2;
     max-height: none;
+    padding: 1rem;
   }
   
   .projects-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  .collaborations-grid {
     grid-template-columns: 1fr;
   }
   
-  .stats-overview {
-    grid-template-columns: repeat(2, 1fr);
+  .donations-grid {
+    grid-template-columns: 1fr;
   }
   
   .sidebar-header h2 {
     font-size: 1.25rem;
   }
   
-  .content-header h2 {
-    font-size: 1.5rem;
+  .section-header h2 {
+    font-size: 1.25rem;
   }
 }
 
 @media (max-width: 480px) {
   .profile-main {
-    padding: 0.5rem;
+    padding: 0.75rem;
+  }
+  
+  .profile-container {
+    gap: 1rem;
   }
   
   .profile-sidebar,
   .profile-content {
     padding: 1rem;
+    border-radius: 12px;
   }
   
-  .stats-overview {
+  .projects-grid,
+  .collaborations-grid,
+  .donations-grid {
     grid-template-columns: 1fr;
+  }
+  
+  .empty-state {
+    padding: 1.5rem 1rem;
   }
   
   .contact-item,

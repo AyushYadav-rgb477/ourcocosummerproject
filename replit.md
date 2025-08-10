@@ -123,6 +123,26 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (August 2025)
 
+### Enhanced Notification System
+- **Issue**: Notifications were missing for key user interactions like discussion replies and likes
+- **Solution**: Added comprehensive notification system for all user interactions including collaboration requests, donations, votes, comments, discussion likes, and replies
+- **Impact**: Users now receive real-time notifications for all platform interactions, improving engagement and communication
+
+### Team Management Optimization  
+- **Issue**: View Profile button caused confusion and navigation issues in team section
+- **Solution**: Removed View Profile button from team members, kept only Team Chat functionality with centered styling
+- **Impact**: Streamlined team interface focusing on collaboration through chat, reducing UI clutter and user confusion
+
+### Improved Chat System
+- **Issue**: Chat messages showed confusing relative time format
+- **Solution**: Changed chat message timestamps to display actual dates instead of relative time
+- **Impact**: Better context for team communications with clear chronological reference
+
+### Profile Page Layout Improvements
+- **Issue**: Profile page had suboptimal dimensions and box sizing causing layout issues
+- **Solution**: Optimized container dimensions, grid layouts, card sizes, and responsive breakpoints for better visual hierarchy
+- **Impact**: Enhanced user experience with better proportioned layout, improved readability, and consistent spacing across all screen sizes
+
 ### Fixed Notification System
 - **Issue**: Mark as read functionality was not working properly
 - **Solution**: Implemented dedicated Notification model with proper persistence
@@ -137,11 +157,6 @@ Preferred communication style: Simple, everyday language.
 - **Issue**: No communication mechanism between team members
 - **Solution**: Implemented project-specific chat system using TeamChat model
 - **Impact**: Team members can now communicate within project context, messages are persistent and properly attributed
-
-### Profile Page Redirection
-- **Issue**: View Profile button redirected to current user's profile instead of collaborator's profile
-- **Solution**: Fixed URL parameter from 'user' to 'user_id' to match profile page implementation
-- **Impact**: Users can now correctly view other team members' profiles when clicking "View Profile"
 
 ### Enhanced Chat Interface
 - **Issue**: Modal-based chat was limiting and not user-friendly for team collaboration
