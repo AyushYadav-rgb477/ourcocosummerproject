@@ -320,10 +320,15 @@ body {
 }
 
 .payment-detail {
-  padding: 1.5rem;
+  padding: 2rem;
   background: #f8f9fa;
   border-radius: 12px;
   border: 1px solid #e0e0e0;
+  min-height: 450px;
+  max-width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .payment-detail h4 {
@@ -338,129 +343,94 @@ body {
   color: #667eea;
 }
 
-/* UPI Details */
-.upi-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
+/* Payment Form */
+.payment-form {
+  margin-bottom: 2rem;
+  flex: 1;
 }
 
-.upi-id label {
+.payment-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.payment-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.payment-form label {
   display: block;
   margin-bottom: 0.5rem;
   color: #2c3e50;
   font-weight: 500;
 }
 
-.copy-field {
+.payment-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.payment-form input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.payment-form input:required {
+  border-left: 4px solid #667eea;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Payment Instructions */
+.payment-instructions {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  margin-top: auto;
+}
+
+.payment-instructions h5 {
+  margin-bottom: 1rem;
+  color: #2c3e50;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
 }
 
-.upi-id-value {
-  flex: 1;
-  font-family: monospace;
-  font-size: 1.1rem;
-  color: #2c3e50;
-}
-
-.copy-btn {
-  padding: 0.5rem 1rem;
-  background: #667eea;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.3s ease;
-}
-
-.copy-btn:hover {
-  background: #5a6fd8;
-}
-
-.qr-code {
-  text-align: center;
-}
-
-.qr-code h5 {
-  margin-bottom: 1rem;
-  color: #2c3e50;
-}
-
-.qr-placeholder {
-  display: inline-block;
-  width: 200px;
-  height: 200px;
-  border: 2px dashed #ddd;
-  border-radius: 12px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: #666;
-}
-
-.qr-placeholder i {
-  font-size: 4rem;
-  margin-bottom: 0.5rem;
-}
-
-.qr-placeholder p {
-  margin: 0.5rem 0;
-  font-weight: 500;
-}
-
-.qr-placeholder small {
-  font-size: 0.8rem;
-  color: #999;
-}
-
-.upi-apps h5 {
-  margin-bottom: 1rem;
-  color: #2c3e50;
-}
-
-.app-icons {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-}
-
-.app-icon {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
-
-.app-icon i {
-  font-size: 2rem;
+.payment-instructions h5 i {
   color: #667eea;
+}
+
+.payment-instructions ol {
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.payment-instructions li {
   margin-bottom: 0.5rem;
+  color: #555;
+  line-height: 1.5;
 }
 
-.app-icon span {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* Bank Details */
-.bank-info {
+/* Bank Info */
+.bank-info .payment-form .form-row {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
-}
-
-.bank-field label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
-  font-weight: 500;
 }
 
 /* Card Form */
@@ -469,29 +439,30 @@ body {
   gap: 1rem;
 }
 
-.form-row {
+.card-form .form-row {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 1rem;
 }
 
-.form-group label {
+.card-form .form-group label {
   display: block;
   margin-bottom: 0.5rem;
   color: #2c3e50;
   font-weight: 500;
 }
 
-.form-group input {
+.card-form .form-group input {
   width: 100%;
   padding: 0.75rem;
   border: 2px solid #e0e0e0;
   border-radius: 8px;
   font-size: 1rem;
   transition: border-color 0.3s ease;
+  box-sizing: border-box;
 }
 
-.form-group input:focus {
+.card-form .form-group input:focus {
   outline: none;
   border-color: #667eea;
 }
@@ -615,16 +586,14 @@ body {
     grid-template-columns: 1fr;
   }
   
-  .upi-info {
-    gap: 1.5rem;
-  }
-  
-  .app-icons {
-    gap: 1rem;
-  }
-  
-  .form-row {
+  .payment-form .form-row,
+  .card-form .form-row {
     grid-template-columns: 1fr;
+  }
+  
+  .payment-detail {
+    min-height: 350px;
+    padding: 1.5rem;
   }
   
   .project-info-section,

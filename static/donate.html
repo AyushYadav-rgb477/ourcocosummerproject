@@ -147,82 +147,77 @@
           <div class="payment-detail" id="upi-details">
             <h4><i class="fas fa-mobile-alt"></i> UPI Payment Details</h4>
             <div class="upi-info">
-              <div class="upi-id">
-                <label>UPI ID:</label>
-                <div class="copy-field">
-                  <span class="upi-id-value">collabfund@razorpay</span>
-                  <button class="copy-btn" onclick="copyToClipboard('collabfund@razorpay')">
-                    <i class="fas fa-copy"></i> Copy
-                  </button>
+              <div class="payment-form">
+                <div class="form-group">
+                  <label for="upi-id">Your UPI ID:</label>
+                  <input type="text" id="upi-id" placeholder="yourname@paytm / yourname@gpay" required>
+                  <small class="form-help">Enter your UPI ID to receive payment confirmation</small>
+                </div>
+                <div class="form-group">
+                  <label for="upi-name">Account Holder Name:</label>
+                  <input type="text" id="upi-name" placeholder="Full name as per bank account" required>
+                </div>
+                <div class="form-group">
+                  <label for="upi-phone">Mobile Number:</label>
+                  <input type="tel" id="upi-phone" placeholder="10-digit mobile number" maxlength="10" required>
+                  <small class="form-help">Linked to your UPI account</small>
                 </div>
               </div>
-              <div class="qr-code">
-                <h5>Or scan QR code:</h5>
-                <div class="qr-placeholder">
-                  <i class="fas fa-qrcode"></i>
-                  <p>QR Code</p>
-                  <small>Scan with any UPI app</small>
-                </div>
-              </div>
-              <div class="upi-apps">
-                <h5>Popular UPI Apps:</h5>
-                <div class="app-icons">
-                  <div class="app-icon">
-                    <i class="fas fa-mobile"></i>
-                    <span>PhonePe</span>
-                  </div>
-                  <div class="app-icon">
-                    <i class="fas fa-mobile"></i>
-                    <span>Google Pay</span>
-                  </div>
-                  <div class="app-icon">
-                    <i class="fas fa-mobile"></i>
-                    <span>Paytm</span>
-                  </div>
-                </div>
+              <div class="payment-instructions">
+                <h5><i class="fas fa-info-circle"></i> Payment Instructions:</h5>
+                <ol>
+                  <li>Fill in your UPI details above</li>
+                  <li>Click "Complete Donation" to proceed</li>
+                  <li>You'll receive a payment request on your UPI app</li>
+                  <li>Approve the transaction to complete donation</li>
+                </ol>
               </div>
             </div>
           </div>
 
           <!-- Bank Details -->
           <div class="payment-detail" id="bank-details" style="display: none;">
-            <h4><i class="fas fa-university"></i> Bank Account Details</h4>
+            <h4><i class="fas fa-university"></i> Bank Transfer Details</h4>
             <div class="bank-info">
-              <div class="bank-field">
-                <label>Account Name:</label>
-                <div class="copy-field">
-                  <span>CollabFund Platform</span>
-                  <button class="copy-btn" onclick="copyToClipboard('CollabFund Platform')">
-                    <i class="fas fa-copy"></i> Copy
-                  </button>
+              <div class="payment-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="bank-account-name">Account Holder Name:</label>
+                    <input type="text" id="bank-account-name" placeholder="Full name as per bank account" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="bank-account-number">Account Number:</label>
+                    <input type="text" id="bank-account-number" placeholder="Bank account number" required>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="bank-ifsc">IFSC Code:</label>
+                    <input type="text" id="bank-ifsc" placeholder="IFSC Code" maxlength="11" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="bank-name">Bank Name:</label>
+                    <input type="text" id="bank-name" placeholder="Bank name" required>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="bank-branch">Branch Name:</label>
+                  <input type="text" id="bank-branch" placeholder="Branch name (optional)">
+                </div>
+                <div class="form-group">
+                  <label for="bank-phone">Mobile Number:</label>
+                  <input type="tel" id="bank-phone" placeholder="10-digit mobile number" maxlength="10" required>
+                  <small class="form-help">For transaction confirmation SMS</small>
                 </div>
               </div>
-              <div class="bank-field">
-                <label>Account Number:</label>
-                <div class="copy-field">
-                  <span>1234567890123456</span>
-                  <button class="copy-btn" onclick="copyToClipboard('1234567890123456')">
-                    <i class="fas fa-copy"></i> Copy
-                  </button>
-                </div>
-              </div>
-              <div class="bank-field">
-                <label>IFSC Code:</label>
-                <div class="copy-field">
-                  <span>RZRP0000001</span>
-                  <button class="copy-btn" onclick="copyToClipboard('RZRP0000001')">
-                    <i class="fas fa-copy"></i> Copy
-                  </button>
-                </div>
-              </div>
-              <div class="bank-field">
-                <label>Bank Name:</label>
-                <div class="copy-field">
-                  <span>RazorpayX</span>
-                  <button class="copy-btn" onclick="copyToClipboard('RazorpayX')">
-                    <i class="fas fa-copy"></i> Copy
-                  </button>
-                </div>
+              <div class="payment-instructions">
+                <h5><i class="fas fa-info-circle"></i> Payment Instructions:</h5>
+                <ol>
+                  <li>Fill in your bank account details above</li>
+                  <li>Click "Complete Donation" to proceed</li>
+                  <li>You'll receive bank transfer instructions</li>
+                  <li>Complete the transfer using your bank's app or website</li>
+                </ol>
               </div>
             </div>
           </div>

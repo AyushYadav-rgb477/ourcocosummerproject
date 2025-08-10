@@ -21,6 +21,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup event listeners
     setupEventListeners();
+    
+    // Add real-time validation listeners
+    setupValidationListeners();
 });
 
 async function checkAuthStatus() {
@@ -124,6 +127,51 @@ function setupEventListeners() {
     setupCardInputFormatting();
 }
 
+function setupValidationListeners() {
+    // UPI form validation
+    const upiInputs = ['upi-id', 'upi-name', 'upi-phone'];
+    upiInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', updateDonationSummary);
+        }
+    });
+    
+    // Bank form validation
+    const bankInputs = ['bank-account-name', 'bank-account-number', 'bank-ifsc', 'bank-name', 'bank-phone'];
+    bankInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', updateDonationSummary);
+        }
+    });
+    
+    // Card form validation
+    const cardInputs = ['card-number', 'expiry', 'cvv', 'cardholder-name'];
+    cardInputs.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            input.addEventListener('input', updateDonationSummary);
+        }
+    });
+    
+    // Phone number validation
+    const phoneInputs = document.querySelectorAll('input[type="tel"]');
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 10);
+        });
+    });
+    
+    // IFSC code formatting
+    const ifscInput = document.getElementById('bank-ifsc');
+    if (ifscInput) {
+        ifscInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+        });
+    }
+}
+
 function selectAmount(amount) {
     selectedAmount = amount;
     updateDonationSummary();
@@ -178,9 +226,32 @@ function updateDonationSummary() {
     document.getElementById('summary-fee').textContent = `$${processingFee.toFixed(2)}`;
     document.getElementById('summary-total').textContent = `$${total.toFixed(2)}`;
     
-    // Enable/disable donation button
+    // Enable/disable donation button based on amount and payment method validation
     const donateBtn = document.getElementById('process-donation');
-    donateBtn.disabled = selectedAmount <= 0;
+    donateBtn.disabled = selectedAmount <= 0 || !validatePaymentDetails();
+}
+
+function validatePaymentDetails() {
+    if (selectedPaymentMethod === 'upi') {
+        const upiId = document.getElementById('upi-id')?.value.trim();
+        const upiName = document.getElementById('upi-name')?.value.trim();
+        const upiPhone = document.getElementById('upi-phone')?.value.trim();
+        return upiId && upiName && upiPhone && upiPhone.length === 10;
+    } else if (selectedPaymentMethod === 'bank') {
+        const accountName = document.getElementById('bank-account-name')?.value.trim();
+        const accountNumber = document.getElementById('bank-account-number')?.value.trim();
+        const ifsc = document.getElementById('bank-ifsc')?.value.trim();
+        const bankName = document.getElementById('bank-name')?.value.trim();
+        const phone = document.getElementById('bank-phone')?.value.trim();
+        return accountName && accountNumber && ifsc && bankName && phone && phone.length === 10;
+    } else if (selectedPaymentMethod === 'card') {
+        const cardNumber = document.getElementById('card-number')?.value.trim();
+        const expiry = document.getElementById('expiry')?.value.trim();
+        const cvv = document.getElementById('cvv')?.value.trim();
+        const cardholderName = document.getElementById('cardholder-name')?.value.trim();
+        return cardNumber && expiry && cvv && cardholderName;
+    }
+    return false;
 }
 
 function setupCardInputFormatting() {
@@ -241,7 +312,38 @@ async function processDonation() {
         return;
     }
     
+    if (!validatePaymentDetails()) {
+        showMessage('Please fill in all required payment details', 'error');
+        return;
+    }
+    
     const message = document.getElementById('message-input').value;
+    
+    // Collect payment details based on selected method
+    let paymentDetails = {};
+    if (selectedPaymentMethod === 'upi') {
+        paymentDetails = {
+            upi_id: document.getElementById('upi-id').value.trim(),
+            account_name: document.getElementById('upi-name').value.trim(),
+            phone: document.getElementById('upi-phone').value.trim()
+        };
+    } else if (selectedPaymentMethod === 'bank') {
+        paymentDetails = {
+            account_name: document.getElementById('bank-account-name').value.trim(),
+            account_number: document.getElementById('bank-account-number').value.trim(),
+            ifsc_code: document.getElementById('bank-ifsc').value.trim(),
+            bank_name: document.getElementById('bank-name').value.trim(),
+            branch_name: document.getElementById('bank-branch').value.trim(),
+            phone: document.getElementById('bank-phone').value.trim()
+        };
+    } else if (selectedPaymentMethod === 'card') {
+        paymentDetails = {
+            card_number: document.getElementById('card-number').value.replace(/\s/g, ''),
+            expiry: document.getElementById('expiry').value,
+            cvv: document.getElementById('cvv').value,
+            cardholder_name: document.getElementById('cardholder-name').value.trim()
+        };
+    }
     
     try {
         // Show loading state
@@ -258,7 +360,8 @@ async function processDonation() {
             body: JSON.stringify({
                 amount: selectedAmount,
                 message: message,
-                payment_method: selectedPaymentMethod
+                payment_method: selectedPaymentMethod,
+                payment_details: paymentDetails
             })
         });
         
