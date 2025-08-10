@@ -2119,4 +2119,26 @@ def get_project_details(project_id):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Browse page statistics API
+@app.route('/api/stats', methods=['GET'])
+def get_browse_stats():
+    try:
+        # Get total number of projects
+        total_projects = Project.query.count()
+        
+        # Get total funding raised (sum of all donations)
+        total_funding = db.session.query(func.sum(Donation.amount)).scalar() or 0
+        
+        # Get total number of unique collaborators (users who have accepted collaborations)
+        total_collaborators = db.session.query(Collaboration.user_id).filter_by(status='accepted').distinct().count()
+        
+        return jsonify({
+            'total_projects': total_projects,
+            'total_funding': total_funding,
+            'total_collaborators': total_collaborators
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 

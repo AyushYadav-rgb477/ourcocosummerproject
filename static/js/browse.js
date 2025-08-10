@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load initial projects
     loadProjects();
     
+    // Load header statistics
+    loadHeaderStats();
+    
     // Check if specific project ID in URL
     checkForProjectInURL();
 });
@@ -157,6 +160,43 @@ async function loadProjects() {
     } finally {
         isLoading = false;
         if (loadingEl) loadingEl.style.display = 'none';
+    }
+}
+
+async function loadHeaderStats() {
+    try {
+        const response = await fetch('/api/stats');
+        if (response.ok) {
+            const stats = await response.json();
+            updateHeaderStats(stats);
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+        // Set default values if API fails
+        updateHeaderStats({
+            total_projects: 0,
+            total_funding: 0,
+            total_collaborators: 0
+        });
+    }
+}
+
+function updateHeaderStats(stats) {
+    const totalProjectsEl = document.getElementById('total-projects');
+    const totalFundingEl = document.getElementById('total-funding');
+    const totalCollaboratorsEl = document.getElementById('total-collaborators');
+    
+    if (totalProjectsEl) {
+        totalProjectsEl.textContent = stats.total_projects || 0;
+    }
+    
+    if (totalFundingEl) {
+        const funding = stats.total_funding || 0;
+        totalFundingEl.textContent = `$${funding.toLocaleString()}`;
+    }
+    
+    if (totalCollaboratorsEl) {
+        totalCollaboratorsEl.textContent = stats.total_collaborators || 0;
     }
 }
 
