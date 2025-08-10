@@ -3,6 +3,7 @@
 .profile-main {
   min-height: calc(100vh - 80px);
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
   padding: 2rem;
 }
 
@@ -17,12 +18,12 @@
 
 /* Profile Sidebar */
 .profile-sidebar {
-  background: linear-gradient(145deg, #ffffff, #f8f9fa);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
   padding: 2rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
   height: fit-content;
   position: sticky;
   top: 2rem;

@@ -1,13 +1,17 @@
 /* Browse Page Specific Styles */
 body {
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-attachment: fixed;
   min-height: 100vh;
+  color: white;
 }
 
 /* Override navbar for browse page */
 .navbar {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1) !important;
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .browse-container {
@@ -18,10 +22,12 @@ body {
 
 /* Filters Section */
 .filters-section {
-  background: white;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
   padding: 3rem 2rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   margin-top: 80px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .filters-container {
@@ -89,9 +95,11 @@ body {
 
 /* Projects Section */
 .projects-section {
-  background: #f8f9fa;
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
   padding: 3rem 2rem;
   min-height: 60vh;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .projects-container {
@@ -107,13 +115,14 @@ body {
 }
 
 .project-card {
-  background: white;
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
   padding: 0;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s ease;
   cursor: pointer;
-  border: 2px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   min-height: 350px;
   display: flex;
   flex-direction: column;
@@ -144,9 +153,10 @@ body {
 }
 
 .project-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  border-color: #6a11cb;
+  transform: translateY(-8px);
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .project-header {
