@@ -172,8 +172,7 @@ function displayProjects(projects, clearExisting = false) {
     
     const projectsHTML = projects.map(project => `
         <div class="project-card" onclick="openProjectModal(${project.id})">
-            <div class="project-image">
-                ${getProjectImageHTML(project)}
+            <div class="project-content">
                 ${currentUser && project.can_edit ? `
                     <div class="project-edit-overlay" onclick="event.stopPropagation()">
                         <button class="btn btn-sm btn-secondary" onclick="editProject(${project.id})" title="Edit Project">
@@ -184,8 +183,6 @@ function displayProjects(projects, clearExisting = false) {
                         </button>
                     </div>
                 ` : ''}
-            </div>
-            <div class="project-content">
                 <div class="project-header">
                     <span class="project-category">${project.category}</span>
                     <span class="project-date">${formatDate(project.created_at)}</span>
