@@ -419,11 +419,8 @@ function displayUserProjects(projects) {
         const sampleProject = sampleProjects[index % sampleProjects.length];
         return `
             <div class="project-card" onclick="viewProject(${project.id || sampleProject.id})">
-                <div class="project-image" style="background: ${getProjectImage(project, sampleProject)}">
-                    ${getProjectImageElement(project, sampleProject)}
-                    <div class="project-badge">${sampleProject.badge}</div>
-                </div>
                 <div class="project-info">
+                    <div class="project-badge">${sampleProject.badge}</div>
                     <h3 class="project-title">${escapeHtml(project.title || sampleProject.title)}</h3>
                     <div class="project-category">${escapeHtml(project.category || sampleProject.category)}</div>
                     <div class="project-actions">
