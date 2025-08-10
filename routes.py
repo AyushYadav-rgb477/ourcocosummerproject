@@ -412,6 +412,18 @@ def vote_project(project_id):
             vote.is_upvote = True
             db.session.add(vote)
             action = 'added'
+            
+            # Create notification for project owner (only for new votes)
+            voter = User.query.get(user_id)
+            if voter and project.user_id != user_id:
+                create_notification(
+                    user_id=project.user_id,
+                    type='vote',
+                    title='Project Liked',
+                    message=f'{voter.full_name} liked your project "{project.title}"',
+                    related_user_id=user_id,
+                    project_id=project.id
+                )
         
         db.session.commit()
         
@@ -619,6 +631,18 @@ def request_collaboration(project_id):
         db.session.add(collaboration)
         db.session.commit()
         
+        # Create notification for project owner
+        requester = User.query.get(user_id)
+        if requester:
+            create_notification(
+                user_id=project.user_id,
+                type='collaboration',
+                title='New Collaboration Request',
+                message=f'{requester.full_name} wants to collaborate on "{project.title}"',
+                related_user_id=user_id,
+                project_id=project.id
+            )
+        
         return jsonify({
             'message': 'Collaboration request sent successfully',
             'collaboration': collaboration.to_dict()
@@ -654,6 +678,18 @@ def donate_to_project(project_id):
         
         db.session.add(donation)
         db.session.commit()
+        
+        # Create notification for project owner
+        donor = User.query.get(user_id)
+        if donor and project.user_id != user_id:
+            create_notification(
+                user_id=project.user_id,
+                type='donation',
+                title='New Donation Received',
+                message=f'{donor.full_name} donated ${amount:.2f} to your project "{project.title}"',
+                related_user_id=user_id,
+                project_id=project.id
+            )
         
         return jsonify({
             'message': 'Donation successful',
@@ -763,6 +799,19 @@ def toggle_discussion_like(discussion_id):
             )
             db.session.add(new_like)
             liked = True
+            
+            # Create notification for discussion owner
+            discussion = Discussion.query.get(discussion_id)
+            liker = User.query.get(user_id)
+            if discussion and liker and discussion.user_id != user_id:
+                create_notification(
+                    user_id=discussion.user_id,
+                    type='like',
+                    title='Discussion Liked',
+                    message=f'{liker.full_name} liked your discussion "{discussion.title}"',
+                    related_user_id=user_id,
+                    project_id=None
+                )
         
         db.session.commit()
         
@@ -925,6 +974,19 @@ def add_discussion_reply(discussion_id):
         
         db.session.add(reply)
         db.session.commit()
+        
+        # Create notification for discussion owner
+        discussion = Discussion.query.get(discussion_id)
+        replier = User.query.get(user_id)
+        if discussion and replier and discussion.user_id != user_id:
+            create_notification(
+                user_id=discussion.user_id,
+                type='reply',
+                title='New Discussion Reply',
+                message=f'{replier.full_name} replied to your discussion "{discussion.title}"',
+                related_user_id=user_id,
+                project_id=None
+            )
         
         return jsonify({
             'message': 'Reply added successfully',
