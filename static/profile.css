@@ -27,7 +27,7 @@
   height: fit-content;
   position: sticky;
   top: 2rem;
-  overflow-y: auto;
+  /* overflow-y: auto; */
   max-height: calc(100vh - 120px);
 }
 
@@ -1287,7 +1287,7 @@
 /* Navigation Active State */
 .nav-right .profile-link.active {
   background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  color: #dcfe00;
   border-radius: 25px;
 }
 
@@ -1401,8 +1401,8 @@
   background: white;
   border-radius: 15px;
   width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
+  max-width: 900px;
+  max-height: 100vh;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   animation: slideIn 0.3s ease;
@@ -1527,7 +1527,9 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  min-width: 120px;
+  min-width: 100px;
+  height: 45px;
+  margin-top: 5px;
   text-align: center;
   font-weight: 500;
 }

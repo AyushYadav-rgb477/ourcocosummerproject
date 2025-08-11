@@ -22,7 +22,6 @@ body {
 .page-header-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 4rem 2rem 3rem;
-  margin-top: 80px;
   color: white;
   text-align: center;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -603,13 +602,13 @@ body {
 }
 
 .project-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  /* display: grid; */
+  /* grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); */
   gap: 1rem;
-  margin-bottom: 2rem;
+  /* margin-bottom: 2rem; */
   padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-radius: 12px;
+  /* background: linear-gradient(135deg, #25fc5b, #d82ded); */
+  /* border-radius: 12px; */
   color: white;
 }
 
